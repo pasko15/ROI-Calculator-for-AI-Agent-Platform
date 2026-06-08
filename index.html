@@ -1,0 +1,1265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Agent Platform ROI Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --page: #f4f7fa;
+      --panel: #ffffff;
+      --panel-soft: #f8fafc;
+      --ink: #17202a;
+      --muted: #647084;
+      --line: #d7e0e8;
+      --line-strong: #b9c7d4;
+      --navy: #123545;
+      --navy-2: #173f52;
+      --teal: #0f8b8d;
+      --blue: #2f6fbb;
+      --green: #1b8f5a;
+      --amber: #b7791f;
+      --red: #b42318;
+      --soft-teal: #e8f6f5;
+      --soft-blue: #edf4fd;
+      --soft-green: #eaf7ef;
+      --soft-amber: #fff6e6;
+      --soft-red: #fef0ef;
+      --shadow: 0 16px 36px rgba(23, 32, 42, 0.08);
+      --radius: 8px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      min-width: 320px;
+    }
+
+    body {
+      margin: 0;
+      background: var(--page);
+      color: var(--ink);
+      font-family: "Segoe UI", Arial, sans-serif;
+      line-height: 1.45;
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin: 0;
+    }
+
+    .shell {
+      width: min(1480px, 100%);
+      margin: 0 auto;
+      padding: 22px;
+    }
+
+    .top-band {
+      background: linear-gradient(135deg, var(--navy), var(--navy-2));
+      color: #ffffff;
+      border-bottom: 5px solid var(--teal);
+    }
+
+    .top-band .shell {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 24px;
+      align-items: center;
+    }
+
+    .eyebrow {
+      color: rgba(255, 255, 255, 0.72);
+      font-size: 0.78rem;
+      font-weight: 750;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin-top: 4px;
+      font-size: clamp(1.45rem, 2vw, 2.35rem);
+      font-weight: 760;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      max-width: 880px;
+      margin-top: 6px;
+      color: rgba(255, 255, 255, 0.78);
+      font-size: 0.98rem;
+    }
+
+    .answer-card {
+      width: min(380px, 100%);
+      padding: 16px 18px;
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, 0.09);
+    }
+
+    .answer-card span {
+      display: block;
+      color: rgba(255, 255, 255, 0.72);
+      font-size: 0.76rem;
+      font-weight: 750;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+    }
+
+    .answer-card strong {
+      display: block;
+      margin-top: 6px;
+      font-size: clamp(1.8rem, 3vw, 2.8rem);
+      line-height: 1;
+    }
+
+    .answer-card p {
+      margin-top: 8px;
+      color: rgba(255, 255, 255, 0.74);
+      font-size: 0.88rem;
+    }
+
+    .page {
+      display: grid;
+      gap: 18px;
+    }
+
+    .scenario-bar,
+    .panel,
+    .kpi-card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .scenario-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 14px;
+    }
+
+    .scenario-title {
+      min-width: 170px;
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 760;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+    }
+
+    .scenario-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+
+    .scenario-button {
+      min-height: 40px;
+      border: 1px solid var(--line-strong);
+      border-radius: var(--radius);
+      padding: 8px 13px;
+      color: var(--ink);
+      background: #ffffff;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .scenario-button:hover,
+    .scenario-button:focus-visible,
+    .scenario-button.is-active {
+      outline: 0;
+      border-color: var(--teal);
+      background: var(--soft-teal);
+      color: #0b5f61;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(330px, 410px) minmax(0, 1fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .panel-header {
+      padding: 18px 20px 0;
+    }
+
+    .panel-header h2 {
+      font-size: 1rem;
+      font-weight: 760;
+      letter-spacing: 0;
+    }
+
+    .panel-header p {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 0.86rem;
+    }
+
+    .panel-body {
+      padding: 18px 20px 20px;
+    }
+
+    .inputs-panel {
+      position: sticky;
+      top: 16px;
+    }
+
+    .input-group {
+      display: grid;
+      gap: 12px;
+      padding: 0 0 18px;
+      border-bottom: 1px solid var(--line);
+      margin-bottom: 18px;
+    }
+
+    .input-group:last-child {
+      margin-bottom: 0;
+      padding-bottom: 0;
+      border-bottom: 0;
+    }
+
+    .input-group h3 {
+      color: #2c3a48;
+      font-size: 0.82rem;
+      font-weight: 800;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+    }
+
+    .field {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(112px, 138px);
+      gap: 12px;
+      align-items: center;
+    }
+
+    label {
+      color: var(--ink);
+      font-size: 0.9rem;
+      font-weight: 650;
+    }
+
+    input[type="number"] {
+      width: 100%;
+      min-height: 40px;
+      border: 1px solid #c6d1dc;
+      border-radius: var(--radius);
+      color: var(--ink);
+      background: #fbfdff;
+      padding: 8px 10px;
+      text-align: right;
+    }
+
+    input[type="number"]:focus {
+      outline: 3px solid rgba(15, 139, 141, 0.18);
+      border-color: var(--teal);
+      background: #ffffff;
+    }
+
+    .calculated-total {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel-soft);
+    }
+
+    .calculated-total span {
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-weight: 750;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .calculated-total output {
+      color: var(--ink);
+      font-size: 1.1rem;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .workbench {
+      display: grid;
+      gap: 18px;
+    }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .kpi-card {
+      min-height: 132px;
+      padding: 16px;
+      display: grid;
+      align-content: space-between;
+      gap: 10px;
+      border-left-width: 5px;
+    }
+
+    .kpi-card[data-tone="blue"] {
+      border-left-color: var(--blue);
+    }
+
+    .kpi-card[data-tone="green"] {
+      border-left-color: var(--green);
+    }
+
+    .kpi-card[data-tone="amber"] {
+      border-left-color: var(--amber);
+    }
+
+    .kpi-card[data-tone="teal"] {
+      border-left-color: var(--teal);
+    }
+
+    .kpi-card[data-tone="red"] {
+      border-left-color: var(--red);
+    }
+
+    .kpi-label {
+      color: var(--muted);
+      font-size: 0.75rem;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .kpi-value {
+      color: var(--ink);
+      font-size: clamp(1.2rem, 1.9vw, 1.9rem);
+      font-weight: 800;
+      line-height: 1.1;
+      overflow-wrap: anywhere;
+    }
+
+    .kpi-context {
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+
+    .positive {
+      color: #14734a;
+    }
+
+    .negative {
+      color: var(--red);
+    }
+
+    .charts-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .chart-panel {
+      min-height: 360px;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+    }
+
+    .chart-panel.wide {
+      grid-column: 1 / -1;
+    }
+
+    .chart-wrap {
+      position: relative;
+      height: 285px;
+      min-height: 285px;
+    }
+
+    .chart-panel.wide .chart-wrap {
+      height: 320px;
+    }
+
+    .chart-fallback {
+      display: none;
+      min-height: 250px;
+      place-items: center;
+      border: 1px dashed var(--line-strong);
+      border-radius: var(--radius);
+      color: var(--muted);
+      background: var(--panel-soft);
+      text-align: center;
+      padding: 24px;
+    }
+
+    .charts-unavailable canvas {
+      display: none;
+    }
+
+    .charts-unavailable .chart-fallback {
+      display: grid;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #ffffff;
+    }
+
+    table {
+      width: 100%;
+      min-width: 980px;
+      border-collapse: collapse;
+    }
+
+    th,
+    td {
+      border-bottom: 1px solid var(--line);
+      padding: 12px;
+      vertical-align: top;
+      text-align: right;
+    }
+
+    th {
+      background: #eef3f7;
+      color: #344452;
+      font-size: 0.75rem;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    tbody th {
+      background: #ffffff;
+      color: var(--ink);
+      font-size: 0.95rem;
+      letter-spacing: 0;
+      text-align: left;
+      text-transform: none;
+    }
+
+    tr:last-child th,
+    tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .matrix-cell {
+      display: grid;
+      gap: 5px;
+      min-width: 188px;
+      text-align: left;
+    }
+
+    .matrix-line {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+
+    .matrix-line strong {
+      color: var(--ink);
+      font-size: 0.82rem;
+      font-weight: 750;
+      white-space: nowrap;
+    }
+
+    .roi-pill {
+      display: inline-flex;
+      justify-content: center;
+      min-width: 72px;
+      border-radius: 999px;
+      padding: 3px 8px;
+      font-size: 0.78rem;
+      font-weight: 800;
+    }
+
+    .roi-pill.positive {
+      background: var(--soft-green);
+      color: #14734a;
+    }
+
+    .roi-pill.negative {
+      background: var(--soft-red);
+      color: var(--red);
+    }
+
+    .roi-pill.neutral {
+      background: var(--soft-amber);
+      color: #7a5812;
+    }
+
+    @media (max-width: 1200px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .inputs-panel {
+        position: static;
+      }
+
+      .kpi-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 860px) {
+      .shell {
+        padding: 16px;
+      }
+
+      .top-band .shell,
+      .scenario-bar,
+      .field {
+        grid-template-columns: 1fr;
+      }
+
+      .scenario-bar {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .scenario-actions {
+        justify-content: flex-start;
+      }
+
+      .answer-card {
+        width: 100%;
+      }
+
+      .charts-grid,
+      .kpi-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .chart-panel,
+      .chart-panel.wide {
+        min-height: 340px;
+      }
+
+      .chart-wrap,
+      .chart-panel.wide .chart-wrap {
+        height: 250px;
+        min-height: 250px;
+      }
+
+      input[type="number"] {
+        text-align: left;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="top-band">
+    <div class="shell">
+      <div>
+        <div class="eyebrow">Executive ROI Model</div>
+        <h1>AI Agent Platform ROI Dashboard</h1>
+        <p class="subtitle">Activity-based investment model for adoption, interaction volume, platform costs, labor savings, and break-even time.</p>
+      </div>
+      <div class="answer-card">
+        <span>Break-even answer</span>
+        <strong id="heroBreakEven">0 min</strong>
+        <p>saved per active employee per week</p>
+      </div>
+    </div>
+  </header>
+
+  <main class="shell page">
+    <section class="scenario-bar" aria-label="Preset scenarios">
+      <div class="scenario-title">Preset Scenarios</div>
+      <div class="scenario-actions">
+        <button class="scenario-button" type="button" data-scenario="pilot">Small Pilot</button>
+        <button class="scenario-button" type="button" data-scenario="department">Department Rollout</button>
+        <button class="scenario-button" type="button" data-scenario="enterprise">Enterprise Deployment</button>
+      </div>
+    </section>
+
+    <section class="layout">
+      <aside class="panel inputs-panel" aria-label="ROI model inputs">
+        <div class="panel-header">
+          <h2>Model Inputs</h2>
+          <p>Workforce, usage, and fixed platform costs.</p>
+        </div>
+        <div class="panel-body">
+          <div class="input-group">
+            <h3>Workforce</h3>
+            <div class="field">
+              <label for="workers">Number of workers</label>
+              <input id="workers" data-input="workers" type="number" min="0" step="1" value="100">
+            </div>
+            <div class="field">
+              <label for="adoptionRate">Adoption rate (%)</label>
+              <input id="adoptionRate" data-input="adoptionRate" type="number" min="0" max="100" step="1" value="70">
+            </div>
+            <div class="field">
+              <label for="hourlyCost">Average hourly employee cost ($/hour)</label>
+              <input id="hourlyCost" data-input="hourlyCost" type="number" min="0" step="1" value="75">
+            </div>
+            <div class="field">
+              <label for="minutesSaved">Time saved per worker per week (minutes)</label>
+              <input id="minutesSaved" data-input="minutesSaved" type="number" min="0" step="1" value="45">
+            </div>
+          </div>
+
+          <div class="input-group">
+            <h3>Platform Usage</h3>
+            <div class="field">
+              <label for="interactionsPerDay">Interactions per active user per day</label>
+              <input id="interactionsPerDay" data-input="interactionsPerDay" type="number" min="0" step="1" value="10">
+            </div>
+            <div class="field">
+              <label for="workingDays">Working days per month</label>
+              <input id="workingDays" data-input="workingDays" type="number" min="0" max="31" step="1" value="21">
+            </div>
+            <div class="field">
+              <label for="costPerInteraction">Average cost per interaction ($)</label>
+              <input id="costPerInteraction" data-input="costPerInteraction" type="number" min="0" step="0.01" value="0.10">
+            </div>
+          </div>
+
+          <div class="input-group">
+            <h3>Fixed Platform Costs</h3>
+            <div class="field">
+              <label for="foundryIq">Foundry IQ monthly cost ($)</label>
+              <input id="foundryIq" data-input="foundryIq" type="number" min="0" step="100" value="5850">
+            </div>
+            <div class="field">
+              <label for="monitoring">Monitoring / Logging monthly cost ($)</label>
+              <input id="monitoring" data-input="monitoring" type="number" min="0" step="50" value="450">
+            </div>
+            <div class="calculated-total">
+              <span>Total fixed monthly cost</span>
+              <output id="fixedMonthlyCost">$0</output>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <div class="workbench">
+        <section class="kpi-grid" aria-label="Key performance indicators">
+          <article class="kpi-card" data-tone="amber">
+            <div class="kpi-label">Monthly Platform Cost</div>
+            <div id="monthlyPlatformCostKpi" class="kpi-value">$0</div>
+            <div id="costMixContext" class="kpi-context">$0 fixed, $0 variable</div>
+          </article>
+          <article class="kpi-card" data-tone="amber">
+            <div class="kpi-label">Annual Platform Cost</div>
+            <div id="annualPlatformCostKpi" class="kpi-value">$0</div>
+            <div class="kpi-context">12 month run rate</div>
+          </article>
+          <article class="kpi-card" data-tone="blue">
+            <div class="kpi-label">Monthly Value Created</div>
+            <div id="monthlyValueKpi" class="kpi-value">$0</div>
+            <div id="monthlyHoursContext" class="kpi-context">0 monthly hours saved</div>
+          </article>
+          <article class="kpi-card" data-tone="blue">
+            <div class="kpi-label">Annual Value Created</div>
+            <div id="annualValueKpi" class="kpi-value">$0</div>
+            <div id="annualHoursContext" class="kpi-context">0 annual hours saved</div>
+          </article>
+          <article class="kpi-card" data-tone="green">
+            <div class="kpi-label">Monthly Net Benefit</div>
+            <div id="monthlyNetBenefitKpi" class="kpi-value">$0</div>
+            <div class="kpi-context">value minus platform cost</div>
+          </article>
+          <article class="kpi-card" data-tone="green">
+            <div class="kpi-label">Annual Net Benefit</div>
+            <div id="annualNetBenefitKpi" class="kpi-value">$0</div>
+            <div class="kpi-context">annual value minus annual cost</div>
+          </article>
+          <article class="kpi-card" data-tone="teal">
+            <div class="kpi-label">ROI %</div>
+            <div id="roiKpi" class="kpi-value">0%</div>
+            <div id="effectiveWorkersContext" class="kpi-context">0 effective workers</div>
+          </article>
+          <article class="kpi-card" data-tone="red">
+            <div class="kpi-label">Break-Even Minutes Saved Per Worker Per Week</div>
+            <div id="breakEvenKpi" class="kpi-value">0 min</div>
+            <div class="kpi-context">minimum weekly time saving</div>
+          </article>
+          <article class="kpi-card" data-tone="teal">
+            <div class="kpi-label">Monthly Interactions</div>
+            <div id="monthlyInteractionsKpi" class="kpi-value">0</div>
+            <div id="usageContext" class="kpi-context">0 per active user per day</div>
+          </article>
+        </section>
+
+        <section class="charts-grid" aria-label="Interactive charts">
+          <article class="panel chart-panel">
+            <div class="panel-header">
+              <h2>ROI vs Number of Workers</h2>
+            </div>
+            <div class="panel-body">
+              <div class="chart-wrap">
+                <canvas id="workersChart" aria-label="ROI versus number of workers"></canvas>
+                <div class="chart-fallback">Chart.js is required for this chart.</div>
+              </div>
+            </div>
+          </article>
+
+          <article class="panel chart-panel">
+            <div class="panel-header">
+              <h2>ROI vs Time Saved Per Week</h2>
+            </div>
+            <div class="panel-body">
+              <div class="chart-wrap">
+                <canvas id="minutesChart" aria-label="ROI versus weekly time saved"></canvas>
+                <div class="chart-fallback">Chart.js is required for this chart.</div>
+              </div>
+            </div>
+          </article>
+
+          <article class="panel chart-panel">
+            <div class="panel-header">
+              <h2>ROI vs Cost Per Interaction</h2>
+            </div>
+            <div class="panel-body">
+              <div class="chart-wrap">
+                <canvas id="interactionCostChart" aria-label="ROI versus cost per interaction"></canvas>
+                <div class="chart-fallback">Chart.js is required for this chart.</div>
+              </div>
+            </div>
+          </article>
+
+          <article class="panel chart-panel">
+            <div class="panel-header">
+              <h2>Monthly Cost Breakdown</h2>
+            </div>
+            <div class="panel-body">
+              <div class="chart-wrap">
+                <canvas id="costBreakdownChart" aria-label="Monthly fixed and variable platform cost"></canvas>
+                <div class="chart-fallback">Chart.js is required for this chart.</div>
+              </div>
+            </div>
+          </article>
+
+          <article class="panel chart-panel wide">
+            <div class="panel-header">
+              <h2>Platform Cost vs User Adoption</h2>
+            </div>
+            <div class="panel-body">
+              <div class="chart-wrap">
+                <canvas id="adoptionCostChart" aria-label="Monthly platform cost versus user adoption"></canvas>
+                <div class="chart-fallback">Chart.js is required for this chart.</div>
+              </div>
+            </div>
+          </article>
+        </section>
+
+        <section class="panel" aria-label="Sensitivity analysis table">
+          <div class="panel-header">
+            <h2>Sensitivity Analysis</h2>
+            <p>Workers by minutes saved per week.</p>
+          </div>
+          <div class="panel-body">
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Workers</th>
+                    <th>15 min/week</th>
+                    <th>30 min/week</th>
+                    <th>60 min/week</th>
+                    <th>120 min/week</th>
+                  </tr>
+                </thead>
+                <tbody id="sensitivityBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const WEEKS_PER_MONTH = 52 / 12;
+    const WEEKS_PER_YEAR = 52;
+    const MONTHS_PER_YEAR = 12;
+
+    const PRESETS = {
+      pilot: {
+        workers: 25,
+        adoptionRate: 50,
+        interactionsPerDay: 5,
+        costPerInteraction: 0.05
+      },
+      department: {
+        workers: 100,
+        adoptionRate: 70,
+        interactionsPerDay: 10,
+        costPerInteraction: 0.10
+      },
+      enterprise: {
+        workers: 500,
+        adoptionRate: 80,
+        interactionsPerDay: 20,
+        costPerInteraction: 0.15
+      }
+    };
+
+    const inputElements = Array.from(document.querySelectorAll("[data-input]")).reduce((accumulator, input) => {
+      accumulator[input.dataset.input] = input;
+      return accumulator;
+    }, {});
+
+    const output = {
+      heroBreakEven: document.getElementById("heroBreakEven"),
+      fixedMonthlyCost: document.getElementById("fixedMonthlyCost"),
+      monthlyPlatformCostKpi: document.getElementById("monthlyPlatformCostKpi"),
+      annualPlatformCostKpi: document.getElementById("annualPlatformCostKpi"),
+      monthlyValueKpi: document.getElementById("monthlyValueKpi"),
+      annualValueKpi: document.getElementById("annualValueKpi"),
+      monthlyNetBenefitKpi: document.getElementById("monthlyNetBenefitKpi"),
+      annualNetBenefitKpi: document.getElementById("annualNetBenefitKpi"),
+      roiKpi: document.getElementById("roiKpi"),
+      breakEvenKpi: document.getElementById("breakEvenKpi"),
+      monthlyInteractionsKpi: document.getElementById("monthlyInteractionsKpi"),
+      costMixContext: document.getElementById("costMixContext"),
+      monthlyHoursContext: document.getElementById("monthlyHoursContext"),
+      annualHoursContext: document.getElementById("annualHoursContext"),
+      effectiveWorkersContext: document.getElementById("effectiveWorkersContext"),
+      usageContext: document.getElementById("usageContext"),
+      sensitivityBody: document.getElementById("sensitivityBody")
+    };
+
+    const charts = {};
+
+    const moneyFormatter = new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      maximumFractionDigits: 0
+    });
+
+    const compactMoneyFormatter = new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      notation: "compact",
+      maximumFractionDigits: 1
+    });
+
+    const numberFormatter = new Intl.NumberFormat("en-US", {
+      maximumFractionDigits: 1
+    });
+
+    const wholeNumberFormatter = new Intl.NumberFormat("en-US", {
+      maximumFractionDigits: 0
+    });
+
+    function readInput(name) {
+      const value = Number.parseFloat(inputElements[name].value);
+      return Number.isFinite(value) ? value : 0;
+    }
+
+    function clamp(value, minimum, maximum) {
+      return Math.min(Math.max(value, minimum), maximum);
+    }
+
+    function getAssumptions(overrides = {}) {
+      return {
+        workers: Math.max(0, readInput("workers")),
+        adoptionRate: clamp(readInput("adoptionRate") / 100, 0, 1),
+        hourlyCost: Math.max(0, readInput("hourlyCost")),
+        minutesSaved: Math.max(0, readInput("minutesSaved")),
+        interactionsPerDay: Math.max(0, readInput("interactionsPerDay")),
+        workingDays: clamp(readInput("workingDays"), 0, 31),
+        costPerInteraction: Math.max(0, readInput("costPerInteraction")),
+        foundryIq: Math.max(0, readInput("foundryIq")),
+        monitoring: Math.max(0, readInput("monitoring")),
+        ...overrides
+      };
+    }
+
+    function calculate(assumptions) {
+      const fixedMonthlyCost = assumptions.foundryIq + assumptions.monitoring;
+
+      const effectiveWorkers = assumptions.workers * assumptions.adoptionRate;
+      const monthlyInteractions = effectiveWorkers
+        * assumptions.interactionsPerDay
+        * assumptions.workingDays;
+      const variableMonthlyCost = monthlyInteractions * assumptions.costPerInteraction;
+      const totalMonthlyPlatformCost = fixedMonthlyCost + variableMonthlyCost;
+
+      const weeklyHoursSaved = effectiveWorkers * (assumptions.minutesSaved / 60);
+      const monthlyHoursSaved = weeklyHoursSaved * WEEKS_PER_MONTH;
+      const annualHoursSaved = weeklyHoursSaved * WEEKS_PER_YEAR;
+
+      const monthlyValueCreated = monthlyHoursSaved * assumptions.hourlyCost;
+      const annualValueCreated = annualHoursSaved * assumptions.hourlyCost;
+      const monthlyNetBenefit = monthlyValueCreated - totalMonthlyPlatformCost;
+      const annualPlatformCost = totalMonthlyPlatformCost * MONTHS_PER_YEAR;
+      const annualNetBenefit = annualValueCreated - annualPlatformCost;
+      const roi = annualPlatformCost > 0
+        ? (annualNetBenefit / annualPlatformCost) * 100
+        : null;
+
+      const breakEvenDenominator = effectiveWorkers
+        * assumptions.hourlyCost
+        * WEEKS_PER_MONTH;
+      const breakEvenHours = breakEvenDenominator > 0
+        ? totalMonthlyPlatformCost / breakEvenDenominator
+        : null;
+      const breakEvenMinutes = breakEvenHours === null ? null : breakEvenHours * 60;
+
+      return {
+        effectiveWorkers,
+        monthlyInteractions,
+        variableMonthlyCost,
+        fixedMonthlyCost,
+        totalMonthlyPlatformCost,
+        weeklyHoursSaved,
+        monthlyHoursSaved,
+        annualHoursSaved,
+        monthlyValueCreated,
+        annualValueCreated,
+        monthlyNetBenefit,
+        annualPlatformCost,
+        annualNetBenefit,
+        roi,
+        breakEvenHours,
+        breakEvenMinutes
+      };
+    }
+
+    function formatMoney(value) {
+      return moneyFormatter.format(value);
+    }
+
+    function formatCompactMoney(value) {
+      return compactMoneyFormatter.format(value);
+    }
+
+    function formatNumber(value) {
+      return numberFormatter.format(value);
+    }
+
+    function formatWholeNumber(value) {
+      return wholeNumberFormatter.format(value);
+    }
+
+    function formatPercent(value) {
+      if (value === null || !Number.isFinite(value)) {
+        return "N/A";
+      }
+      return `${numberFormatter.format(value)}%`;
+    }
+
+    function formatMinutes(value) {
+      if (value === null || !Number.isFinite(value)) {
+        return "N/A";
+      }
+
+      const formatted = value >= 10 ? formatWholeNumber(value) : formatNumber(value);
+      return `${formatted} min`;
+    }
+
+    function setSignedClass(element, value) {
+      element.classList.toggle("positive", Number.isFinite(value) && value > 0);
+      element.classList.toggle("negative", Number.isFinite(value) && value < 0);
+    }
+
+    function roiTone(value) {
+      if (value === null || !Number.isFinite(value)) {
+        return "neutral";
+      }
+      if (value > 0) {
+        return "positive";
+      }
+      if (value < 0) {
+        return "negative";
+      }
+      return "neutral";
+    }
+
+    function uniqueSorted(values) {
+      return [...new Set(values)]
+        .filter((value) => Number.isFinite(value) && value >= 0)
+        .sort((a, b) => a - b);
+    }
+
+    function createLineChart(canvasId, label, color, yMode) {
+      const canvas = document.getElementById(canvasId);
+
+      return new Chart(canvas, {
+        type: "line",
+        data: {
+          labels: [],
+          datasets: [{
+            label,
+            data: [],
+            borderColor: color,
+            backgroundColor: `${color}20`,
+            pointBackgroundColor: color,
+            pointBorderColor: "#ffffff",
+            pointBorderWidth: 2,
+            pointRadius: 3,
+            pointHoverRadius: 6,
+            borderWidth: 3,
+            fill: true,
+            tension: 0.32
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: {
+            intersect: false,
+            mode: "index"
+          },
+          plugins: {
+            legend: {
+              display: false
+            },
+            tooltip: {
+              callbacks: {
+                label: (context) => {
+                  const value = context.parsed.y;
+                  const formatted = yMode === "money" ? formatMoney(value) : formatPercent(value);
+                  return `${context.dataset.label}: ${formatted}`;
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              grid: {
+                display: false
+              },
+              ticks: {
+                maxRotation: 0,
+                autoSkip: true
+              }
+            },
+            y: {
+              ticks: {
+                callback: (value) => yMode === "money" ? formatCompactMoney(value) : `${value}%`
+              },
+              grid: {
+                color: "rgba(100, 112, 132, 0.16)"
+              }
+            }
+          }
+        }
+      });
+    }
+
+    function createDoughnutChart(canvasId) {
+      return new Chart(document.getElementById(canvasId), {
+        type: "doughnut",
+        data: {
+          labels: ["Fixed Cost", "Variable Cost"],
+          datasets: [{
+            data: [0, 0],
+            backgroundColor: ["#2f6fbb", "#0f8b8d"],
+            borderColor: "#ffffff",
+            borderWidth: 3,
+            hoverOffset: 8
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: "62%",
+          plugins: {
+            legend: {
+              position: "bottom",
+              labels: {
+                boxWidth: 12,
+                boxHeight: 12,
+                usePointStyle: true
+              }
+            },
+            tooltip: {
+              callbacks: {
+                label: (context) => {
+                  const total = context.dataset.data.reduce((sum, value) => sum + value, 0);
+                  const share = total > 0 ? (context.parsed / total) * 100 : 0;
+                  return `${context.label}: ${formatMoney(context.parsed)} (${formatNumber(share)}%)`;
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    function initializeCharts() {
+      if (!window.Chart) {
+        document.documentElement.classList.add("charts-unavailable");
+        return;
+      }
+
+      Chart.defaults.font.family = '"Segoe UI", Arial, sans-serif';
+      Chart.defaults.color = "#647084";
+      Chart.defaults.plugins.tooltip.backgroundColor = "#17202a";
+      Chart.defaults.plugins.tooltip.padding = 12;
+      Chart.defaults.plugins.tooltip.cornerRadius = 6;
+      Chart.defaults.plugins.tooltip.titleFont = { weight: "700" };
+
+      charts.workers = createLineChart("workersChart", "ROI", "#2f6fbb", "percent");
+      charts.minutes = createLineChart("minutesChart", "ROI", "#0f8b8d", "percent");
+      charts.interactionCost = createLineChart("interactionCostChart", "ROI", "#b7791f", "percent");
+      charts.costBreakdown = createDoughnutChart("costBreakdownChart");
+      charts.adoptionCost = createLineChart("adoptionCostChart", "Monthly Platform Cost", "#1b8f5a", "money");
+    }
+
+    function updateLineChart(chart, labels, data) {
+      if (!chart) {
+        return;
+      }
+
+      chart.data.labels = labels;
+      chart.data.datasets[0].data = data;
+      chart.update();
+    }
+
+    function updateCharts(assumptions, result) {
+      const workerValues = uniqueSorted([25, 50, 100, 250, 500, 750, 1000, assumptions.workers]);
+      const minuteValues = uniqueSorted([0, 15, 30, 45, 60, 90, 120, 180, 240, assumptions.minutesSaved]);
+      const interactionCostValues = uniqueSorted([0, 0.01, 0.02, 0.05, 0.10, 0.15, 0.25, 0.50, assumptions.costPerInteraction]);
+      const adoptionValues = uniqueSorted([0, 10, 25, 50, 70, 80, 90, 100, Math.round(assumptions.adoptionRate * 100)]);
+
+      updateLineChart(
+        charts.workers,
+        workerValues.map((workers) => `${workers}`),
+        workerValues.map((workers) => calculate({ ...assumptions, workers }).roi)
+      );
+
+      updateLineChart(
+        charts.minutes,
+        minuteValues.map((minutes) => `${minutes}`),
+        minuteValues.map((minutesSaved) => calculate({ ...assumptions, minutesSaved }).roi)
+      );
+
+      updateLineChart(
+        charts.interactionCost,
+        interactionCostValues.map((cost) => `$${cost.toFixed(2)}`),
+        interactionCostValues.map((costPerInteraction) => calculate({ ...assumptions, costPerInteraction }).roi)
+      );
+
+      if (charts.costBreakdown) {
+        charts.costBreakdown.data.datasets[0].data = [
+          result.fixedMonthlyCost,
+          result.variableMonthlyCost
+        ];
+        charts.costBreakdown.update();
+      }
+
+      updateLineChart(
+        charts.adoptionCost,
+        adoptionValues.map((adoption) => `${adoption}%`),
+        adoptionValues.map((adoption) => calculate({ ...assumptions, adoptionRate: adoption / 100 }).totalMonthlyPlatformCost)
+      );
+    }
+
+    function renderSensitivityTable(assumptions) {
+      const workerCounts = [25, 50, 100, 250, 500];
+      const minuteValues = [15, 30, 60, 120];
+
+      output.sensitivityBody.innerHTML = workerCounts.map((workers) => {
+        const cells = minuteValues.map((minutesSaved) => {
+          const scenario = calculate({ ...assumptions, workers, minutesSaved });
+          const roiClass = roiTone(scenario.roi);
+
+          return `
+            <td>
+              <div class="matrix-cell">
+                <div class="matrix-line"><span>Monthly Value</span><strong>${formatMoney(scenario.monthlyValueCreated)}</strong></div>
+                <div class="matrix-line"><span>Monthly Cost</span><strong>${formatMoney(scenario.totalMonthlyPlatformCost)}</strong></div>
+                <div class="matrix-line"><span>Monthly Net Benefit</span><strong class="${scenario.monthlyNetBenefit >= 0 ? "positive" : "negative"}">${formatMoney(scenario.monthlyNetBenefit)}</strong></div>
+                <div class="matrix-line"><span>ROI</span><span class="roi-pill ${roiClass}">${formatPercent(scenario.roi)}</span></div>
+              </div>
+            </td>
+          `;
+        }).join("");
+
+        return `
+          <tr>
+            <th scope="row">${workers}</th>
+            ${cells}
+          </tr>
+        `;
+      }).join("");
+    }
+
+    function updateDashboard() {
+      const assumptions = getAssumptions();
+      const result = calculate(assumptions);
+
+      output.heroBreakEven.textContent = formatMinutes(result.breakEvenMinutes);
+      output.fixedMonthlyCost.textContent = formatMoney(result.fixedMonthlyCost);
+      output.monthlyPlatformCostKpi.textContent = formatMoney(result.totalMonthlyPlatformCost);
+      output.annualPlatformCostKpi.textContent = formatMoney(result.annualPlatformCost);
+      output.monthlyValueKpi.textContent = formatMoney(result.monthlyValueCreated);
+      output.annualValueKpi.textContent = formatMoney(result.annualValueCreated);
+      output.monthlyNetBenefitKpi.textContent = formatMoney(result.monthlyNetBenefit);
+      output.annualNetBenefitKpi.textContent = formatMoney(result.annualNetBenefit);
+      output.roiKpi.textContent = formatPercent(result.roi);
+      output.breakEvenKpi.textContent = formatMinutes(result.breakEvenMinutes);
+      output.monthlyInteractionsKpi.textContent = formatWholeNumber(result.monthlyInteractions);
+
+      output.costMixContext.textContent = `${formatMoney(result.fixedMonthlyCost)} fixed, ${formatMoney(result.variableMonthlyCost)} variable`;
+      output.monthlyHoursContext.textContent = `${formatNumber(result.monthlyHoursSaved)} monthly hours saved`;
+      output.annualHoursContext.textContent = `${formatNumber(result.annualHoursSaved)} annual hours saved`;
+      output.effectiveWorkersContext.textContent = `${formatNumber(result.effectiveWorkers)} effective workers`;
+      output.usageContext.textContent = `${formatNumber(assumptions.interactionsPerDay)} per active user per day`;
+
+      setSignedClass(output.monthlyNetBenefitKpi, result.monthlyNetBenefit);
+      setSignedClass(output.annualNetBenefitKpi, result.annualNetBenefit);
+      setSignedClass(output.roiKpi, result.roi);
+
+      updateCharts(assumptions, result);
+      renderSensitivityTable(assumptions);
+    }
+
+    function applyPreset(name) {
+      const preset = PRESETS[name];
+      if (!preset) {
+        return;
+      }
+
+      Object.entries(preset).forEach(([key, value]) => {
+        inputElements[key].value = value;
+      });
+
+      document.querySelectorAll("[data-scenario]").forEach((button) => {
+        button.classList.toggle("is-active", button.dataset.scenario === name);
+      });
+
+      updateDashboard();
+    }
+
+    Object.values(inputElements).forEach((input) => {
+      input.addEventListener("input", () => {
+        document.querySelectorAll("[data-scenario]").forEach((button) => {
+          button.classList.remove("is-active");
+        });
+        updateDashboard();
+      });
+    });
+
+    document.querySelectorAll("[data-scenario]").forEach((button) => {
+      button.addEventListener("click", () => applyPreset(button.dataset.scenario));
+    });
+
+    initializeCharts();
+    updateDashboard();
+  </script>
+</body>
+</html>
