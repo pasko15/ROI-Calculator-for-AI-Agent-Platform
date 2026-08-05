@@ -111,7 +111,6 @@ const output = {
   tokenGuidanceBody: document.getElementById("tokenGuidanceBody"),
   costByAgentChart: document.getElementById("costByAgentChart"),
   valueCostChart: document.getElementById("valueCostChart"),
-  roiBridgeChart: document.getElementById("roiBridgeChart"),
   agentConfigDialog: document.getElementById("agentConfigDialog"),
   agentConfigTitle: document.getElementById("agentConfigTitle")
 };
@@ -253,6 +252,10 @@ function formatMoney(value) {
 
 function formatPreciseMoney(value) {
   return Number.isFinite(value) ? preciseMoneyFormatter.format(value) : "N/A";
+}
+
+function formatInteractionCost(value) {
+  return Number.isFinite(value) ? `$${value.toFixed(4)}` : "N/A";
 }
 
 function formatCompactMoney(value) {
@@ -579,7 +582,7 @@ function renderModelCosts(modelMix, summary) {
           <td>${formatWholeNumber(readInput(`${prefix}MonthlyInteractions`))}</td>
           <td>${formatWholeNumber(readInput(`${prefix}InputTokens`))}</td>
           <td>${formatWholeNumber(readInput(`${prefix}OutputTokens`))}</td>
-          <td>${formatPreciseMoney(model.cost_per_interaction)}</td>
+          <td>${formatInteractionCost(model.cost_per_interaction)}</td>
           <td class="cost-cell">${formatMoney(model.monthly_cost)}</td>
         </tr>
       `;
@@ -679,36 +682,9 @@ function renderValueCostChart(summary) {
   `;
 }
 
-function renderRoiBridge(summary) {
-  if (!output.roiBridgeChart) {
-    return;
-  }
-
-  const monthlyValue = summary.monthly_value || 0;
-  const monthlyCost = summary.monthly_platform_cost || 0;
-  const monthlyNet = summary.monthly_net_benefit || 0;
-  const maxValue = Math.max(Math.abs(monthlyValue), Math.abs(monthlyCost), Math.abs(monthlyNet), 1);
-  const rows = [
-    { label: "Value", value: monthlyValue, className: "" },
-    { label: "Cost", value: monthlyCost, className: "cost" },
-    { label: "Net", value: monthlyNet, className: `net ${monthlyNet < 0 ? "negative" : ""}` }
-  ];
-
-  output.roiBridgeChart.innerHTML = rows.map((row) => `
-    <div class="bridge-row">
-      <div class="bridge-label">${row.label}</div>
-      <div class="bridge-track">
-        <div class="bridge-fill ${row.className}" style="--bar-width:${clampPercent((Math.abs(row.value) / maxValue) * 100)}%"></div>
-      </div>
-      <div class="bridge-value">${formatMoney(row.value)}</div>
-    </div>
-  `).join("");
-}
-
 function renderInsightCharts(data) {
   renderCostByAgent(data.model_mix || []);
   renderValueCostChart(data.summary);
-  renderRoiBridge(data.summary);
 }
 
 function renderTokenGuidance() {

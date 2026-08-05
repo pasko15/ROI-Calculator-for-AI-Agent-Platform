@@ -254,8 +254,12 @@
     .scenario-actions {
       display: flex;
       flex-wrap: wrap;
-      gap: var(--space-2);
+      gap: 3px;
       justify-content: flex-end;
+      padding: 3px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.82);
     }
 
     .scenario-stack {
@@ -271,10 +275,10 @@
 
     .scenario-button {
       min-height: 34px;
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
+      border: 0;
+      border-radius: 999px;
       padding: 6px 11px;
-      background: #ffffff;
+      background: transparent;
       color: var(--muted);
       cursor: pointer;
       font-size: 0.82rem;
@@ -285,9 +289,12 @@
     .scenario-button:focus-visible,
     .scenario-button.is-active {
       outline: 0;
-      border-color: var(--accent);
       color: var(--accent);
       background: #edfafa;
+    }
+
+    .scenario-button.is-active {
+      box-shadow: 0 1px 5px rgba(21, 111, 124, 0.14);
     }
 
     .kpi-grid {
@@ -904,7 +911,7 @@
 
     .insight-grid {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: var(--space-4);
     }
 
@@ -964,17 +971,17 @@
     }
 
     .bar-track {
-      height: 10px;
+      height: 16px;
       overflow: hidden;
       border-radius: 999px;
-      background: #edf3f5;
+      background: #dfe9ed;
     }
 
     .bar-fill {
       width: var(--bar-width, 0%);
       height: 100%;
       border-radius: inherit;
-      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      background: linear-gradient(90deg, #0f5e69, #25a0a8);
       transition: width 180ms ease;
     }
 
@@ -983,7 +990,7 @@
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: var(--space-4);
       align-items: end;
-      min-height: 150px;
+      min-height: 170px;
       padding-top: var(--space-2);
     }
 
@@ -991,7 +998,7 @@
       display: grid;
       gap: var(--space-2);
       align-items: end;
-      min-height: 150px;
+      min-height: 170px;
     }
 
     .column-bar {
@@ -1018,61 +1025,6 @@
     .column-value {
       font-size: 1rem;
       font-weight: 760;
-    }
-
-    .bridge-list {
-      display: grid;
-      gap: var(--space-3);
-    }
-
-    .bridge-row {
-      display: grid;
-      grid-template-columns: 92px minmax(0, 1fr) auto;
-      gap: var(--space-3);
-      align-items: center;
-    }
-
-    .bridge-label {
-      color: var(--muted);
-      font-size: 0.72rem;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-    }
-
-    .bridge-track {
-      height: 12px;
-      overflow: hidden;
-      border-radius: 999px;
-      background: #edf3f5;
-    }
-
-    .bridge-fill {
-      width: var(--bar-width, 0%);
-      height: 100%;
-      border-radius: inherit;
-      background: var(--accent);
-      transition: width 180ms ease;
-    }
-
-    .bridge-fill.cost {
-      background: #687586;
-    }
-
-    .bridge-fill.net {
-      background: var(--positive);
-    }
-
-    .bridge-fill.net.negative {
-      background: var(--negative);
-    }
-
-    .bridge-value {
-      min-width: 74px;
-      text-align: right;
-      font-size: 0.82rem;
-      font-weight: 760;
-      white-space: nowrap;
     }
 
     @keyframes button-ghost {
@@ -1350,16 +1302,6 @@
             <div id="valueCostChart" class="comparison-chart"></div>
           </article>
 
-          <article class="insight-card blueprint">
-            <div class="insight-head">
-              <div>
-                <h3>ROI bridge</h3>
-                <p class="insight-note">Shows value, cost, and net monthly benefit together.</p>
-              </div>
-              <span class="info-icon" tabindex="0" data-tip="Net monthly benefit equals monthly value minus total monthly costs.">i</span>
-            </div>
-            <div id="roiBridgeChart" class="bridge-list"></div>
-          </article>
         </section>
 
         <div id="usageContext" hidden>0 per active user per day</div>
