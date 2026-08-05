@@ -409,7 +409,39 @@ function renderCatalog() {
   }
 }
 
-function openCatalog() {
+function setDialogLaunch(backdrop, trigger) {
+  const rect = trigger?.getBoundingClientRect();
+  if (!rect) {
+    backdrop.style.removeProperty("--dialog-from-x");
+    backdrop.style.removeProperty("--dialog-from-y");
+    backdrop.style.removeProperty("--ghost-left");
+    backdrop.style.removeProperty("--ghost-top");
+    backdrop.style.removeProperty("--ghost-width");
+    backdrop.style.removeProperty("--ghost-height");
+    backdrop.style.removeProperty("--ghost-travel-x");
+    backdrop.style.removeProperty("--ghost-travel-y");
+    return;
+  }
+
+  const originX = rect.left + rect.width / 2;
+  const originY = rect.top + rect.height / 2;
+  const targetX = window.innerWidth / 2;
+  const targetY = window.innerHeight / 2;
+
+  backdrop.style.setProperty("--dialog-from-x", `${originX - targetX}px`);
+  backdrop.style.setProperty("--dialog-from-y", `${originY - targetY}px`);
+  backdrop.style.setProperty("--ghost-left", `${originX}px`);
+  backdrop.style.setProperty("--ghost-top", `${originY}px`);
+  backdrop.style.setProperty("--ghost-width", `${Math.max(rect.width, 34)}px`);
+  backdrop.style.setProperty("--ghost-height", `${Math.max(rect.height, 34)}px`);
+  backdrop.style.setProperty("--ghost-travel-x", `${targetX - originX}px`);
+  backdrop.style.setProperty("--ghost-travel-y", `${targetY - originY}px`);
+}
+
+function openCatalog(trigger) {
+  setDialogLaunch(output.modelCatalogDialog, trigger);
+  output.modelCatalogDialog.classList.remove("is-open");
+  void output.modelCatalogDialog.offsetWidth;
   output.modelCatalogDialog.classList.add("is-open");
   output.modelCatalogDialog.setAttribute("aria-hidden", "false");
 }
@@ -544,7 +576,10 @@ function renderTokenGuidance() {
   `).join("");
 }
 
-function openGuidance() {
+function openGuidance(trigger) {
+  setDialogLaunch(output.tokenGuidanceDialog, trigger);
+  output.tokenGuidanceDialog.classList.remove("is-open");
+  void output.tokenGuidanceDialog.offsetWidth;
   output.tokenGuidanceDialog.classList.add("is-open");
   output.tokenGuidanceDialog.setAttribute("aria-hidden", "false");
 }
@@ -668,11 +703,15 @@ document.querySelectorAll("[data-scenario]").forEach((button) => {
   button.addEventListener("click", () => applyPreset(button.dataset.scenario));
 });
 
-document.getElementById("openCatalogButton").addEventListener("click", openCatalog);
+document.getElementById("openCatalogButton").addEventListener("click", (event) => {
+  openCatalog(event.currentTarget);
+});
 document.getElementById("closeCatalogButton").addEventListener("click", closeCatalog);
 document.getElementById("cancelCatalogButton").addEventListener("click", closeCatalog);
 document.getElementById("saveCatalogModelButton").addEventListener("click", saveCatalogModel);
-document.getElementById("openGuidanceButton").addEventListener("click", openGuidance);
+document.getElementById("openGuidanceButton").addEventListener("click", (event) => {
+  openGuidance(event.currentTarget);
+});
 document.getElementById("closeGuidanceButton").addEventListener("click", closeGuidance);
 document.getElementById("cancelGuidanceButton").addEventListener("click", closeGuidance);
 document.getElementById("toggleCatalogRowsButton").addEventListener("click", () => {
