@@ -846,6 +846,23 @@
       font-weight: 800;
     }
 
+    .use-case-sync-note {
+      margin: -2px 0 var(--space-3);
+      padding: 8px 10px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface-soft);
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+
+    .use-case-sync-note.warning {
+      border-color: rgba(165, 101, 22, 0.35);
+      background: rgba(255, 248, 235, 0.86);
+      color: var(--warning);
+    }
+
     .use-case-layout {
       display: grid;
       grid-template-columns: minmax(0, 1.25fr) minmax(260px, 0.75fr);
@@ -1604,6 +1621,7 @@
             <div id="useCaseAnnualHoursSaved" class="use-case-stat-value">0</div>
           </div>
         </div>
+        <div id="useCaseSyncNote" class="use-case-sync-note">Use cases have not been applied to the dashboard yet.</div>
 
         <div class="use-case-layout">
           <section>

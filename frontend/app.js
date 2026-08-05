@@ -47,6 +47,7 @@ const agentNames = {
 };
 
 let useCases = [];
+let useCasesAppliedActiveUsers = null;
 
 const WEEKS_PER_YEAR = 52;
 
@@ -179,6 +180,7 @@ const output = {
   useCaseAnnualTotal: document.getElementById("useCaseAnnualTotal"),
   useCaseMonthlyTotal: document.getElementById("useCaseMonthlyTotal"),
   useCaseAnnualHoursSaved: document.getElementById("useCaseAnnualHoursSaved"),
+  useCaseSyncNote: document.getElementById("useCaseSyncNote"),
   useCaseAgentChoices: document.getElementById("useCaseAgentChoices")
 };
 
@@ -609,6 +611,28 @@ function renderUseCaseAgentChoices() {
   `).join("");
 }
 
+function renderUseCaseSyncNote() {
+  if (!output.useCaseSyncNote) {
+    return;
+  }
+
+  const currentUsers = Math.max(0, readInput("activeMonthlyUsers"));
+  const hasApplied = useCasesAppliedActiveUsers !== null;
+  const isStale = hasApplied && useCasesAppliedActiveUsers !== currentUsers;
+
+  output.useCaseSyncNote.classList.toggle("warning", isStale || !hasApplied);
+  if (!hasApplied) {
+    output.useCaseSyncNote.textContent = "Use cases have not been applied to the dashboard yet.";
+    return;
+  }
+  if (isStale) {
+    output.useCaseSyncNote.textContent = `Use cases were applied for ${formatWholeNumber(useCasesAppliedActiveUsers)} active users; current dashboard has ${formatWholeNumber(currentUsers)}. Apply again to resync.`;
+    return;
+  }
+
+  output.useCaseSyncNote.textContent = `Use cases are applied for the current ${formatWholeNumber(currentUsers)} active users.`;
+}
+
 function renderUseCases() {
   if (!output.useCaseList) {
     return;
@@ -623,6 +647,7 @@ function renderUseCases() {
   output.useCaseAnnualTotal.textContent = formatWholeNumber(rollup.annualOccurrences);
   output.useCaseMonthlyTotal.textContent = formatNumber(monthlyInteractions);
   output.useCaseAnnualHoursSaved.textContent = formatNumber(rollup.annualHoursSaved);
+  renderUseCaseSyncNote();
 
   if (useCases.length === 0) {
     output.useCaseList.innerHTML = `
@@ -778,6 +803,8 @@ function applyUseCasesToAgentUsage() {
     ? (rollup.annualHoursSaved * 60) / 52 / activeUsers
     : 0;
   setInputValue("minutesSaved", Math.round(minutesSavedPerUserPerWeek));
+  useCasesAppliedActiveUsers = activeUsers;
+  renderUseCaseSyncNote();
   document.querySelectorAll("[data-scenario]").forEach((button) => {
     button.classList.remove("is-active");
   });
@@ -1114,6 +1141,12 @@ function openGuidance(trigger) {
 }
 
 function closeGuidance() {
+  const activeCustomInput = output.tokenGuidanceDialog.querySelector(
+    "[data-custom-token-agent]:focus"
+  );
+  if (activeCustomInput) {
+    applyCustomTokenGuidance(activeCustomInput, true);
+  }
   output.tokenGuidanceDialog.classList.remove("is-open");
   output.tokenGuidanceDialog.setAttribute("aria-hidden", "true");
 }
@@ -1238,6 +1271,7 @@ function applyPreset(name) {
     button.classList.toggle("is-active", button.dataset.scenario === name);
   });
 
+  renderUseCases();
   updateDashboard();
 }
 
