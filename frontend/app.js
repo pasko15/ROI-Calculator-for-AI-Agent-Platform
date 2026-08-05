@@ -1,20 +1,20 @@
 const PRESETS = {
   pilot: {
-    activeMonthlyUsers: 25,
-    modelOneMonthlyInteractions: 260,
-    modelTwoMonthlyInteractions: 1050,
+    activeMonthlyUsers: 10,
+    modelOneMonthlyInteractions: 210,
+    modelTwoMonthlyInteractions: 840,
     manualCostPerInteraction: 0.36
   },
   department: {
-    activeMonthlyUsers: 100,
-    modelOneMonthlyInteractions: 2100,
-    modelTwoMonthlyInteractions: 8400,
+    activeMonthlyUsers: 40,
+    modelOneMonthlyInteractions: 840,
+    modelTwoMonthlyInteractions: 3360,
     manualCostPerInteraction: 0.13
   },
   enterprise: {
-    activeMonthlyUsers: 500,
-    modelOneMonthlyInteractions: 21000,
-    modelTwoMonthlyInteractions: 84000,
+    activeMonthlyUsers: 200,
+    modelOneMonthlyInteractions: 4200,
+    modelTwoMonthlyInteractions: 16800,
     manualCostPerInteraction: 0.18
   }
 };

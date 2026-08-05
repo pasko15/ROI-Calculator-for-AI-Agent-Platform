@@ -258,6 +258,17 @@
       justify-content: flex-end;
     }
 
+    .scenario-stack {
+      display: grid;
+      gap: 6px;
+      justify-items: end;
+    }
+
+    .scenario-note {
+      color: var(--muted);
+      font-size: 0.74rem;
+    }
+
     .scenario-button {
       min-height: 34px;
       border: 1px solid var(--line);
@@ -904,10 +915,13 @@
         <h1>ROI overview</h1>
         <p class="subtitle">Usage-based AI model cost and productivity value from visible assumptions.</p>
       </div>
-      <div class="scenario-actions" aria-label="Preset scenarios">
-        <button class="scenario-button" type="button" data-scenario="pilot">Small Pilot</button>
-        <button class="scenario-button" type="button" data-scenario="department">Department Rollout</button>
-        <button class="scenario-button" type="button" data-scenario="enterprise">Enterprise Deployment</button>
+      <div class="scenario-stack">
+        <div class="scenario-actions" aria-label="Preset scenarios">
+          <button class="scenario-button" type="button" data-scenario="pilot">Small Pilot</button>
+          <button class="scenario-button" type="button" data-scenario="department">Department Rollout</button>
+          <button class="scenario-button" type="button" data-scenario="enterprise">Enterprise Deployment</button>
+        </div>
+        <div class="scenario-note">Presets: 10 pilot users, 40 department users, 200 enterprise users.</div>
       </div>
     </section>
 
