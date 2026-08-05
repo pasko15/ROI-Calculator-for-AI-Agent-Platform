@@ -53,6 +53,7 @@ Represents the full ROI scenario:
 - model mix
 - time saved
 - hourly employee cost
+- optional fixed monthly costs
 
 The model calculates:
 
@@ -60,6 +61,7 @@ The model calculates:
 - monthly interactions
 - blended cost per interaction
 - monthly variable AI cost
+- total fixed monthly cost
 - monthly cost per active user rollup
 - monthly and annual value
 - monthly and annual net benefit

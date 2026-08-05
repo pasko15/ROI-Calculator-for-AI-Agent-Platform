@@ -217,6 +217,9 @@ function getPayload(overrides = {}) {
     active_monthly_users: Math.max(0, readInput("activeMonthlyUsers")),
     hourly_cost_per_worker: Math.max(0, readInput("hourlyCost")),
     time_saved_minutes_per_user_per_week: Math.max(0, readInput("minutesSaved")),
+    fixed_monthly_costs: {
+      enterprise_integration: Math.max(0, readInput("fixedMonthlyCost"))
+    },
     model_mix: [
       modelPayload("modelOne", agentNames.modelOne),
       modelPayload("modelTwo", agentNames.modelTwo)
@@ -1003,7 +1006,9 @@ function renderDashboard(data) {
     summary.monthly_interactions
   );
 
-  output.costMixContext.textContent = `${formatWholeNumber(summary.monthly_interactions)} monthly interactions`;
+  output.costMixContext.textContent = summary.total_fixed_monthly_cost > 0
+    ? `${formatWholeNumber(summary.monthly_interactions)} interactions + ${formatMoney(summary.total_fixed_monthly_cost)} fixed`
+    : `${formatWholeNumber(summary.monthly_interactions)} monthly interactions`;
   output.monthlyHoursContext.textContent = `${formatNumber(summary.monthly_hours_saved)} monthly hours saved`;
   output.annualHoursContext.textContent = `${formatNumber(summary.annual_hours_saved)} annual hours saved`;
   output.effectiveWorkersContext.textContent = `${formatNumber(summary.active_users)} active monthly users`;

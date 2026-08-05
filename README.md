@@ -15,14 +15,15 @@ The model currently focuses on usage-based AI costs:
 - Per-agent model selection from a model catalog
 - Average input and output tokens per interaction
 - Input and output model pricing per 1 million tokens from the selected catalog model
+- Optional fixed monthly platform cost
 - Time saved per active user
 - Average hourly employee cost
 
-The current model and agent mix assumes standard pay-as-you-go pricing. Dedicated capacity options such as PTUs, batch processing, and other commitment-based pricing models are not included yet and are planned as future additions.
+The current model and agent mix assumes standard pay-as-you-go token pricing, with an optional fixed monthly platform-cost assumption for non-token costs. Dedicated capacity options such as PTUs, batch processing, and other commitment-based pricing models are not included yet and are planned as future additions.
 
 An interaction is defined as one user task made up of roughly 1-3 user-entered messages.
 
-The dashboard blends per-agent model costs into an effective cost per interaction, estimates total monthly cost from expected monthly agent interactions, converts expected time savings into financial value, and calculates ROI. The figures are intended to be as accurate as possible from the available assumptions, while remaining easy to update as better usage data becomes available.
+The dashboard blends per-agent model costs into an effective cost per interaction, estimates total monthly cost from expected monthly agent interactions and fixed monthly costs, converts expected time savings into financial value, and calculates ROI. The figures are intended to be as accurate as possible from the available assumptions, while remaining easy to update as better usage data becomes available.
 
 ## Preview
 
@@ -60,6 +61,4 @@ http://127.0.0.1:8001
 
 ## Current Scope
 
-The model does not currently include fixed platform costs, because those cost drivers are not defined yet for this use case. The monthly platform cost shown in the dashboard should currently be read as monthly standard pay-as-you-go AI model usage cost.
-
-Future versions may add Azure Resource API integration to automatically pull deployment, pricing, quota, and usage data, including dedicated capacity, PTUs, and batch processing.
+The monthly platform cost combines standard pay-as-you-go model usage with any manually entered fixed monthly platform cost. Future versions may add Azure Resource API integration to automatically pull deployment, pricing, quota, and usage data, including dedicated capacity, PTUs, and batch processing.

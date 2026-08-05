@@ -1424,6 +1424,12 @@
             <label class="seg-opt"><input type="radio" name="pricesrc" disabled><span>Azure auto-fill</span></label>
           </div>
           <p class="card-note" style="margin: var(--space-3) 0 0;">All model prices are entered manually as dollars per 1 million tokens.</p>
+          <div class="field" style="margin-top:var(--space-3)">
+            <div class="field-row">
+              <label for="fixedMonthlyCost" class="label-with-info">Fixed monthly platform cost ($) <span class="info-icon" tabindex="0" data-tip="Optional non-token monthly cost such as hosting, storage, monitoring, integration, support, or dedicated capacity baseline.">i</span></label>
+            </div>
+            <input id="fixedMonthlyCost" data-input="fixedMonthlyCost" type="number" min="0" step="100" value="0">
+          </div>
         </section>
 
         <div id="statusLine" class="status-line" role="status"></div>
