@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -254,6 +254,34 @@
       font-weight: 650;
     }
 
+    .label-with-info {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .info-icon {
+      display: inline-grid;
+      width: 16px;
+      height: 16px;
+      place-items: center;
+      border: 1px solid var(--line-strong);
+      border-radius: 3px;
+      color: var(--muted);
+      background: #ffffff;
+      font-size: 0.68rem;
+      font-weight: 800;
+      line-height: 1;
+      cursor: help;
+    }
+
+    .info-icon:hover,
+    .info-icon:focus {
+      border-color: var(--teal);
+      color: #0b5f61;
+      background: var(--soft-teal);
+    }
+
     input[type="number"] {
       width: 100%;
       min-height: 40px;
@@ -269,6 +297,58 @@
       outline: 3px solid rgba(15, 139, 141, 0.18);
       border-color: var(--teal);
       background: #ffffff;
+    }
+
+    .model-row {
+      display: grid;
+      gap: 10px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel-soft);
+    }
+
+    .model-row-title {
+      color: #2c3a48;
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .calc-note {
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--soft-blue);
+      color: #344452;
+      font-size: 0.82rem;
+    }
+
+    .model-costs {
+      display: grid;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .model-cost-line {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+
+    .model-cost-line strong {
+      color: var(--ink);
+      white-space: nowrap;
+    }
+
+    .status-line {
+      min-height: 20px;
+      color: var(--red);
+      font-size: 0.82rem;
+      font-weight: 700;
     }
 
     .calculated-total {
@@ -594,25 +674,25 @@
       <aside class="panel inputs-panel" aria-label="ROI model inputs">
         <div class="panel-header">
           <h2>Model Inputs</h2>
-          <p>Workforce, usage, and fixed platform costs.</p>
+          <p>Workforce, interaction volume, and model token costs.</p>
         </div>
         <div class="panel-body">
           <div class="input-group">
             <h3>Workforce</h3>
             <div class="field">
-              <label for="workers">Number of workers</label>
+              <label for="workers" class="label-with-info">Number of workers <span class="info-icon" title="Total employees in the population that could use the agent platform.">i</span></label>
               <input id="workers" data-input="workers" type="number" min="0" step="1" value="100">
             </div>
             <div class="field">
-              <label for="adoptionRate">Adoption rate (%)</label>
+              <label for="adoptionRate" class="label-with-info">Adoption rate (%) <span class="info-icon" title="Share of workers expected to actively use the agents. Active users equals workers times adoption rate.">i</span></label>
               <input id="adoptionRate" data-input="adoptionRate" type="number" min="0" max="100" step="1" value="70">
             </div>
             <div class="field">
-              <label for="hourlyCost">Average hourly employee cost ($/hour)</label>
+              <label for="hourlyCost" class="label-with-info">Average hourly employee cost ($/hour) <span class="info-icon" title="Fully loaded average employee cost used to convert saved hours into financial value.">i</span></label>
               <input id="hourlyCost" data-input="hourlyCost" type="number" min="0" step="1" value="75">
             </div>
             <div class="field">
-              <label for="minutesSaved">Time saved per worker per week (minutes)</label>
+              <label for="minutesSaved" class="label-with-info">Time saved per worker per week (minutes) <span class="info-icon" title="Estimated weekly productivity gain for each active user.">i</span></label>
               <input id="minutesSaved" data-input="minutesSaved" type="number" min="0" step="1" value="45">
             </div>
           </div>
@@ -620,33 +700,79 @@
           <div class="input-group">
             <h3>Platform Usage</h3>
             <div class="field">
-              <label for="interactionsPerDay">Interactions per active user per day</label>
+              <label for="interactionsPerDay" class="label-with-info">Interactions per active user per day <span class="info-icon" title="An interaction is one user task made up of roughly 1-3 user-entered messages.">i</span></label>
               <input id="interactionsPerDay" data-input="interactionsPerDay" type="number" min="0" step="1" value="10">
             </div>
             <div class="field">
-              <label for="workingDays">Working days per month</label>
+              <label for="workingDays" class="label-with-info">Working days per month <span class="info-icon" title="Business days used to convert daily agent usage into monthly interaction volume.">i</span></label>
               <input id="workingDays" data-input="workingDays" type="number" min="0" max="31" step="1" value="21">
             </div>
             <div class="field">
-              <label for="costPerInteraction">Average cost per interaction ($)</label>
-              <input id="costPerInteraction" data-input="costPerInteraction" type="number" min="0" step="0.01" value="0.10">
+              <label for="manualCostPerInteraction" class="label-with-info">Manual cost override ($/interaction) <span class="info-icon" title="Fallback cost per interaction used only when model usage shares do not add to 100%. Use it for quick what-if tests before the model mix is complete.">i</span></label>
+              <input id="manualCostPerInteraction" data-input="manualCostPerInteraction" type="number" min="0" step="0.01" value="0.13">
             </div>
+            <div class="calc-note">An interaction is defined as one user task made up of roughly 1-3 user-entered messages. Python uses the blended model cost when model shares add to 100%; otherwise it uses the manual override.</div>
           </div>
 
           <div class="input-group">
-            <h3>Fixed Platform Costs</h3>
+            <h3>Model Mix</h3>
+            <div class="model-row">
+              <div class="model-row-title">Data Extract Agent - GPT-5.5</div>
+              <div class="field">
+                <label for="modelOneShare" class="label-with-info">Usage share (%) <span class="info-icon" title="Percent of total interactions handled by this agent.">i</span></label>
+                <input id="modelOneShare" data-input="modelOneShare" type="number" min="0" max="100" step="1" value="35">
+              </div>
+              <div class="field">
+                <label for="modelOneInputPrice" class="label-with-info">Input price ($/1M tokens) <span class="info-icon" title="Provider price for one million input tokens. Global GPT-5.5 example: $5.00 per 1M input tokens.">i</span></label>
+                <input id="modelOneInputPrice" data-input="modelOneInputPrice" type="number" min="0" step="0.01" value="5.00">
+              </div>
+              <div class="field">
+                <label for="modelOneOutputPrice" class="label-with-info">Output price ($/1M tokens) <span class="info-icon" title="Provider price for one million output tokens. Global GPT-5.5 example: $30.00 per 1M output tokens.">i</span></label>
+                <input id="modelOneOutputPrice" data-input="modelOneOutputPrice" type="number" min="0" step="0.01" value="30.00">
+              </div>
+              <div class="field">
+                <label for="modelOneInputTokens" class="label-with-info">Avg input tokens <span class="info-icon" title="Average prompt, context, retrieved data, and tool payload tokens consumed by one interaction.">i</span></label>
+                <input id="modelOneInputTokens" data-input="modelOneInputTokens" type="number" min="0" step="50" value="68000">
+              </div>
+              <div class="field">
+                <label for="modelOneOutputTokens" class="label-with-info">Avg output tokens <span class="info-icon" title="Average generated response tokens produced by one interaction.">i</span></label>
+                <input id="modelOneOutputTokens" data-input="modelOneOutputTokens" type="number" min="0" step="50" value="710">
+              </div>
+            </div>
+
+            <div class="model-row">
+              <div class="model-row-title">Report Generating Agent - GPT-5.4 mini</div>
+              <div class="field">
+                <label for="modelTwoShare" class="label-with-info">Usage share (%) <span class="info-icon" title="Percent of total interactions handled by this agent.">i</span></label>
+                <input id="modelTwoShare" data-input="modelTwoShare" type="number" min="0" max="100" step="1" value="65">
+              </div>
+              <div class="field">
+                <label for="modelTwoInputPrice" class="label-with-info">Input price ($/1M tokens) <span class="info-icon" title="Provider price for one million input tokens. Global GPT-5.4 mini example: $0.75 per 1M input tokens.">i</span></label>
+                <input id="modelTwoInputPrice" data-input="modelTwoInputPrice" type="number" min="0" step="0.001" value="0.75">
+              </div>
+              <div class="field">
+                <label for="modelTwoOutputPrice" class="label-with-info">Output price ($/1M tokens) <span class="info-icon" title="Provider price for one million output tokens. Global GPT-5.4 mini example: $4.50 per 1M output tokens.">i</span></label>
+                <input id="modelTwoOutputPrice" data-input="modelTwoOutputPrice" type="number" min="0" step="0.001" value="4.50">
+              </div>
+              <div class="field">
+                <label for="modelTwoInputTokens" class="label-with-info">Avg input tokens <span class="info-icon" title="Average prompt, context, retrieved data, and tool payload tokens consumed by one interaction.">i</span></label>
+                <input id="modelTwoInputTokens" data-input="modelTwoInputTokens" type="number" min="0" step="50" value="4200">
+              </div>
+              <div class="field">
+                <label for="modelTwoOutputTokens" class="label-with-info">Avg output tokens <span class="info-icon" title="Average generated response tokens produced by one interaction.">i</span></label>
+                <input id="modelTwoOutputTokens" data-input="modelTwoOutputTokens" type="number" min="0" step="50" value="64">
+              </div>
+            </div>
+            <div id="modelCostLines" class="model-costs"></div>
+          </div>
+
+          <div class="input-group">
+            <h3>Implementation</h3>
             <div class="field">
-              <label for="foundryIq">Foundry IQ monthly cost ($)</label>
-              <input id="foundryIq" data-input="foundryIq" type="number" min="0" step="100" value="5850">
+              <label for="implementationCost" class="label-with-info">One-time implementation cost ($) <span class="info-icon" title="Optional upfront implementation cost used only for payback period. It is not treated as a recurring platform cost.">i</span></label>
+              <input id="implementationCost" data-input="implementationCost" type="number" min="0" step="1000" value="15000">
             </div>
-            <div class="field">
-              <label for="monitoring">Monitoring / Logging monthly cost ($)</label>
-              <input id="monitoring" data-input="monitoring" type="number" min="0" step="50" value="450">
-            </div>
-            <div class="calculated-total">
-              <span>Total fixed monthly cost</span>
-              <output id="fixedMonthlyCost">$0</output>
-            </div>
+            <div id="statusLine" class="status-line" role="status"></div>
           </div>
         </div>
       </aside>
@@ -656,7 +782,7 @@
           <article class="kpi-card" data-tone="amber">
             <div class="kpi-label">Monthly Platform Cost</div>
             <div id="monthlyPlatformCostKpi" class="kpi-value">$0</div>
-            <div id="costMixContext" class="kpi-context">$0 fixed, $0 variable</div>
+            <div id="costMixContext" class="kpi-context">$0 model usage cost</div>
           </article>
           <article class="kpi-card" data-tone="amber">
             <div class="kpi-label">Annual Platform Cost</div>
@@ -739,11 +865,11 @@
 
           <article class="panel chart-panel">
             <div class="panel-header">
-              <h2>Monthly Cost Breakdown</h2>
+              <h2>Monthly AI Cost by Agent</h2>
             </div>
             <div class="panel-body">
               <div class="chart-wrap">
-                <canvas id="costBreakdownChart" aria-label="Monthly fixed and variable platform cost"></canvas>
+                <canvas id="costBreakdownChart" aria-label="Monthly AI cost by agent"></canvas>
                 <div class="chart-fallback">Chart.js is required for this chart.</div>
               </div>
             </div>
@@ -787,479 +913,7 @@
       </div>
     </section>
   </main>
-
-  <script>
-    const WEEKS_PER_MONTH = 52 / 12;
-    const WEEKS_PER_YEAR = 52;
-    const MONTHS_PER_YEAR = 12;
-
-    const PRESETS = {
-      pilot: {
-        workers: 25,
-        adoptionRate: 50,
-        interactionsPerDay: 5,
-        costPerInteraction: 0.05
-      },
-      department: {
-        workers: 100,
-        adoptionRate: 70,
-        interactionsPerDay: 10,
-        costPerInteraction: 0.10
-      },
-      enterprise: {
-        workers: 500,
-        adoptionRate: 80,
-        interactionsPerDay: 20,
-        costPerInteraction: 0.15
-      }
-    };
-
-    const inputElements = Array.from(document.querySelectorAll("[data-input]")).reduce((accumulator, input) => {
-      accumulator[input.dataset.input] = input;
-      return accumulator;
-    }, {});
-
-    const output = {
-      heroBreakEven: document.getElementById("heroBreakEven"),
-      fixedMonthlyCost: document.getElementById("fixedMonthlyCost"),
-      monthlyPlatformCostKpi: document.getElementById("monthlyPlatformCostKpi"),
-      annualPlatformCostKpi: document.getElementById("annualPlatformCostKpi"),
-      monthlyValueKpi: document.getElementById("monthlyValueKpi"),
-      annualValueKpi: document.getElementById("annualValueKpi"),
-      monthlyNetBenefitKpi: document.getElementById("monthlyNetBenefitKpi"),
-      annualNetBenefitKpi: document.getElementById("annualNetBenefitKpi"),
-      roiKpi: document.getElementById("roiKpi"),
-      breakEvenKpi: document.getElementById("breakEvenKpi"),
-      monthlyInteractionsKpi: document.getElementById("monthlyInteractionsKpi"),
-      costMixContext: document.getElementById("costMixContext"),
-      monthlyHoursContext: document.getElementById("monthlyHoursContext"),
-      annualHoursContext: document.getElementById("annualHoursContext"),
-      effectiveWorkersContext: document.getElementById("effectiveWorkersContext"),
-      usageContext: document.getElementById("usageContext"),
-      sensitivityBody: document.getElementById("sensitivityBody")
-    };
-
-    const charts = {};
-
-    const moneyFormatter = new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-      maximumFractionDigits: 0
-    });
-
-    const compactMoneyFormatter = new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-      notation: "compact",
-      maximumFractionDigits: 1
-    });
-
-    const numberFormatter = new Intl.NumberFormat("en-US", {
-      maximumFractionDigits: 1
-    });
-
-    const wholeNumberFormatter = new Intl.NumberFormat("en-US", {
-      maximumFractionDigits: 0
-    });
-
-    function readInput(name) {
-      const value = Number.parseFloat(inputElements[name].value);
-      return Number.isFinite(value) ? value : 0;
-    }
-
-    function clamp(value, minimum, maximum) {
-      return Math.min(Math.max(value, minimum), maximum);
-    }
-
-    function getAssumptions(overrides = {}) {
-      return {
-        workers: Math.max(0, readInput("workers")),
-        adoptionRate: clamp(readInput("adoptionRate") / 100, 0, 1),
-        hourlyCost: Math.max(0, readInput("hourlyCost")),
-        minutesSaved: Math.max(0, readInput("minutesSaved")),
-        interactionsPerDay: Math.max(0, readInput("interactionsPerDay")),
-        workingDays: clamp(readInput("workingDays"), 0, 31),
-        costPerInteraction: Math.max(0, readInput("costPerInteraction")),
-        foundryIq: Math.max(0, readInput("foundryIq")),
-        monitoring: Math.max(0, readInput("monitoring")),
-        ...overrides
-      };
-    }
-
-    function calculate(assumptions) {
-      const fixedMonthlyCost = assumptions.foundryIq + assumptions.monitoring;
-
-      const effectiveWorkers = assumptions.workers * assumptions.adoptionRate;
-      const monthlyInteractions = effectiveWorkers
-        * assumptions.interactionsPerDay
-        * assumptions.workingDays;
-      const variableMonthlyCost = monthlyInteractions * assumptions.costPerInteraction;
-      const totalMonthlyPlatformCost = fixedMonthlyCost + variableMonthlyCost;
-
-      const weeklyHoursSaved = effectiveWorkers * (assumptions.minutesSaved / 60);
-      const monthlyHoursSaved = weeklyHoursSaved * WEEKS_PER_MONTH;
-      const annualHoursSaved = weeklyHoursSaved * WEEKS_PER_YEAR;
-
-      const monthlyValueCreated = monthlyHoursSaved * assumptions.hourlyCost;
-      const annualValueCreated = annualHoursSaved * assumptions.hourlyCost;
-      const monthlyNetBenefit = monthlyValueCreated - totalMonthlyPlatformCost;
-      const annualPlatformCost = totalMonthlyPlatformCost * MONTHS_PER_YEAR;
-      const annualNetBenefit = annualValueCreated - annualPlatformCost;
-      const roi = annualPlatformCost > 0
-        ? (annualNetBenefit / annualPlatformCost) * 100
-        : null;
-
-      const breakEvenDenominator = effectiveWorkers
-        * assumptions.hourlyCost
-        * WEEKS_PER_MONTH;
-      const breakEvenHours = breakEvenDenominator > 0
-        ? totalMonthlyPlatformCost / breakEvenDenominator
-        : null;
-      const breakEvenMinutes = breakEvenHours === null ? null : breakEvenHours * 60;
-
-      return {
-        effectiveWorkers,
-        monthlyInteractions,
-        variableMonthlyCost,
-        fixedMonthlyCost,
-        totalMonthlyPlatformCost,
-        weeklyHoursSaved,
-        monthlyHoursSaved,
-        annualHoursSaved,
-        monthlyValueCreated,
-        annualValueCreated,
-        monthlyNetBenefit,
-        annualPlatformCost,
-        annualNetBenefit,
-        roi,
-        breakEvenHours,
-        breakEvenMinutes
-      };
-    }
-
-    function formatMoney(value) {
-      return moneyFormatter.format(value);
-    }
-
-    function formatCompactMoney(value) {
-      return compactMoneyFormatter.format(value);
-    }
-
-    function formatNumber(value) {
-      return numberFormatter.format(value);
-    }
-
-    function formatWholeNumber(value) {
-      return wholeNumberFormatter.format(value);
-    }
-
-    function formatPercent(value) {
-      if (value === null || !Number.isFinite(value)) {
-        return "N/A";
-      }
-      return `${numberFormatter.format(value)}%`;
-    }
-
-    function formatMinutes(value) {
-      if (value === null || !Number.isFinite(value)) {
-        return "N/A";
-      }
-
-      const formatted = value >= 10 ? formatWholeNumber(value) : formatNumber(value);
-      return `${formatted} min`;
-    }
-
-    function setSignedClass(element, value) {
-      element.classList.toggle("positive", Number.isFinite(value) && value > 0);
-      element.classList.toggle("negative", Number.isFinite(value) && value < 0);
-    }
-
-    function roiTone(value) {
-      if (value === null || !Number.isFinite(value)) {
-        return "neutral";
-      }
-      if (value > 0) {
-        return "positive";
-      }
-      if (value < 0) {
-        return "negative";
-      }
-      return "neutral";
-    }
-
-    function uniqueSorted(values) {
-      return [...new Set(values)]
-        .filter((value) => Number.isFinite(value) && value >= 0)
-        .sort((a, b) => a - b);
-    }
-
-    function createLineChart(canvasId, label, color, yMode) {
-      const canvas = document.getElementById(canvasId);
-
-      return new Chart(canvas, {
-        type: "line",
-        data: {
-          labels: [],
-          datasets: [{
-            label,
-            data: [],
-            borderColor: color,
-            backgroundColor: `${color}20`,
-            pointBackgroundColor: color,
-            pointBorderColor: "#ffffff",
-            pointBorderWidth: 2,
-            pointRadius: 3,
-            pointHoverRadius: 6,
-            borderWidth: 3,
-            fill: true,
-            tension: 0.32
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          interaction: {
-            intersect: false,
-            mode: "index"
-          },
-          plugins: {
-            legend: {
-              display: false
-            },
-            tooltip: {
-              callbacks: {
-                label: (context) => {
-                  const value = context.parsed.y;
-                  const formatted = yMode === "money" ? formatMoney(value) : formatPercent(value);
-                  return `${context.dataset.label}: ${formatted}`;
-                }
-              }
-            }
-          },
-          scales: {
-            x: {
-              grid: {
-                display: false
-              },
-              ticks: {
-                maxRotation: 0,
-                autoSkip: true
-              }
-            },
-            y: {
-              ticks: {
-                callback: (value) => yMode === "money" ? formatCompactMoney(value) : `${value}%`
-              },
-              grid: {
-                color: "rgba(100, 112, 132, 0.16)"
-              }
-            }
-          }
-        }
-      });
-    }
-
-    function createDoughnutChart(canvasId) {
-      return new Chart(document.getElementById(canvasId), {
-        type: "doughnut",
-        data: {
-          labels: ["Fixed Cost", "Variable Cost"],
-          datasets: [{
-            data: [0, 0],
-            backgroundColor: ["#2f6fbb", "#0f8b8d"],
-            borderColor: "#ffffff",
-            borderWidth: 3,
-            hoverOffset: 8
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          cutout: "62%",
-          plugins: {
-            legend: {
-              position: "bottom",
-              labels: {
-                boxWidth: 12,
-                boxHeight: 12,
-                usePointStyle: true
-              }
-            },
-            tooltip: {
-              callbacks: {
-                label: (context) => {
-                  const total = context.dataset.data.reduce((sum, value) => sum + value, 0);
-                  const share = total > 0 ? (context.parsed / total) * 100 : 0;
-                  return `${context.label}: ${formatMoney(context.parsed)} (${formatNumber(share)}%)`;
-                }
-              }
-            }
-          }
-        }
-      });
-    }
-
-    function initializeCharts() {
-      if (!window.Chart) {
-        document.documentElement.classList.add("charts-unavailable");
-        return;
-      }
-
-      Chart.defaults.font.family = '"Segoe UI", Arial, sans-serif';
-      Chart.defaults.color = "#647084";
-      Chart.defaults.plugins.tooltip.backgroundColor = "#17202a";
-      Chart.defaults.plugins.tooltip.padding = 12;
-      Chart.defaults.plugins.tooltip.cornerRadius = 6;
-      Chart.defaults.plugins.tooltip.titleFont = { weight: "700" };
-
-      charts.workers = createLineChart("workersChart", "ROI", "#2f6fbb", "percent");
-      charts.minutes = createLineChart("minutesChart", "ROI", "#0f8b8d", "percent");
-      charts.interactionCost = createLineChart("interactionCostChart", "ROI", "#b7791f", "percent");
-      charts.costBreakdown = createDoughnutChart("costBreakdownChart");
-      charts.adoptionCost = createLineChart("adoptionCostChart", "Monthly Platform Cost", "#1b8f5a", "money");
-    }
-
-    function updateLineChart(chart, labels, data) {
-      if (!chart) {
-        return;
-      }
-
-      chart.data.labels = labels;
-      chart.data.datasets[0].data = data;
-      chart.update();
-    }
-
-    function updateCharts(assumptions, result) {
-      const workerValues = uniqueSorted([25, 50, 100, 250, 500, 750, 1000, assumptions.workers]);
-      const minuteValues = uniqueSorted([0, 15, 30, 45, 60, 90, 120, 180, 240, assumptions.minutesSaved]);
-      const interactionCostValues = uniqueSorted([0, 0.01, 0.02, 0.05, 0.10, 0.15, 0.25, 0.50, assumptions.costPerInteraction]);
-      const adoptionValues = uniqueSorted([0, 10, 25, 50, 70, 80, 90, 100, Math.round(assumptions.adoptionRate * 100)]);
-
-      updateLineChart(
-        charts.workers,
-        workerValues.map((workers) => `${workers}`),
-        workerValues.map((workers) => calculate({ ...assumptions, workers }).roi)
-      );
-
-      updateLineChart(
-        charts.minutes,
-        minuteValues.map((minutes) => `${minutes}`),
-        minuteValues.map((minutesSaved) => calculate({ ...assumptions, minutesSaved }).roi)
-      );
-
-      updateLineChart(
-        charts.interactionCost,
-        interactionCostValues.map((cost) => `$${cost.toFixed(2)}`),
-        interactionCostValues.map((costPerInteraction) => calculate({ ...assumptions, costPerInteraction }).roi)
-      );
-
-      if (charts.costBreakdown) {
-        charts.costBreakdown.data.datasets[0].data = [
-          result.fixedMonthlyCost,
-          result.variableMonthlyCost
-        ];
-        charts.costBreakdown.update();
-      }
-
-      updateLineChart(
-        charts.adoptionCost,
-        adoptionValues.map((adoption) => `${adoption}%`),
-        adoptionValues.map((adoption) => calculate({ ...assumptions, adoptionRate: adoption / 100 }).totalMonthlyPlatformCost)
-      );
-    }
-
-    function renderSensitivityTable(assumptions) {
-      const workerCounts = [25, 50, 100, 250, 500];
-      const minuteValues = [15, 30, 60, 120];
-
-      output.sensitivityBody.innerHTML = workerCounts.map((workers) => {
-        const cells = minuteValues.map((minutesSaved) => {
-          const scenario = calculate({ ...assumptions, workers, minutesSaved });
-          const roiClass = roiTone(scenario.roi);
-
-          return `
-            <td>
-              <div class="matrix-cell">
-                <div class="matrix-line"><span>Monthly Value</span><strong>${formatMoney(scenario.monthlyValueCreated)}</strong></div>
-                <div class="matrix-line"><span>Monthly Cost</span><strong>${formatMoney(scenario.totalMonthlyPlatformCost)}</strong></div>
-                <div class="matrix-line"><span>Monthly Net Benefit</span><strong class="${scenario.monthlyNetBenefit >= 0 ? "positive" : "negative"}">${formatMoney(scenario.monthlyNetBenefit)}</strong></div>
-                <div class="matrix-line"><span>ROI</span><span class="roi-pill ${roiClass}">${formatPercent(scenario.roi)}</span></div>
-              </div>
-            </td>
-          `;
-        }).join("");
-
-        return `
-          <tr>
-            <th scope="row">${workers}</th>
-            ${cells}
-          </tr>
-        `;
-      }).join("");
-    }
-
-    function updateDashboard() {
-      const assumptions = getAssumptions();
-      const result = calculate(assumptions);
-
-      output.heroBreakEven.textContent = formatMinutes(result.breakEvenMinutes);
-      output.fixedMonthlyCost.textContent = formatMoney(result.fixedMonthlyCost);
-      output.monthlyPlatformCostKpi.textContent = formatMoney(result.totalMonthlyPlatformCost);
-      output.annualPlatformCostKpi.textContent = formatMoney(result.annualPlatformCost);
-      output.monthlyValueKpi.textContent = formatMoney(result.monthlyValueCreated);
-      output.annualValueKpi.textContent = formatMoney(result.annualValueCreated);
-      output.monthlyNetBenefitKpi.textContent = formatMoney(result.monthlyNetBenefit);
-      output.annualNetBenefitKpi.textContent = formatMoney(result.annualNetBenefit);
-      output.roiKpi.textContent = formatPercent(result.roi);
-      output.breakEvenKpi.textContent = formatMinutes(result.breakEvenMinutes);
-      output.monthlyInteractionsKpi.textContent = formatWholeNumber(result.monthlyInteractions);
-
-      output.costMixContext.textContent = `${formatMoney(result.fixedMonthlyCost)} fixed, ${formatMoney(result.variableMonthlyCost)} variable`;
-      output.monthlyHoursContext.textContent = `${formatNumber(result.monthlyHoursSaved)} monthly hours saved`;
-      output.annualHoursContext.textContent = `${formatNumber(result.annualHoursSaved)} annual hours saved`;
-      output.effectiveWorkersContext.textContent = `${formatNumber(result.effectiveWorkers)} effective workers`;
-      output.usageContext.textContent = `${formatNumber(assumptions.interactionsPerDay)} per active user per day`;
-
-      setSignedClass(output.monthlyNetBenefitKpi, result.monthlyNetBenefit);
-      setSignedClass(output.annualNetBenefitKpi, result.annualNetBenefit);
-      setSignedClass(output.roiKpi, result.roi);
-
-      updateCharts(assumptions, result);
-      renderSensitivityTable(assumptions);
-    }
-
-    function applyPreset(name) {
-      const preset = PRESETS[name];
-      if (!preset) {
-        return;
-      }
-
-      Object.entries(preset).forEach(([key, value]) => {
-        inputElements[key].value = value;
-      });
-
-      document.querySelectorAll("[data-scenario]").forEach((button) => {
-        button.classList.toggle("is-active", button.dataset.scenario === name);
-      });
-
-      updateDashboard();
-    }
-
-    Object.values(inputElements).forEach((input) => {
-      input.addEventListener("input", () => {
-        document.querySelectorAll("[data-scenario]").forEach((button) => {
-          button.classList.remove("is-active");
-        });
-        updateDashboard();
-      });
-    });
-
-    document.querySelectorAll("[data-scenario]").forEach((button) => {
-      button.addEventListener("click", () => applyPreset(button.dataset.scenario));
-    });
-
-    initializeCharts();
-    updateDashboard();
-  </script>
+  <script src="/app.js"></script>
 </body>
 </html>
+
