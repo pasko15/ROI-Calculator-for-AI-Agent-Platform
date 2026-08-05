@@ -48,32 +48,72 @@ const agentNames = {
 
 let useCases = [];
 
-const TOKEN_GUIDANCE = [
-  {
-    name: "Light Q&A",
-    description: "Short lookup, policy answer, or simple internal question.",
-    inputTokens: 1500,
-    outputTokens: 300
+const TOKEN_GUIDANCE = {
+  modelOne: {
+    title: "Data Extract Agent",
+    prompt: "How much source data will the agent retrieve?",
+    options: [
+      {
+        name: "Little",
+        description: "Small lookup or a few short records.",
+        inputTokens: 8000,
+        outputTokens: 500
+      },
+      {
+        name: "Medium",
+        description: "Several records, excerpts, or moderate retrieved context.",
+        inputTokens: 40000,
+        outputTokens: 1000
+      },
+      {
+        name: "A lot",
+        description: "Large retrieval with long source context.",
+        inputTokens: 120000,
+        outputTokens: 2000
+      },
+      {
+        name: "Custom",
+        description: "Use manually entered token values for this agent.",
+        custom: true
+      }
+    ]
   },
-  {
-    name: "Report generating",
-    description: "Current report-agent estimate for concise generated summaries.",
-    inputTokens: 4200,
-    outputTokens: 64
-  },
-  {
-    name: "Data extraction",
-    description: "Current data-extract estimate with heavy retrieved context.",
-    inputTokens: 68000,
-    outputTokens: 710
-  },
-  {
-    name: "Deep analysis",
-    description: "Large-context review with a longer synthesized answer.",
-    inputTokens: 120000,
-    outputTokens: 2000
+  modelTwo: {
+    title: "Report Generating Agent",
+    prompt: "What kind of report will it generate?",
+    options: [
+      {
+        name: "PDF, one page",
+        description: "Short written summary or one-page export.",
+        inputTokens: 12000,
+        outputTokens: 1200
+      },
+      {
+        name: "PDF, multi page",
+        description: "Longer report with sections and supporting detail.",
+        inputTokens: 30000,
+        outputTokens: 4500
+      },
+      {
+        name: "PowerPoint, one page",
+        description: "Single-slide executive summary.",
+        inputTokens: 18000,
+        outputTokens: 1600
+      },
+      {
+        name: "PowerPoint, multi page",
+        description: "Several slides with bullets and speaker-ready structure.",
+        inputTokens: 45000,
+        outputTokens: 6000
+      },
+      {
+        name: "Custom",
+        description: "Use manually entered token values for this agent.",
+        custom: true
+      }
+    ]
   }
-];
+};
 
 const modelSelects = {
   modelOne: document.getElementById("modelOneModel"),
@@ -950,18 +990,68 @@ function renderTokenGuidance() {
     return;
   }
 
-  output.tokenGuidanceBody.innerHTML = TOKEN_GUIDANCE.map((guidance, index) => `
-    <div class="guidance-row">
-      <div class="guidance-name">${guidance.name}</div>
-      <div class="guidance-description">${guidance.description}</div>
-      <div class="guidance-metric">${formatWholeNumber(guidance.inputTokens)} input</div>
-      <div class="guidance-metric">${formatWholeNumber(guidance.outputTokens)} output</div>
-      <div class="guidance-actions">
-        <button class="btn" type="button" data-guidance-index="${index}" data-guidance-agent="modelOne">Data Extract</button>
-        <button class="btn" type="button" data-guidance-index="${index}" data-guidance-agent="modelTwo">Report</button>
-      </div>
-    </div>
-  `).join("");
+  output.tokenGuidanceBody.innerHTML = Object.entries(TOKEN_GUIDANCE).map(([agent, config]) => {
+    const currentInput = Math.max(0, readInput(`${agent}InputTokens`));
+    const currentOutput = Math.max(0, readInput(`${agent}OutputTokens`));
+    const matchedIndex = config.options.findIndex((option) => (
+      !option.custom &&
+      option.inputTokens === currentInput &&
+      option.outputTokens === currentOutput
+    ));
+
+    return `
+      <section class="guidance-section">
+        <div class="guidance-section-head">
+          <h3>${escapeHtml(config.title)}</h3>
+          <p>${escapeHtml(config.prompt)}</p>
+        </div>
+        <div class="guidance-options">
+          ${config.options.map((guidance, index) => {
+            const isSelected = guidance.custom
+              ? matchedIndex === -1
+              : matchedIndex === index;
+            const tokenMarkup = guidance.custom
+              ? `
+                <span class="guidance-custom-fields">
+                  <label>
+                    <span>Input tokens</span>
+                    <input type="number" min="0" step="100" value="${currentInput}" data-custom-token-agent="${agent}" data-custom-token-kind="input">
+                  </label>
+                  <label>
+                    <span>Output tokens</span>
+                    <input type="number" min="0" step="100" value="${currentOutput}" data-custom-token-agent="${agent}" data-custom-token-kind="output">
+                  </label>
+                </span>
+              `
+              : `
+                <span class="guidance-token-row">
+                  <span>${formatWholeNumber(guidance.inputTokens)} input</span>
+                  <span>${formatWholeNumber(guidance.outputTokens)} output</span>
+                </span>
+              `;
+
+            if (guidance.custom) {
+              return `
+                <div class="guidance-option guidance-custom-option ${isSelected ? "is-selected" : ""}">
+                  <span class="guidance-name">${escapeHtml(guidance.name)}</span>
+                  <span class="guidance-description">${escapeHtml(guidance.description)}</span>
+                  ${tokenMarkup}
+                </div>
+              `;
+            }
+
+            return `
+              <button class="guidance-option ${isSelected ? "is-selected" : ""}" type="button" data-guidance-agent="${agent}" data-guidance-index="${index}" aria-pressed="${isSelected ? "true" : "false"}">
+                <span class="guidance-name">${escapeHtml(guidance.name)}</span>
+                <span class="guidance-description">${escapeHtml(guidance.description)}</span>
+                ${tokenMarkup}
+              </button>
+            `;
+          }).join("")}
+        </div>
+      </section>
+    `;
+  }).join("");
 }
 
 function openGuidance(trigger) {
@@ -978,12 +1068,35 @@ function closeGuidance() {
 }
 
 function applyTokenGuidance(prefix, guidance) {
+  if (guidance.custom) {
+    renderTokenGuidance();
+    return;
+  }
   setInputValue(`${prefix}InputTokens`, guidance.inputTokens);
   setInputValue(`${prefix}OutputTokens`, guidance.outputTokens);
   document.querySelectorAll("[data-scenario]").forEach((button) => {
     button.classList.remove("is-active");
   });
   scheduleUpdate();
+  renderTokenGuidance();
+}
+
+function applyCustomTokenGuidance(input, shouldRender = false) {
+  const agent = input.dataset.customTokenAgent;
+  const kind = input.dataset.customTokenKind;
+  const value = Math.max(0, Number.parseFloat(input.value) || 0);
+  if (!agent || !kind) {
+    return;
+  }
+
+  setInputValue(`${agent}${kind === "input" ? "InputTokens" : "OutputTokens"}`, value);
+  document.querySelectorAll("[data-scenario]").forEach((button) => {
+    button.classList.remove("is-active");
+  });
+  scheduleUpdate();
+  if (shouldRender) {
+    renderTokenGuidance();
+  }
 }
 
 function renderDashboard(data) {
@@ -1155,9 +1268,20 @@ output.tokenGuidanceDialog.addEventListener("click", (event) => {
     return;
   }
 
-  const guidance = TOKEN_GUIDANCE[Number(button.dataset.guidanceIndex)];
+  const group = TOKEN_GUIDANCE[button.dataset.guidanceAgent];
+  const guidance = group?.options[Number(button.dataset.guidanceIndex)];
   if (guidance) {
     applyTokenGuidance(button.dataset.guidanceAgent, guidance);
+  }
+});
+output.tokenGuidanceDialog.addEventListener("input", (event) => {
+  if (event.target.matches("[data-custom-token-agent]")) {
+    applyCustomTokenGuidance(event.target);
+  }
+});
+output.tokenGuidanceDialog.addEventListener("change", (event) => {
+  if (event.target.matches("[data-custom-token-agent]")) {
+    applyCustomTokenGuidance(event.target, true);
   }
 });
 output.agentConfigDialog.addEventListener("click", (event) => {

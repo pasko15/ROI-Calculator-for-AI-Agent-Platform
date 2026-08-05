@@ -715,22 +715,89 @@
 
     .guidance-grid {
       display: grid;
-      gap: 10px;
+      gap: var(--space-4);
     }
 
-    .guidance-row {
+    .guidance-section {
       display: grid;
-      grid-template-columns: minmax(120px, 0.9fr) minmax(180px, 1.5fr) minmax(82px, 0.5fr) minmax(82px, 0.5fr);
-      gap: 10px;
-      align-items: center;
-      padding: 8px 10px;
+      gap: var(--space-3);
+      padding: var(--space-3);
       border: 1px solid var(--line);
       border-radius: var(--radius);
       background: var(--surface-soft);
     }
 
+    .guidance-section-head {
+      display: grid;
+      gap: 2px;
+    }
+
+    .guidance-section-head h3 {
+      font-size: 0.95rem;
+      font-weight: 800;
+    }
+
+    .guidance-section-head p {
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+
+    .guidance-options {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--space-2);
+    }
+
+    .guidance-option {
+      display: grid;
+      gap: 5px;
+      min-height: 112px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 10px;
+      background: #ffffff;
+      color: var(--text);
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .guidance-option:hover,
+    .guidance-option:focus-visible {
+      outline: 0;
+      border-color: var(--accent);
+      box-shadow: 0 8px 20px rgba(21, 111, 124, 0.1);
+    }
+
+    .guidance-option.is-selected {
+      border-color: var(--accent);
+      background:
+        linear-gradient(180deg, rgba(37, 160, 168, 0.12), rgba(255, 255, 255, 0.96) 150px),
+        #ffffff;
+      box-shadow: 0 12px 28px rgba(21, 111, 124, 0.16);
+    }
+
+    .guidance-option.is-selected .guidance-name::after {
+      content: "Selected";
+      display: inline-flex;
+      min-height: 20px;
+      align-items: center;
+      margin-left: 8px;
+      border: 1px solid rgba(37, 160, 168, 0.38);
+      border-radius: 999px;
+      padding: 1px 7px;
+      background: rgba(240, 251, 251, 0.92);
+      color: var(--accent);
+      font-size: 0.66rem;
+      font-weight: 850;
+      vertical-align: middle;
+    }
+
+    .guidance-custom-option {
+      cursor: default;
+    }
+
     .guidance-name {
-      font-weight: 760;
+      font-weight: 800;
     }
 
     .guidance-description {
@@ -738,23 +805,46 @@
       font-size: 0.8rem;
     }
 
-    .guidance-metric {
-      text-align: right;
-      font-weight: 760;
+    .guidance-token-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-self: end;
+    }
+
+    .guidance-token-row span {
+      display: inline-flex;
+      min-height: 22px;
+      align-items: center;
+      border: 1px solid rgba(37, 160, 168, 0.38);
+      border-radius: 999px;
+      padding: 2px 8px;
+      background: rgba(240, 251, 251, 0.92);
+      color: var(--accent);
+      font-size: 0.72rem;
+      font-weight: 800;
       white-space: nowrap;
     }
 
-    .guidance-actions {
-      display: flex;
-      grid-column: 1 / -1;
-      justify-content: flex-start;
+    .guidance-custom-fields {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: var(--space-2);
+      align-self: end;
     }
 
-    .guidance-actions .btn {
-      min-height: 28px;
-      padding: 4px 9px;
-      font-size: 0.8rem;
+    .guidance-custom-fields label {
+      display: grid;
+      gap: 4px;
+      color: var(--muted);
+      font-size: 0.72rem;
+      font-weight: 800;
+    }
+
+    .guidance-custom-fields input {
+      min-height: 32px;
+      padding: 6px 8px;
+      text-align: right;
     }
 
     .use-case-summary {
@@ -1302,14 +1392,8 @@
         grid-template-columns: 1fr;
       }
 
-      .guidance-row {
+      .guidance-options {
         grid-template-columns: 1fr;
-      }
-
-      .guidance-metric,
-      .guidance-actions {
-        text-align: left;
-        justify-content: flex-start;
       }
 
       input[type="number"] {
@@ -1674,7 +1758,7 @@
       <div class="dialog-title">
         <div>
           <h2 id="tokenGuidanceTitle">Token guidance</h2>
-          <p class="card-note" style="margin:4px 0 0">Use these starting points for tokens per interaction. You can still tune the values in each agent card.</p>
+          <p class="card-note" style="margin:4px 0 0">Choose the closest workload shape for each agent. The selected option updates that agent's token assumptions.</p>
         </div>
         <button id="closeGuidanceButton" class="btn icon-btn" type="button" aria-label="Close token guidance">x</button>
       </div>
