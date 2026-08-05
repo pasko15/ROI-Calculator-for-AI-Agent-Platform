@@ -40,6 +40,7 @@ const fallbackModelCatalog = [
 
 let modelCatalog = [...fallbackModelCatalog];
 let catalogRowsExpanded = false;
+const CATALOG_PREVIEW_LIMIT = 4;
 const LOCAL_CATALOG_KEY = "agent-roi-model-catalog";
 
 const agentNames = {
@@ -385,7 +386,9 @@ function renderCatalog() {
     return;
   }
 
-  const visibleModels = catalogRowsExpanded ? modelCatalog : modelCatalog.slice(0, 6);
+  const visibleModels = catalogRowsExpanded
+    ? modelCatalog
+    : modelCatalog.slice(0, CATALOG_PREVIEW_LIMIT);
 
   output.catalogBody.innerHTML = visibleModels.map((model) => `
     <tr>
@@ -399,10 +402,10 @@ function renderCatalog() {
   `).join("");
 
   if (output.catalogViewToggle) {
-    output.catalogViewToggle.hidden = modelCatalog.length <= 6;
+    output.catalogViewToggle.hidden = modelCatalog.length <= CATALOG_PREVIEW_LIMIT;
     output.catalogViewToggle.textContent = catalogRowsExpanded
       ? "View fewer"
-      : `View more (${modelCatalog.length - 6})`;
+      : `View more (${modelCatalog.length - CATALOG_PREVIEW_LIMIT})`;
   }
 }
 
