@@ -5,8 +5,10 @@ import os
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
+from urllib.parse import parse_qs, urlparse
 
 from ROI_Model import calculate_dashboard
+from pricing_catalog import add_or_update_manual_model, load_catalog
 
 
 ROOT = Path(__file__).resolve().parent
@@ -16,34 +18,57 @@ PORT = int(os.environ.get("PORT", "8000"))
 
 class ROIRequestHandler(BaseHTTPRequestHandler):
     def do_GET(self) -> None:
-        if self.path in ("/", "/index.html"):
+        parsed = urlparse(self.path)
+
+        if parsed.path in ("/", "/index.html"):
             self._send_file(ROOT / "index.html", "text/html; charset=utf-8")
             return
-        if self.path == "/app.js":
+        if parsed.path == "/app.js":
             self._send_file(ROOT / "app.js", "text/javascript; charset=utf-8")
             return
-        if self.path == "/roirobot.png":
+        if parsed.path == "/roirobot.png":
             self._send_file(ROOT / "roirobot.png", "image/png")
+            return
+        if parsed.path == "/api/model-catalog":
+            query = parse_qs(parsed.query)
+            refresh = query.get("refresh", ["0"])[0] == "1"
+            self._send_json(load_catalog(refresh=refresh))
             return
 
         self.send_error(404, "Not found")
 
     def do_POST(self) -> None:
-        if self.path != "/api/calculate":
-            self.send_error(404, "Not found")
+        parsed = urlparse(self.path)
+
+        if parsed.path == "/api/calculate":
+            try:
+                payload = self._read_json_body()
+                result = calculate_dashboard(payload)
+            except ValueError as error:
+                self._send_json({"error": str(error)}, status=400)
+                return
+            except Exception as error:
+                self._send_json({"error": f"Calculation failed: {error}"}, status=500)
+                return
+
+            self._send_json(result)
             return
 
-        try:
-            payload = self._read_json_body()
-            result = calculate_dashboard(payload)
-        except ValueError as error:
-            self._send_json({"error": str(error)}, status=400)
-            return
-        except Exception as error:
-            self._send_json({"error": f"Calculation failed: {error}"}, status=500)
+        if parsed.path == "/api/model-catalog":
+            try:
+                payload = self._read_json_body()
+                catalog = add_or_update_manual_model(payload)
+            except ValueError as error:
+                self._send_json({"error": str(error)}, status=400)
+                return
+            except Exception as error:
+                self._send_json({"error": f"Catalog update failed: {error}"}, status=500)
+                return
+
+            self._send_json(catalog)
             return
 
-        self._send_json(result)
+        self.send_error(404, "Not found")
 
     def log_message(self, format: str, *args: Any) -> None:
         print(f"{self.address_string()} - {format % args}")
@@ -81,8 +106,17 @@ class ROIRequestHandler(BaseHTTPRequestHandler):
 
 
 def main() -> None:
-    server = ThreadingHTTPServer((HOST, PORT), ROIRequestHandler)
-    print(f"ROI dashboard running at http://{HOST}:{PORT}")
+    port = PORT
+    while True:
+        try:
+            server = ThreadingHTTPServer((HOST, port), ROIRequestHandler)
+            break
+        except OSError as error:
+            if port >= PORT + 20:
+                raise error
+            port += 1
+
+    print(f"ROI dashboard running at http://{HOST}:{port}")
     server.serve_forever()
 
 

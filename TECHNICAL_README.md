@@ -4,8 +4,10 @@ This application separates ROI calculation logic from presentation:
 
 - `ROI_Model.py` contains the calculation model and dashboard data builder.
 - `app.py` exposes a small local HTTP API using Python standard library tools.
-- `index.html` contains the dashboard layout, form controls, cards, and chart containers.
-- `app.js` collects inputs, calls the Python API, and renders the returned results with Chart.js.
+- `pricing_catalog.py` manages model catalog data, cached manual entries, and Azure Retail Prices API refresh.
+- `index.html` contains the dashboard layout, form controls, cards, agent table, and model catalog modal.
+- `app.js` collects inputs, calls the Python API, and renders the returned results.
+- `model_catalog_cache.json` stores the cached model catalog used by the UI.
 
 The browser does not duplicate the business formulas. It sends assumptions to Python and renders the response.
 
@@ -16,7 +18,7 @@ The browser does not duplicate the business formulas. It sends assumptions to Py
 3. The browser sends a JSON payload to `POST /api/calculate`.
 4. `app.py` passes that payload to `calculate_dashboard(...)` in `ROI_Model.py`.
 5. Python returns summary KPIs, model mix costs, chart series, and sensitivity table data.
-6. `app.js` updates KPI cards, model cost lines, charts, and the sensitivity table.
+6. `app.js` updates KPI cards and the agent/model mix table.
 
 ## Main Calculation Objects
 
@@ -115,6 +117,24 @@ Response includes:
 - `model_mix`
 - `charts`
 - `sensitivity`
+
+The backend still returns chart and sensitivity data so charts can be reintroduced later without changing the calculation layer. The current UI intentionally keeps the page focused and does not render those sections.
+
+### `GET /api/model-catalog`
+
+Returns the cached model catalog from `model_catalog_cache.json`.
+
+Use:
+
+```text
+GET /api/model-catalog?refresh=1
+```
+
+to attempt a refresh from the Azure Retail Prices API. If Azure pricing cannot be reached, the backend returns the cached catalog with a warning instead of breaking the UI.
+
+### `POST /api/model-catalog`
+
+Adds or updates one manual model in the cache.
 
 ## Local Development
 

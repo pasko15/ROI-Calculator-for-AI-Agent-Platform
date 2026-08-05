@@ -539,10 +539,6 @@
       min-width: 860px;
     }
 
-    .sensitivity-table {
-      min-width: 980px;
-    }
-
     th,
     td {
       border-bottom: 1px solid var(--line);
@@ -580,53 +576,6 @@
 
     .negative {
       color: var(--negative);
-    }
-
-    .matrix-cell {
-      display: grid;
-      gap: 5px;
-      min-width: 188px;
-      text-align: left;
-    }
-
-    .matrix-line {
-      display: flex;
-      justify-content: space-between;
-      gap: 10px;
-      color: var(--muted);
-      font-size: 0.76rem;
-    }
-
-    .matrix-line strong {
-      color: var(--text);
-      font-size: 0.78rem;
-      font-weight: 750;
-      white-space: nowrap;
-    }
-
-    .roi-pill {
-      display: inline-flex;
-      justify-content: center;
-      min-width: 72px;
-      border-radius: 999px;
-      padding: 3px 8px;
-      font-size: 0.74rem;
-      font-weight: 800;
-    }
-
-    .roi-pill.positive {
-      background: #eaf7ef;
-      color: var(--positive);
-    }
-
-    .roi-pill.negative {
-      background: #fef0ef;
-      color: var(--negative);
-    }
-
-    .roi-pill.neutral {
-      background: #fff6e6;
-      color: var(--warning);
     }
 
     .dialog-backdrop {
@@ -1003,6 +952,7 @@
         <div>
           <h2 id="modelCatalogTitle">Model catalog</h2>
           <p class="card-note" style="margin:4px 0 0">Assign catalog models to agents and maintain manual pricing assumptions. Prices are per 1M tokens.</p>
+          <p id="catalogSourceNote" class="card-note" style="margin:4px 0 0">Loading catalog...</p>
         </div>
         <button id="closeCatalogButton" class="btn icon-btn" type="button" aria-label="Close model catalog">x</button>
       </div>
@@ -1055,6 +1005,7 @@
         </div>
       </div>
       <div class="dialog-actions">
+        <button id="refreshCatalogButton" class="btn" type="button">Refresh Azure prices</button>
         <button id="cancelCatalogButton" class="btn" type="button">Close</button>
         <button id="saveCatalogModelButton" class="btn btn-primary" type="button">Save model</button>
       </div>

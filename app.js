@@ -25,7 +25,7 @@ const PRESETS = {
   }
 };
 
-const modelCatalog = [
+const fallbackModelCatalog = [
   {
     name: "GPT-5.5",
     publisher: "OpenAI",
@@ -43,6 +43,9 @@ const modelCatalog = [
     outputDataZone: 4.95
   }
 ];
+
+let modelCatalog = [...fallbackModelCatalog];
+const LOCAL_CATALOG_KEY = "agent-roi-model-catalog";
 
 const agentNames = {
   modelOne: "Data Extract Agent",
@@ -83,7 +86,8 @@ const output = {
   agentMixBody: document.getElementById("agentMixBody"),
   statusLine: document.getElementById("statusLine"),
   modelCatalogDialog: document.getElementById("modelCatalogDialog"),
-  catalogBody: document.getElementById("catalogBody")
+  catalogBody: document.getElementById("catalogBody"),
+  catalogSourceNote: document.getElementById("catalogSourceNote")
 };
 
 const catalogFields = {
@@ -165,7 +169,7 @@ function getPayload(overrides = {}) {
 }
 
 async function calculate(payload) {
-  const response = await fetch("/api/calculate", {
+  const response = await fetch("api/calculate", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -173,11 +177,43 @@ async function calculate(payload) {
     body: JSON.stringify(payload)
   });
 
-  const body = await response.json();
+  const body = await readJsonResponse(response, "Python calculation API is not available. Run python app.py and open the local server URL.");
   if (!response.ok) {
     throw new Error(body.error || "Calculation failed.");
   }
   return body;
+}
+
+async function fetchModelCatalog(refresh = false) {
+  const response = await fetch(`api/model-catalog${refresh ? "?refresh=1" : ""}`);
+  const body = await readJsonResponse(response, "Python catalog API is not available. Using browser-local catalog instead.");
+  if (!response.ok) {
+    throw new Error(body.error || "Model catalog request failed.");
+  }
+  return body;
+}
+
+async function postManualModel(model) {
+  const response = await fetch("api/model-catalog", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(model)
+  });
+  const body = await readJsonResponse(response, "Python catalog API is not available. Saving this model in the browser instead.");
+  if (!response.ok) {
+    throw new Error(body.error || "Model catalog update failed.");
+  }
+  return body;
+}
+
+async function readJsonResponse(response, fallbackMessage) {
+  const contentType = response.headers.get("content-type") || "";
+  if (!contentType.includes("application/json")) {
+    throw new Error(fallbackMessage);
+  }
+  return response.json();
 }
 
 function formatMoney(value) {
@@ -251,6 +287,74 @@ function populateModelSelects() {
   });
 }
 
+function applyCatalog(catalog) {
+  if (Array.isArray(catalog.models) && catalog.models.length > 0) {
+    modelCatalog = catalog.models.map((model) => ({
+      name: model.name,
+      publisher: model.publisher || "Unknown",
+      inputGlobal: Number(model.inputGlobal),
+      outputGlobal: Number(model.outputGlobal),
+      inputDataZone: model.inputDataZone === null ? NaN : Number(model.inputDataZone),
+      outputDataZone: model.outputDataZone === null ? NaN : Number(model.outputDataZone)
+    }));
+  }
+
+  populateModelSelects();
+  renderCatalog(catalog);
+  if (output.catalogSourceNote) {
+    const source = catalog.source || "manual";
+    const updated = catalog.lastUpdated ? new Date(catalog.lastUpdated).toLocaleString() : "not refreshed yet";
+    output.catalogSourceNote.textContent = `Source: ${source}. Last updated: ${updated}.`;
+    if (catalog.warning) {
+      output.catalogSourceNote.textContent += ` ${catalog.warning}`;
+    }
+  }
+}
+
+async function loadModelCatalog(refresh = false) {
+  try {
+    const catalog = await fetchModelCatalog(refresh);
+    applyCatalog(catalog);
+    output.statusLine.textContent = "";
+  } catch (error) {
+    const localCatalog = loadLocalCatalog();
+    applyCatalog({
+      source: "browser-local",
+      lastUpdated: localCatalog.lastUpdated,
+      warning: error.message,
+      models: localCatalog.models
+    });
+    output.statusLine.textContent = "Using browser-local model catalog. Run python app.py for Azure refresh and shared cache.";
+  }
+}
+
+function loadLocalCatalog() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(LOCAL_CATALOG_KEY) || "null");
+    if (saved && Array.isArray(saved.models) && saved.models.length > 0) {
+      return saved;
+    }
+  } catch {
+    // Ignore corrupt browser state and fall back to defaults.
+  }
+
+  return {
+    source: "browser-default",
+    lastUpdated: null,
+    models: fallbackModelCatalog
+  };
+}
+
+function saveLocalCatalog(models) {
+  const catalog = {
+    source: "browser-local",
+    lastUpdated: new Date().toISOString(),
+    models
+  };
+  localStorage.setItem(LOCAL_CATALOG_KEY, JSON.stringify(catalog));
+  return catalog;
+}
+
 function applyModelToAgent(prefix) {
   const model = getSelectedModel(prefix);
   setInputValue(`${prefix}InputPrice`, model.inputGlobal);
@@ -296,7 +400,7 @@ function clearCatalogForm() {
   });
 }
 
-function saveCatalogModel() {
+async function saveCatalogModel() {
   const name = catalogFields.name.value.trim();
   const publisher = catalogFields.publisher.value.trim() || "Manual";
   const inputGlobal = readCatalogNumber(catalogFields.inputGlobal);
@@ -307,26 +411,47 @@ function saveCatalogModel() {
     return;
   }
 
-  const nextModel = {
-    name,
-    publisher,
-    inputGlobal,
-    outputGlobal,
-    inputDataZone: readCatalogNumber(catalogFields.inputDataZone),
-    outputDataZone: readCatalogNumber(catalogFields.outputDataZone)
-  };
-  const existingIndex = modelCatalog.findIndex((model) => model.name === name);
+  try {
+    const catalog = await postManualModel({
+      name,
+      publisher,
+      inputGlobal,
+      outputGlobal,
+      inputDataZone: readCatalogNumber(catalogFields.inputDataZone),
+      outputDataZone: readCatalogNumber(catalogFields.outputDataZone)
+    });
+    applyCatalog(catalog);
+    clearCatalogForm();
+    output.statusLine.textContent = "";
+  } catch (error) {
+    const existingIndex = modelCatalog.findIndex((model) => model.name === name);
+    const localModels = [...modelCatalog];
 
-  if (existingIndex >= 0) {
-    modelCatalog[existingIndex] = nextModel;
-  } else {
-    modelCatalog.push(nextModel);
+    if (existingIndex >= 0) {
+      localModels[existingIndex] = {
+        ...localModels[existingIndex],
+        name,
+        publisher,
+        inputGlobal,
+        outputGlobal,
+        inputDataZone: readCatalogNumber(catalogFields.inputDataZone),
+        outputDataZone: readCatalogNumber(catalogFields.outputDataZone)
+      };
+    } else {
+      localModels.push({
+        name,
+        publisher,
+        inputGlobal,
+        outputGlobal,
+        inputDataZone: readCatalogNumber(catalogFields.inputDataZone),
+        outputDataZone: readCatalogNumber(catalogFields.outputDataZone)
+      });
+    }
+
+    applyCatalog(saveLocalCatalog(localModels));
+    clearCatalogForm();
+    output.statusLine.textContent = "Saved model in this browser. Run python app.py to save through the backend cache.";
   }
-
-  populateModelSelects();
-  renderCatalog();
-  clearCatalogForm();
-  output.statusLine.textContent = "";
 }
 
 function setSignedClass(element, value) {
@@ -483,14 +608,28 @@ document.getElementById("openCatalogButton").addEventListener("click", openCatal
 document.getElementById("closeCatalogButton").addEventListener("click", closeCatalog);
 document.getElementById("cancelCatalogButton").addEventListener("click", closeCatalog);
 document.getElementById("saveCatalogModelButton").addEventListener("click", saveCatalogModel);
+document.getElementById("refreshCatalogButton").addEventListener("click", async () => {
+  output.statusLine.textContent = "Refreshing Azure prices...";
+  await loadModelCatalog(true);
+  updateDashboard();
+});
 output.modelCatalogDialog.addEventListener("click", (event) => {
   if (event.target === output.modelCatalogDialog) {
     closeCatalog();
   }
 });
 
-populateModelSelects();
-modelSelects.modelOne.value = "GPT-5.5";
-modelSelects.modelTwo.value = "GPT-5.4 mini";
-renderCatalog();
-updateDashboard();
+async function initializeDashboard() {
+  await loadModelCatalog(false);
+  modelSelects.modelOne.value = modelCatalog.some((model) => model.name === "GPT-5.5")
+    ? "GPT-5.5"
+    : modelCatalog[0].name;
+  modelSelects.modelTwo.value = modelCatalog.some((model) => model.name === "GPT-5.4 mini")
+    ? "GPT-5.4 mini"
+    : modelCatalog[0].name;
+  applyModelToAgent("modelOne");
+  applyModelToAgent("modelTwo");
+  updateDashboard();
+}
+
+initializeDashboard();
