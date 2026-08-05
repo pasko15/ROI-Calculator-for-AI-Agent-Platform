@@ -25,9 +25,9 @@
       --space-1: 4px;
       --space-2: 8px;
       --space-3: 12px;
-      --space-4: 16px;
-      --space-5: 20px;
-      --space-6: 24px;
+      --space-4: 14px;
+      --space-5: 18px;
+      --space-6: 18px;
     }
 
     * {
@@ -76,10 +76,10 @@
     }
 
     .nav {
-      min-height: 58px;
+      min-height: 50px;
       display: flex;
       align-items: center;
-      gap: var(--space-5);
+      gap: var(--space-4);
       padding: 0 max(var(--space-6), calc((100vw - 1450px) / 2));
       border-bottom: 1px solid var(--line);
       background: rgba(255, 255, 255, 0.92);
@@ -93,14 +93,14 @@
       display: flex;
       align-items: center;
       gap: var(--space-2);
-      min-width: 180px;
+      min-width: 150px;
       font-weight: 760;
       letter-spacing: 0;
     }
 
     .brand-mark {
-      width: 34px;
-      height: 34px;
+      width: 30px;
+      height: 30px;
       border: 1px solid var(--accent);
       border-radius: 4px;
       object-fit: cover;
@@ -153,10 +153,10 @@
     }
 
     .btn {
-      min-height: 34px;
+      min-height: 32px;
       border: 1px solid var(--line-strong);
       border-radius: var(--radius);
-      padding: 7px 12px;
+      padding: 6px 11px;
       background: #ffffff;
       color: var(--text);
       font-weight: 750;
@@ -217,17 +217,17 @@
     }
 
     .shell {
-      width: min(1450px, calc(100% - 48px));
+      width: min(1450px, calc(100% - 36px));
       margin: 0 auto;
-      padding: var(--space-6) 0;
+      padding: var(--space-4) 0;
     }
 
     .hero {
       display: flex;
       justify-content: space-between;
       align-items: flex-end;
-      gap: var(--space-6);
-      padding-bottom: var(--space-5);
+      gap: var(--space-4);
+      padding-bottom: var(--space-3);
     }
 
     .eyebrow {
@@ -240,7 +240,7 @@
 
     h1 {
       margin-top: 2px;
-      font-size: clamp(1.65rem, 2vw, 2.15rem);
+      font-size: clamp(1.55rem, 1.8vw, 1.95rem);
       font-weight: 760;
       letter-spacing: 0;
     }
@@ -274,10 +274,10 @@
     }
 
     .scenario-button {
-      min-height: 34px;
+      min-height: 31px;
       border: 0;
       border-radius: 999px;
-      padding: 6px 11px;
+      padding: 5px 10px;
       background: transparent;
       color: var(--muted);
       cursor: pointer;
@@ -300,16 +300,16 @@
     .kpi-grid {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: var(--space-4);
-      margin-bottom: var(--space-6);
+      gap: var(--space-3);
+      margin-bottom: var(--space-3);
     }
 
     .kpi-card {
-      min-height: 142px;
-      padding: var(--space-4);
+      min-height: 100px;
+      padding: 10px var(--space-3);
       display: grid;
       align-content: space-between;
-      gap: var(--space-3);
+      gap: var(--space-2);
       border-top: 2px solid var(--accent);
       border-radius: var(--radius);
     }
@@ -344,7 +344,7 @@
 
     .kpi-value {
       color: var(--text);
-      font-size: clamp(1.8rem, 3vw, 2.45rem);
+      font-size: clamp(1.55rem, 2.25vw, 2.05rem);
       font-weight: 760;
       line-height: 1;
       overflow-wrap: anywhere;
@@ -372,20 +372,20 @@
     .layout {
       display: grid;
       grid-template-columns: minmax(300px, 370px) minmax(0, 1fr);
-      gap: var(--space-6);
+      gap: var(--space-3);
       align-items: start;
     }
 
     .rail,
     .workbench {
       display: grid;
-      gap: var(--space-4);
+      gap: 10px;
       min-width: 0;
     }
 
     .card {
       border-radius: var(--radius);
-      padding: var(--space-4);
+      padding: 10px var(--space-3);
       min-width: 0;
     }
 
@@ -394,7 +394,7 @@
       align-items: center;
       justify-content: space-between;
       gap: var(--space-3);
-      margin-bottom: var(--space-3);
+      margin-bottom: 6px;
     }
 
     .card-title h2,
@@ -406,7 +406,7 @@
 
     .card-note {
       margin-top: -4px;
-      margin-bottom: var(--space-3);
+      margin-bottom: 6px;
       color: var(--muted);
       font-size: 0.76rem;
       line-height: 1.5;
@@ -414,7 +414,7 @@
 
     .input-stack {
       display: grid;
-      gap: var(--space-3);
+      gap: 10px;
     }
 
     .field {
@@ -561,7 +561,7 @@
     .cost-driver-panel {
       border-color: rgba(37, 160, 168, 0.55);
       background:
-        linear-gradient(180deg, rgba(37, 160, 168, 0.075), rgba(255, 255, 255, 0.94) 220px),
+        linear-gradient(180deg, rgba(37, 160, 168, 0.075), rgba(255, 255, 255, 0.94) 170px),
         rgba(255, 255, 255, 0.94);
       box-shadow: 0 22px 58px rgba(21, 111, 124, 0.14);
     }
@@ -608,28 +608,30 @@
     }
 
     .config-btn {
-      width: 30px;
-      min-width: 30px;
-      min-height: 30px;
+      width: 28px;
+      min-width: 28px;
+      min-height: 28px;
       padding: 0;
       display: inline-grid;
       place-items: center;
-      border: 0;
+      border: 1px solid rgba(184, 198, 210, 0.72);
       border-radius: 50%;
-      background: transparent;
+      background: rgba(255, 255, 255, 0.72);
       box-shadow: none;
+      transition: background 120ms ease, border-color 120ms ease, transform 120ms ease;
     }
 
     .config-btn:hover,
     .config-btn:focus-visible {
-      border: 0;
-      background: rgba(21, 111, 124, 0.08);
+      border-color: rgba(21, 111, 124, 0.48);
+      background: rgba(240, 251, 251, 0.96);
       color: var(--accent);
+      transform: translateY(-1px);
     }
 
     .config-btn img {
-      width: 20px;
-      height: 20px;
+      width: 19px;
+      height: 19px;
       display: block;
       opacity: 0.8;
     }
@@ -653,21 +655,35 @@
       font-weight: 850;
     }
 
+    .add-agent-row td {
+      padding: var(--space-2) var(--space-3);
+      background: rgba(249, 251, 252, 0.72);
+      text-align: left;
+    }
+
+    .add-agent-button {
+      min-height: 30px;
+      border-style: dashed;
+      color: var(--accent);
+      background: rgba(255, 255, 255, 0.72);
+      font-weight: 760;
+    }
+
     .agent-state {
       display: none;
     }
 
     .guidance-grid {
       display: grid;
-      gap: var(--space-3);
+      gap: 10px;
     }
 
     .guidance-row {
       display: grid;
       grid-template-columns: minmax(120px, 0.9fr) minmax(180px, 1.5fr) minmax(82px, 0.5fr) minmax(82px, 0.5fr);
-      gap: var(--space-3);
+      gap: 10px;
       align-items: center;
-      padding: 10px var(--space-3);
+      padding: 8px 10px;
       border: 1px solid var(--line);
       border-radius: var(--radius);
       background: var(--surface-soft);
@@ -696,8 +712,8 @@
     }
 
     .guidance-actions .btn {
-      min-height: 30px;
-      padding: 5px 10px;
+      min-height: 28px;
+      padding: 4px 9px;
       font-size: 0.8rem;
     }
 
@@ -730,7 +746,7 @@
     th,
     td {
       border-bottom: 1px solid var(--line);
-      padding: 9px 8px;
+      padding: 7px 8px;
       text-align: right;
       vertical-align: top;
       overflow-wrap: anywhere;
@@ -744,14 +760,14 @@
       letter-spacing: 0.06em;
       text-transform: uppercase;
       white-space: normal;
-      line-height: 1.25;
+      line-height: 1.18;
     }
 
     tbody th,
     td:first-child {
       color: var(--text);
       text-align: left;
-      font-size: 0.84rem;
+      font-size: 0.82rem;
       font-weight: 700;
     }
 
@@ -773,7 +789,7 @@
       inset: 0;
       z-index: 50;
       display: none;
-      padding: var(--space-6);
+      padding: var(--space-4);
       background: rgba(22, 32, 42, 0.46);
       overflow: auto;
       scrollbar-width: none;
@@ -814,7 +830,7 @@
 
     .dialog {
       width: min(860px, 100%);
-      max-height: calc(100svh - 48px);
+      max-height: calc(100svh - 32px);
       overflow: visible;
       scrollbar-width: none;
       border-radius: var(--radius);
@@ -841,7 +857,7 @@
       align-items: center;
       justify-content: space-between;
       gap: var(--space-3);
-      padding: var(--space-5);
+      padding: var(--space-4);
       border-bottom: 1px solid var(--line);
     }
 
@@ -868,14 +884,14 @@
     }
 
     .dialog-body {
-      padding: var(--space-4) var(--space-5);
+      padding: var(--space-3) var(--space-4);
     }
 
     .dialog-actions {
       display: flex;
       justify-content: flex-end;
       gap: var(--space-3);
-      padding: var(--space-4) var(--space-5);
+      padding: var(--space-3) var(--space-4);
       border-top: 1px solid var(--line);
       background: var(--surface-soft);
     }
@@ -893,7 +909,7 @@
     }
 
     .icon-btn {
-      width: 34px;
+      width: 32px;
       padding: 0;
       display: inline-grid;
       place-items: center;
@@ -904,7 +920,7 @@
     .catalog-preview-actions {
       display: flex;
       justify-content: center;
-      padding: var(--space-2);
+      padding: 6px;
       border-top: 1px solid var(--line);
       background: var(--surface-soft);
     }
@@ -912,15 +928,15 @@
     .insight-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: var(--space-4);
+      gap: var(--space-3);
     }
 
     .insight-card {
-      min-height: 255px;
+      min-height: 178px;
       display: grid;
       align-content: start;
-      gap: var(--space-3);
-      padding: var(--space-4);
+      gap: var(--space-2);
+      padding: 10px var(--space-3);
       border-radius: var(--radius);
     }
 
@@ -944,12 +960,12 @@
 
     .bar-list {
       display: grid;
-      gap: var(--space-3);
+      gap: 8px;
     }
 
     .bar-row {
       display: grid;
-      gap: 6px;
+      gap: 5px;
     }
 
     .bar-meta {
@@ -971,7 +987,7 @@
     }
 
     .bar-track {
-      height: 16px;
+      height: 18px;
       overflow: hidden;
       border-radius: 999px;
       background: #dfe9ed;
@@ -988,17 +1004,17 @@
     .comparison-chart {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: var(--space-4);
+      gap: var(--space-3);
       align-items: end;
-      min-height: 170px;
-      padding-top: var(--space-2);
+      min-height: 112px;
+      padding-top: var(--space-1);
     }
 
     .comparison-column {
       display: grid;
-      gap: var(--space-2);
+      gap: 6px;
       align-items: end;
-      min-height: 170px;
+      min-height: 112px;
     }
 
     .column-bar {

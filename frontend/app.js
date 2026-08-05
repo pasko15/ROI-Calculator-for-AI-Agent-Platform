@@ -588,7 +588,15 @@ function renderModelCosts(modelMix, summary) {
       `;
     }).join("");
 
-    output.agentMixBody.innerHTML = rows;
+    output.agentMixBody.innerHTML = `${rows}
+      <tr class="add-agent-row">
+        <td colspan="7">
+          <button class="btn add-agent-button" type="button" disabled title="Future Foundry sync or manual agent creation">
+            + Add agent
+          </button>
+        </td>
+      </tr>
+    `;
   }
 }
 
