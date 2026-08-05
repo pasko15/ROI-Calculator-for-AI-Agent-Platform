@@ -31,6 +31,9 @@ class ROIRequestHandler(BaseHTTPRequestHandler):
         if parsed.path == "/roirobot.png":
             self._send_file(ASSETS_ROOT / "roirobot.png", "image/png")
             return
+        if parsed.path == "/gear.png":
+            self._send_file(ASSETS_ROOT / "gear.png", "image/png")
+            return
         if parsed.path == "/api/model-catalog":
             query = parse_qs(parsed.query)
             refresh = query.get("refresh", ["0"])[0] == "1"

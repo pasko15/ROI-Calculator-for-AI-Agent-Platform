@@ -111,8 +111,19 @@ const output = {
   tokenGuidanceBody: document.getElementById("tokenGuidanceBody"),
   costByAgentChart: document.getElementById("costByAgentChart"),
   valueCostChart: document.getElementById("valueCostChart"),
-  roiBridgeChart: document.getElementById("roiBridgeChart")
+  roiBridgeChart: document.getElementById("roiBridgeChart"),
+  agentConfigDialog: document.getElementById("agentConfigDialog"),
+  agentConfigTitle: document.getElementById("agentConfigTitle")
 };
+
+const configFields = {
+  model: document.getElementById("configAgentModel"),
+  monthlyInteractions: document.getElementById("configMonthlyInteractions"),
+  inputTokens: document.getElementById("configInputTokens"),
+  outputTokens: document.getElementById("configOutputTokens")
+};
+
+let activeConfigPrefix = null;
 
 const catalogFields = {
   name: document.getElementById("catalogModelName"),
@@ -312,6 +323,16 @@ function populateModelSelects() {
       select.value = currentValue;
     }
   });
+
+  if (configFields.model) {
+    const currentValue = configFields.model.value;
+    configFields.model.innerHTML = modelCatalog.map((model) => (
+      `<option value="${model.name}">${model.name}</option>`
+    )).join("");
+    if (modelCatalog.some((model) => model.name === currentValue)) {
+      configFields.model.value = currentValue;
+    }
+  }
 }
 
 function applyCatalog(catalog) {
@@ -546,19 +567,68 @@ function renderModelCosts(modelMix, summary) {
       const selectedModel = getSelectedModel(prefix);
       return `
         <tr>
-          <td>${agentNames[prefix]}</td>
+          <td>
+            <div class="agent-cell">
+              <span class="agent-name">${agentNames[prefix]}</span>
+              <button class="btn config-btn" type="button" data-config-agent="${prefix}" aria-label="Configure ${agentNames[prefix]}" title="Configure ${agentNames[prefix]}">
+                <img src="gear.png" alt="">
+              </button>
+            </div>
+          </td>
           <td>${selectedModel.name}</td>
           <td>${formatWholeNumber(readInput(`${prefix}MonthlyInteractions`))}</td>
           <td>${formatWholeNumber(readInput(`${prefix}InputTokens`))}</td>
           <td>${formatWholeNumber(readInput(`${prefix}OutputTokens`))}</td>
           <td>${formatPreciseMoney(model.cost_per_interaction)}</td>
-          <td>${formatMoney(model.monthly_cost)}</td>
+          <td class="cost-cell">${formatMoney(model.monthly_cost)}</td>
         </tr>
       `;
     }).join("");
 
     output.agentMixBody.innerHTML = rows;
   }
+}
+
+function syncConfigFields(prefix) {
+  if (!prefix) {
+    return;
+  }
+
+  activeConfigPrefix = prefix;
+  output.agentConfigTitle.textContent = `Configure ${agentNames[prefix]}`;
+  configFields.model.value = modelSelects[prefix].value;
+  configFields.monthlyInteractions.value = readInput(`${prefix}MonthlyInteractions`);
+  configFields.inputTokens.value = readInput(`${prefix}InputTokens`);
+  configFields.outputTokens.value = readInput(`${prefix}OutputTokens`);
+}
+
+function openAgentConfig(prefix, trigger) {
+  syncConfigFields(prefix);
+  setDialogLaunch(output.agentConfigDialog, trigger);
+  output.agentConfigDialog.classList.remove("is-open");
+  void output.agentConfigDialog.offsetWidth;
+  output.agentConfigDialog.classList.add("is-open");
+  output.agentConfigDialog.setAttribute("aria-hidden", "false");
+}
+
+function closeAgentConfig() {
+  output.agentConfigDialog.classList.remove("is-open");
+  output.agentConfigDialog.setAttribute("aria-hidden", "true");
+}
+
+function applyAgentConfig() {
+  if (!activeConfigPrefix) {
+    return;
+  }
+
+  modelSelects[activeConfigPrefix].value = configFields.model.value;
+  setInputValue(`${activeConfigPrefix}MonthlyInteractions`, configFields.monthlyInteractions.value);
+  setInputValue(`${activeConfigPrefix}InputTokens`, configFields.inputTokens.value);
+  setInputValue(`${activeConfigPrefix}OutputTokens`, configFields.outputTokens.value);
+  document.querySelectorAll("[data-scenario]").forEach((button) => {
+    button.classList.remove("is-active");
+  });
+  scheduleUpdate();
 }
 
 function renderCostByAgent(modelMix) {
@@ -784,6 +854,11 @@ Object.entries(modelSelects).forEach(([prefix, select]) => {
   select.addEventListener("change", () => applyModelToAgent(prefix));
 });
 
+Object.values(configFields).forEach((field) => {
+  field.addEventListener("input", applyAgentConfig);
+  field.addEventListener("change", applyAgentConfig);
+});
+
 document.querySelectorAll("[data-scenario]").forEach((button) => {
   button.addEventListener("click", () => applyPreset(button.dataset.scenario));
 });
@@ -799,6 +874,8 @@ document.getElementById("openGuidanceButton").addEventListener("click", (event) 
 });
 document.getElementById("closeGuidanceButton").addEventListener("click", closeGuidance);
 document.getElementById("cancelGuidanceButton").addEventListener("click", closeGuidance);
+document.getElementById("closeAgentConfigButton").addEventListener("click", closeAgentConfig);
+document.getElementById("cancelAgentConfigButton").addEventListener("click", closeAgentConfig);
 document.getElementById("toggleCatalogRowsButton").addEventListener("click", () => {
   catalogRowsExpanded = !catalogRowsExpanded;
   renderCatalog();
@@ -828,6 +905,18 @@ output.tokenGuidanceDialog.addEventListener("click", (event) => {
   if (guidance) {
     applyTokenGuidance(button.dataset.guidanceAgent, guidance);
   }
+});
+output.agentConfigDialog.addEventListener("click", (event) => {
+  if (event.target === output.agentConfigDialog) {
+    closeAgentConfig();
+  }
+});
+output.agentMixBody.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-config-agent]");
+  if (!button) {
+    return;
+  }
+  openAgentConfig(button.dataset.configAgent, button);
 });
 
 async function initializeDashboard() {
