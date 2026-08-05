@@ -529,7 +529,7 @@
 
     .guidance-row {
       display: grid;
-      grid-template-columns: minmax(160px, 1.1fr) minmax(220px, 2fr) repeat(2, minmax(90px, 0.7fr)) minmax(210px, 1.2fr);
+      grid-template-columns: minmax(120px, 0.9fr) minmax(180px, 1.5fr) minmax(90px, 0.55fr) minmax(90px, 0.55fr);
       gap: var(--space-3);
       align-items: center;
       padding: var(--space-3);
@@ -550,12 +550,20 @@
     .guidance-metric {
       text-align: right;
       font-weight: 760;
+      white-space: nowrap;
     }
 
     .guidance-actions {
       display: flex;
-      justify-content: flex-end;
+      grid-column: 1 / -1;
+      justify-content: flex-start;
       gap: var(--space-2);
+    }
+
+    .guidance-actions .btn {
+      min-height: 30px;
+      padding: 5px 10px;
+      font-size: 0.8rem;
     }
 
     .status-line {
@@ -644,6 +652,15 @@
       box-shadow: var(--shadow-md);
     }
 
+    .token-dialog {
+      width: min(780px, 100%);
+      overflow-x: hidden;
+    }
+
+    .catalog-dialog {
+      width: min(900px, 100%);
+    }
+
     .dialog-title {
       display: flex;
       align-items: center;
@@ -651,6 +668,23 @@
       gap: var(--space-3);
       padding: var(--space-5);
       border-bottom: 1px solid var(--line);
+    }
+
+    .dialog-title-actions {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+
+    .catalog-source-row {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      margin-top: 4px;
+    }
+
+    .catalog-source-row .card-note {
+      margin: 0;
     }
 
     .dialog-title h2 {
@@ -690,6 +724,14 @@
       place-items: center;
       font-size: 1.1rem;
       line-height: 1;
+    }
+
+    .catalog-preview-actions {
+      display: flex;
+      justify-content: center;
+      padding: var(--space-3);
+      border-top: 1px solid var(--line);
+      background: var(--surface-soft);
     }
 
     @media (max-width: 1180px) {
@@ -974,15 +1016,20 @@
   </main>
 
   <div id="modelCatalogDialog" class="dialog-backdrop" aria-hidden="true">
-    <section class="dialog blueprint" role="dialog" aria-modal="true" aria-labelledby="modelCatalogTitle">
+    <section class="dialog catalog-dialog blueprint" role="dialog" aria-modal="true" aria-labelledby="modelCatalogTitle">
       <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
       <div class="dialog-title">
         <div>
           <h2 id="modelCatalogTitle">Model catalog</h2>
           <p class="card-note" style="margin:4px 0 0">Assign catalog models to agents and maintain manual pricing assumptions. Prices are per 1M tokens.</p>
-          <p id="catalogSourceNote" class="card-note" style="margin:4px 0 0">Loading catalog...</p>
+          <div class="catalog-source-row">
+            <p id="catalogSourceNote" class="card-note">Loading catalog...</p>
+            <button id="refreshCatalogButton" class="btn icon-btn" type="button" aria-label="Refresh Azure prices" title="Refresh Azure prices">&#8635;</button>
+          </div>
         </div>
-        <button id="closeCatalogButton" class="btn icon-btn" type="button" aria-label="Close model catalog">x</button>
+        <div class="dialog-title-actions">
+          <button id="closeCatalogButton" class="btn icon-btn" type="button" aria-label="Close model catalog">x</button>
+        </div>
       </div>
       <div class="dialog-body">
         <div class="table-wrap">
@@ -999,6 +1046,9 @@
             </thead>
             <tbody id="catalogBody"></tbody>
           </table>
+          <div class="catalog-preview-actions">
+            <button id="toggleCatalogRowsButton" class="btn" type="button">View more</button>
+          </div>
         </div>
 
         <div style="margin-top:var(--space-5);padding-top:var(--space-5);border-top:1px solid var(--line)">
@@ -1033,7 +1083,6 @@
         </div>
       </div>
       <div class="dialog-actions">
-        <button id="refreshCatalogButton" class="btn" type="button">Refresh Azure prices</button>
         <button id="cancelCatalogButton" class="btn" type="button">Close</button>
         <button id="saveCatalogModelButton" class="btn btn-primary" type="button">Save model</button>
       </div>
@@ -1041,7 +1090,7 @@
   </div>
 
   <div id="tokenGuidanceDialog" class="dialog-backdrop" aria-hidden="true">
-    <section class="dialog blueprint" role="dialog" aria-modal="true" aria-labelledby="tokenGuidanceTitle">
+    <section class="dialog token-dialog blueprint" role="dialog" aria-modal="true" aria-labelledby="tokenGuidanceTitle">
       <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
       <div class="dialog-title">
         <div>

@@ -39,6 +39,7 @@ const fallbackModelCatalog = [
 ];
 
 let modelCatalog = [...fallbackModelCatalog];
+let catalogRowsExpanded = false;
 const LOCAL_CATALOG_KEY = "agent-roi-model-catalog";
 
 const agentNames = {
@@ -108,6 +109,7 @@ const output = {
   statusLine: document.getElementById("statusLine"),
   modelCatalogDialog: document.getElementById("modelCatalogDialog"),
   catalogBody: document.getElementById("catalogBody"),
+  catalogViewToggle: document.getElementById("toggleCatalogRowsButton"),
   catalogSourceNote: document.getElementById("catalogSourceNote"),
   tokenGuidanceDialog: document.getElementById("tokenGuidanceDialog"),
   tokenGuidanceBody: document.getElementById("tokenGuidanceBody")
@@ -387,7 +389,9 @@ function renderCatalog() {
     return;
   }
 
-  output.catalogBody.innerHTML = modelCatalog.map((model) => `
+  const visibleModels = catalogRowsExpanded ? modelCatalog : modelCatalog.slice(0, 6);
+
+  output.catalogBody.innerHTML = visibleModels.map((model) => `
     <tr>
       <td>${model.name}</td>
       <td>${model.publisher}</td>
@@ -397,6 +401,13 @@ function renderCatalog() {
       <td>${Number.isFinite(model.outputDataZone) ? formatPreciseMoney(model.outputDataZone) : "-"}</td>
     </tr>
   `).join("");
+
+  if (output.catalogViewToggle) {
+    output.catalogViewToggle.hidden = modelCatalog.length <= 6;
+    output.catalogViewToggle.textContent = catalogRowsExpanded
+      ? "View fewer"
+      : `View more (${modelCatalog.length - 6})`;
+  }
 }
 
 function openCatalog() {
@@ -668,6 +679,10 @@ document.getElementById("saveCatalogModelButton").addEventListener("click", save
 document.getElementById("openGuidanceButton").addEventListener("click", openGuidance);
 document.getElementById("closeGuidanceButton").addEventListener("click", closeGuidance);
 document.getElementById("cancelGuidanceButton").addEventListener("click", closeGuidance);
+document.getElementById("toggleCatalogRowsButton").addEventListener("click", () => {
+  catalogRowsExpanded = !catalogRowsExpanded;
+  renderCatalog();
+});
 document.getElementById("refreshCatalogButton").addEventListener("click", async () => {
   output.statusLine.textContent = "Refreshing Azure prices...";
   await loadModelCatalog(true);
