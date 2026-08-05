@@ -1,0 +1,919 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Agent Platform ROI Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --page: #f4f7fa;
+      --panel: #ffffff;
+      --panel-soft: #f8fafc;
+      --ink: #17202a;
+      --muted: #647084;
+      --line: #d7e0e8;
+      --line-strong: #b9c7d4;
+      --navy: #123545;
+      --navy-2: #173f52;
+      --teal: #0f8b8d;
+      --blue: #2f6fbb;
+      --green: #1b8f5a;
+      --amber: #b7791f;
+      --red: #b42318;
+      --soft-teal: #e8f6f5;
+      --soft-blue: #edf4fd;
+      --soft-green: #eaf7ef;
+      --soft-amber: #fff6e6;
+      --soft-red: #fef0ef;
+      --shadow: 0 16px 36px rgba(23, 32, 42, 0.08);
+      --radius: 8px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      min-width: 320px;
+    }
+
+    body {
+      margin: 0;
+      background: var(--page);
+      color: var(--ink);
+      font-family: "Segoe UI", Arial, sans-serif;
+      line-height: 1.45;
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin: 0;
+    }
+
+    .shell {
+      width: min(1480px, 100%);
+      margin: 0 auto;
+      padding: 22px;
+    }
+
+    .top-band {
+      background: linear-gradient(135deg, var(--navy), var(--navy-2));
+      color: #ffffff;
+      border-bottom: 5px solid var(--teal);
+    }
+
+    .top-band .shell {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 24px;
+      align-items: center;
+    }
+
+    .eyebrow {
+      color: rgba(255, 255, 255, 0.72);
+      font-size: 0.78rem;
+      font-weight: 750;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin-top: 4px;
+      font-size: clamp(1.45rem, 2vw, 2.35rem);
+      font-weight: 760;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      max-width: 880px;
+      margin-top: 6px;
+      color: rgba(255, 255, 255, 0.78);
+      font-size: 0.98rem;
+    }
+
+    .answer-card {
+      width: min(380px, 100%);
+      padding: 16px 18px;
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, 0.09);
+    }
+
+    .answer-card span {
+      display: block;
+      color: rgba(255, 255, 255, 0.72);
+      font-size: 0.76rem;
+      font-weight: 750;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+    }
+
+    .answer-card strong {
+      display: block;
+      margin-top: 6px;
+      font-size: clamp(1.8rem, 3vw, 2.8rem);
+      line-height: 1;
+    }
+
+    .answer-card p {
+      margin-top: 8px;
+      color: rgba(255, 255, 255, 0.74);
+      font-size: 0.88rem;
+    }
+
+    .page {
+      display: grid;
+      gap: 18px;
+    }
+
+    .scenario-bar,
+    .panel,
+    .kpi-card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .scenario-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 14px;
+    }
+
+    .scenario-title {
+      min-width: 170px;
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 760;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+    }
+
+    .scenario-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+
+    .scenario-button {
+      min-height: 40px;
+      border: 1px solid var(--line-strong);
+      border-radius: var(--radius);
+      padding: 8px 13px;
+      color: var(--ink);
+      background: #ffffff;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .scenario-button:hover,
+    .scenario-button:focus-visible,
+    .scenario-button.is-active {
+      outline: 0;
+      border-color: var(--teal);
+      background: var(--soft-teal);
+      color: #0b5f61;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(330px, 410px) minmax(0, 1fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .panel-header {
+      padding: 18px 20px 0;
+    }
+
+    .panel-header h2 {
+      font-size: 1rem;
+      font-weight: 760;
+      letter-spacing: 0;
+    }
+
+    .panel-header p {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 0.86rem;
+    }
+
+    .panel-body {
+      padding: 18px 20px 20px;
+    }
+
+    .inputs-panel {
+      position: sticky;
+      top: 16px;
+    }
+
+    .input-group {
+      display: grid;
+      gap: 12px;
+      padding: 0 0 18px;
+      border-bottom: 1px solid var(--line);
+      margin-bottom: 18px;
+    }
+
+    .input-group:last-child {
+      margin-bottom: 0;
+      padding-bottom: 0;
+      border-bottom: 0;
+    }
+
+    .input-group h3 {
+      color: #2c3a48;
+      font-size: 0.82rem;
+      font-weight: 800;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+    }
+
+    .field {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(112px, 138px);
+      gap: 12px;
+      align-items: center;
+    }
+
+    label {
+      color: var(--ink);
+      font-size: 0.9rem;
+      font-weight: 650;
+    }
+
+    .label-with-info {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .info-icon {
+      display: inline-grid;
+      width: 16px;
+      height: 16px;
+      place-items: center;
+      border: 1px solid var(--line-strong);
+      border-radius: 3px;
+      color: var(--muted);
+      background: #ffffff;
+      font-size: 0.68rem;
+      font-weight: 800;
+      line-height: 1;
+      cursor: help;
+    }
+
+    .info-icon:hover,
+    .info-icon:focus {
+      border-color: var(--teal);
+      color: #0b5f61;
+      background: var(--soft-teal);
+    }
+
+    input[type="number"] {
+      width: 100%;
+      min-height: 40px;
+      border: 1px solid #c6d1dc;
+      border-radius: var(--radius);
+      color: var(--ink);
+      background: #fbfdff;
+      padding: 8px 10px;
+      text-align: right;
+    }
+
+    input[type="number"]:focus {
+      outline: 3px solid rgba(15, 139, 141, 0.18);
+      border-color: var(--teal);
+      background: #ffffff;
+    }
+
+    .model-row {
+      display: grid;
+      gap: 10px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel-soft);
+    }
+
+    .model-row-title {
+      color: #2c3a48;
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .calc-note {
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--soft-blue);
+      color: #344452;
+      font-size: 0.82rem;
+    }
+
+    .model-costs {
+      display: grid;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .model-cost-line {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+
+    .model-cost-line strong {
+      color: var(--ink);
+      white-space: nowrap;
+    }
+
+    .status-line {
+      min-height: 20px;
+      color: var(--red);
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+
+    .calculated-total {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel-soft);
+    }
+
+    .calculated-total span {
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-weight: 750;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .calculated-total output {
+      color: var(--ink);
+      font-size: 1.1rem;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .workbench {
+      display: grid;
+      gap: 18px;
+    }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .kpi-card {
+      min-height: 132px;
+      padding: 16px;
+      display: grid;
+      align-content: space-between;
+      gap: 10px;
+      border-left-width: 5px;
+    }
+
+    .kpi-card[data-tone="blue"] {
+      border-left-color: var(--blue);
+    }
+
+    .kpi-card[data-tone="green"] {
+      border-left-color: var(--green);
+    }
+
+    .kpi-card[data-tone="amber"] {
+      border-left-color: var(--amber);
+    }
+
+    .kpi-card[data-tone="teal"] {
+      border-left-color: var(--teal);
+    }
+
+    .kpi-card[data-tone="red"] {
+      border-left-color: var(--red);
+    }
+
+    .kpi-label {
+      color: var(--muted);
+      font-size: 0.75rem;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .kpi-value {
+      color: var(--ink);
+      font-size: clamp(1.2rem, 1.9vw, 1.9rem);
+      font-weight: 800;
+      line-height: 1.1;
+      overflow-wrap: anywhere;
+    }
+
+    .kpi-context {
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+
+    .positive {
+      color: #14734a;
+    }
+
+    .negative {
+      color: var(--red);
+    }
+
+    .charts-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .chart-panel {
+      min-height: 360px;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+    }
+
+    .chart-panel.wide {
+      grid-column: 1 / -1;
+    }
+
+    .chart-wrap {
+      position: relative;
+      height: 285px;
+      min-height: 285px;
+    }
+
+    .chart-panel.wide .chart-wrap {
+      height: 320px;
+    }
+
+    .chart-fallback {
+      display: none;
+      min-height: 250px;
+      place-items: center;
+      border: 1px dashed var(--line-strong);
+      border-radius: var(--radius);
+      color: var(--muted);
+      background: var(--panel-soft);
+      text-align: center;
+      padding: 24px;
+    }
+
+    .charts-unavailable canvas {
+      display: none;
+    }
+
+    .charts-unavailable .chart-fallback {
+      display: grid;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #ffffff;
+    }
+
+    table {
+      width: 100%;
+      min-width: 980px;
+      border-collapse: collapse;
+    }
+
+    th,
+    td {
+      border-bottom: 1px solid var(--line);
+      padding: 12px;
+      vertical-align: top;
+      text-align: right;
+    }
+
+    th {
+      background: #eef3f7;
+      color: #344452;
+      font-size: 0.75rem;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    tbody th {
+      background: #ffffff;
+      color: var(--ink);
+      font-size: 0.95rem;
+      letter-spacing: 0;
+      text-align: left;
+      text-transform: none;
+    }
+
+    tr:last-child th,
+    tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .matrix-cell {
+      display: grid;
+      gap: 5px;
+      min-width: 188px;
+      text-align: left;
+    }
+
+    .matrix-line {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+
+    .matrix-line strong {
+      color: var(--ink);
+      font-size: 0.82rem;
+      font-weight: 750;
+      white-space: nowrap;
+    }
+
+    .roi-pill {
+      display: inline-flex;
+      justify-content: center;
+      min-width: 72px;
+      border-radius: 999px;
+      padding: 3px 8px;
+      font-size: 0.78rem;
+      font-weight: 800;
+    }
+
+    .roi-pill.positive {
+      background: var(--soft-green);
+      color: #14734a;
+    }
+
+    .roi-pill.negative {
+      background: var(--soft-red);
+      color: var(--red);
+    }
+
+    .roi-pill.neutral {
+      background: var(--soft-amber);
+      color: #7a5812;
+    }
+
+    @media (max-width: 1200px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .inputs-panel {
+        position: static;
+      }
+
+      .kpi-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 860px) {
+      .shell {
+        padding: 16px;
+      }
+
+      .top-band .shell,
+      .scenario-bar,
+      .field {
+        grid-template-columns: 1fr;
+      }
+
+      .scenario-bar {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .scenario-actions {
+        justify-content: flex-start;
+      }
+
+      .answer-card {
+        width: 100%;
+      }
+
+      .charts-grid,
+      .kpi-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .chart-panel,
+      .chart-panel.wide {
+        min-height: 340px;
+      }
+
+      .chart-wrap,
+      .chart-panel.wide .chart-wrap {
+        height: 250px;
+        min-height: 250px;
+      }
+
+      input[type="number"] {
+        text-align: left;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="top-band">
+    <div class="shell">
+      <div>
+        <div class="eyebrow">Executive ROI Model</div>
+        <h1>AI Agent Platform ROI Dashboard</h1>
+        <p class="subtitle">Activity-based investment model for adoption, interaction volume, platform costs, labor savings, and break-even time.</p>
+      </div>
+      <div class="answer-card">
+        <span>Break-even answer</span>
+        <strong id="heroBreakEven">0 min</strong>
+        <p>saved per active employee per week</p>
+      </div>
+    </div>
+  </header>
+
+  <main class="shell page">
+    <section class="scenario-bar" aria-label="Preset scenarios">
+      <div class="scenario-title">Preset Scenarios</div>
+      <div class="scenario-actions">
+        <button class="scenario-button" type="button" data-scenario="pilot">Small Pilot</button>
+        <button class="scenario-button" type="button" data-scenario="department">Department Rollout</button>
+        <button class="scenario-button" type="button" data-scenario="enterprise">Enterprise Deployment</button>
+      </div>
+    </section>
+
+    <section class="layout">
+      <aside class="panel inputs-panel" aria-label="ROI model inputs">
+        <div class="panel-header">
+          <h2>Model Inputs</h2>
+          <p>Workforce, interaction volume, and model token costs.</p>
+        </div>
+        <div class="panel-body">
+          <div class="input-group">
+            <h3>Workforce</h3>
+            <div class="field">
+              <label for="workers" class="label-with-info">Number of workers <span class="info-icon" title="Total employees in the population that could use the agent platform.">i</span></label>
+              <input id="workers" data-input="workers" type="number" min="0" step="1" value="100">
+            </div>
+            <div class="field">
+              <label for="adoptionRate" class="label-with-info">Adoption rate (%) <span class="info-icon" title="Share of workers expected to actively use the agents. Active users equals workers times adoption rate.">i</span></label>
+              <input id="adoptionRate" data-input="adoptionRate" type="number" min="0" max="100" step="1" value="70">
+            </div>
+            <div class="field">
+              <label for="hourlyCost" class="label-with-info">Average hourly employee cost ($/hour) <span class="info-icon" title="Fully loaded average employee cost used to convert saved hours into financial value.">i</span></label>
+              <input id="hourlyCost" data-input="hourlyCost" type="number" min="0" step="1" value="75">
+            </div>
+            <div class="field">
+              <label for="minutesSaved" class="label-with-info">Time saved per worker per week (minutes) <span class="info-icon" title="Estimated weekly productivity gain for each active user.">i</span></label>
+              <input id="minutesSaved" data-input="minutesSaved" type="number" min="0" step="1" value="45">
+            </div>
+          </div>
+
+          <div class="input-group">
+            <h3>Platform Usage</h3>
+            <div class="field">
+              <label for="interactionsPerDay" class="label-with-info">Interactions per active user per day <span class="info-icon" title="An interaction is one user task made up of roughly 1-3 user-entered messages.">i</span></label>
+              <input id="interactionsPerDay" data-input="interactionsPerDay" type="number" min="0" step="1" value="10">
+            </div>
+            <div class="field">
+              <label for="workingDays" class="label-with-info">Working days per month <span class="info-icon" title="Business days used to convert daily agent usage into monthly interaction volume.">i</span></label>
+              <input id="workingDays" data-input="workingDays" type="number" min="0" max="31" step="1" value="21">
+            </div>
+            <div class="field">
+              <label for="manualCostPerInteraction" class="label-with-info">Manual cost override ($/interaction) <span class="info-icon" title="Fallback cost per interaction used only when model usage shares do not add to 100%. Use it for quick what-if tests before the model mix is complete.">i</span></label>
+              <input id="manualCostPerInteraction" data-input="manualCostPerInteraction" type="number" min="0" step="0.01" value="0.13">
+            </div>
+            <div class="calc-note">An interaction is defined as one user task made up of roughly 1-3 user-entered messages. Python uses the blended model cost when model shares add to 100%; otherwise it uses the manual override.</div>
+          </div>
+
+          <div class="input-group">
+            <h3>Model Mix</h3>
+            <div class="model-row">
+              <div class="model-row-title">Data Extract Agent - GPT-5.5</div>
+              <div class="field">
+                <label for="modelOneShare" class="label-with-info">Usage share (%) <span class="info-icon" title="Percent of total interactions handled by this agent.">i</span></label>
+                <input id="modelOneShare" data-input="modelOneShare" type="number" min="0" max="100" step="1" value="35">
+              </div>
+              <div class="field">
+                <label for="modelOneInputPrice" class="label-with-info">Input price ($/1M tokens) <span class="info-icon" title="Provider price for one million input tokens. Global GPT-5.5 example: $5.00 per 1M input tokens.">i</span></label>
+                <input id="modelOneInputPrice" data-input="modelOneInputPrice" type="number" min="0" step="0.01" value="5.00">
+              </div>
+              <div class="field">
+                <label for="modelOneOutputPrice" class="label-with-info">Output price ($/1M tokens) <span class="info-icon" title="Provider price for one million output tokens. Global GPT-5.5 example: $30.00 per 1M output tokens.">i</span></label>
+                <input id="modelOneOutputPrice" data-input="modelOneOutputPrice" type="number" min="0" step="0.01" value="30.00">
+              </div>
+              <div class="field">
+                <label for="modelOneInputTokens" class="label-with-info">Avg input tokens <span class="info-icon" title="Average prompt, context, retrieved data, and tool payload tokens consumed by one interaction.">i</span></label>
+                <input id="modelOneInputTokens" data-input="modelOneInputTokens" type="number" min="0" step="50" value="68000">
+              </div>
+              <div class="field">
+                <label for="modelOneOutputTokens" class="label-with-info">Avg output tokens <span class="info-icon" title="Average generated response tokens produced by one interaction.">i</span></label>
+                <input id="modelOneOutputTokens" data-input="modelOneOutputTokens" type="number" min="0" step="50" value="710">
+              </div>
+            </div>
+
+            <div class="model-row">
+              <div class="model-row-title">Report Generating Agent - GPT-5.4 mini</div>
+              <div class="field">
+                <label for="modelTwoShare" class="label-with-info">Usage share (%) <span class="info-icon" title="Percent of total interactions handled by this agent.">i</span></label>
+                <input id="modelTwoShare" data-input="modelTwoShare" type="number" min="0" max="100" step="1" value="65">
+              </div>
+              <div class="field">
+                <label for="modelTwoInputPrice" class="label-with-info">Input price ($/1M tokens) <span class="info-icon" title="Provider price for one million input tokens. Global GPT-5.4 mini example: $0.75 per 1M input tokens.">i</span></label>
+                <input id="modelTwoInputPrice" data-input="modelTwoInputPrice" type="number" min="0" step="0.001" value="0.75">
+              </div>
+              <div class="field">
+                <label for="modelTwoOutputPrice" class="label-with-info">Output price ($/1M tokens) <span class="info-icon" title="Provider price for one million output tokens. Global GPT-5.4 mini example: $4.50 per 1M output tokens.">i</span></label>
+                <input id="modelTwoOutputPrice" data-input="modelTwoOutputPrice" type="number" min="0" step="0.001" value="4.50">
+              </div>
+              <div class="field">
+                <label for="modelTwoInputTokens" class="label-with-info">Avg input tokens <span class="info-icon" title="Average prompt, context, retrieved data, and tool payload tokens consumed by one interaction.">i</span></label>
+                <input id="modelTwoInputTokens" data-input="modelTwoInputTokens" type="number" min="0" step="50" value="4200">
+              </div>
+              <div class="field">
+                <label for="modelTwoOutputTokens" class="label-with-info">Avg output tokens <span class="info-icon" title="Average generated response tokens produced by one interaction.">i</span></label>
+                <input id="modelTwoOutputTokens" data-input="modelTwoOutputTokens" type="number" min="0" step="50" value="64">
+              </div>
+            </div>
+            <div id="modelCostLines" class="model-costs"></div>
+          </div>
+
+          <div class="input-group">
+            <h3>Implementation</h3>
+            <div class="field">
+              <label for="implementationCost" class="label-with-info">One-time implementation cost ($) <span class="info-icon" title="Optional upfront implementation cost used only for payback period. It is not treated as a recurring platform cost.">i</span></label>
+              <input id="implementationCost" data-input="implementationCost" type="number" min="0" step="1000" value="15000">
+            </div>
+            <div id="statusLine" class="status-line" role="status"></div>
+          </div>
+        </div>
+      </aside>
+
+      <div class="workbench">
+        <section class="kpi-grid" aria-label="Key performance indicators">
+          <article class="kpi-card" data-tone="amber">
+            <div class="kpi-label">Monthly Platform Cost</div>
+            <div id="monthlyPlatformCostKpi" class="kpi-value">$0</div>
+            <div id="costMixContext" class="kpi-context">$0 model usage cost</div>
+          </article>
+          <article class="kpi-card" data-tone="amber">
+            <div class="kpi-label">Annual Platform Cost</div>
+            <div id="annualPlatformCostKpi" class="kpi-value">$0</div>
+            <div class="kpi-context">12 month run rate</div>
+          </article>
+          <article class="kpi-card" data-tone="blue">
+            <div class="kpi-label">Monthly Value Created</div>
+            <div id="monthlyValueKpi" class="kpi-value">$0</div>
+            <div id="monthlyHoursContext" class="kpi-context">0 monthly hours saved</div>
+          </article>
+          <article class="kpi-card" data-tone="blue">
+            <div class="kpi-label">Annual Value Created</div>
+            <div id="annualValueKpi" class="kpi-value">$0</div>
+            <div id="annualHoursContext" class="kpi-context">0 annual hours saved</div>
+          </article>
+          <article class="kpi-card" data-tone="green">
+            <div class="kpi-label">Monthly Net Benefit</div>
+            <div id="monthlyNetBenefitKpi" class="kpi-value">$0</div>
+            <div class="kpi-context">value minus platform cost</div>
+          </article>
+          <article class="kpi-card" data-tone="green">
+            <div class="kpi-label">Annual Net Benefit</div>
+            <div id="annualNetBenefitKpi" class="kpi-value">$0</div>
+            <div class="kpi-context">annual value minus annual cost</div>
+          </article>
+          <article class="kpi-card" data-tone="teal">
+            <div class="kpi-label">ROI %</div>
+            <div id="roiKpi" class="kpi-value">0%</div>
+            <div id="effectiveWorkersContext" class="kpi-context">0 effective workers</div>
+          </article>
+          <article class="kpi-card" data-tone="red">
+            <div class="kpi-label">Break-Even Minutes Saved Per Worker Per Week</div>
+            <div id="breakEvenKpi" class="kpi-value">0 min</div>
+            <div class="kpi-context">minimum weekly time saving</div>
+          </article>
+          <article class="kpi-card" data-tone="teal">
+            <div class="kpi-label">Monthly Interactions</div>
+            <div id="monthlyInteractionsKpi" class="kpi-value">0</div>
+            <div id="usageContext" class="kpi-context">0 per active user per day</div>
+          </article>
+        </section>
+
+        <section class="charts-grid" aria-label="Interactive charts">
+          <article class="panel chart-panel">
+            <div class="panel-header">
+              <h2>ROI vs Number of Workers</h2>
+            </div>
+            <div class="panel-body">
+              <div class="chart-wrap">
+                <canvas id="workersChart" aria-label="ROI versus number of workers"></canvas>
+                <div class="chart-fallback">Chart.js is required for this chart.</div>
+              </div>
+            </div>
+          </article>
+
+          <article class="panel chart-panel">
+            <div class="panel-header">
+              <h2>ROI vs Time Saved Per Week</h2>
+            </div>
+            <div class="panel-body">
+              <div class="chart-wrap">
+                <canvas id="minutesChart" aria-label="ROI versus weekly time saved"></canvas>
+                <div class="chart-fallback">Chart.js is required for this chart.</div>
+              </div>
+            </div>
+          </article>
+
+          <article class="panel chart-panel">
+            <div class="panel-header">
+              <h2>ROI vs Cost Per Interaction</h2>
+            </div>
+            <div class="panel-body">
+              <div class="chart-wrap">
+                <canvas id="interactionCostChart" aria-label="ROI versus cost per interaction"></canvas>
+                <div class="chart-fallback">Chart.js is required for this chart.</div>
+              </div>
+            </div>
+          </article>
+
+          <article class="panel chart-panel">
+            <div class="panel-header">
+              <h2>Monthly AI Cost by Agent</h2>
+            </div>
+            <div class="panel-body">
+              <div class="chart-wrap">
+                <canvas id="costBreakdownChart" aria-label="Monthly AI cost by agent"></canvas>
+                <div class="chart-fallback">Chart.js is required for this chart.</div>
+              </div>
+            </div>
+          </article>
+
+          <article class="panel chart-panel wide">
+            <div class="panel-header">
+              <h2>Platform Cost vs User Adoption</h2>
+            </div>
+            <div class="panel-body">
+              <div class="chart-wrap">
+                <canvas id="adoptionCostChart" aria-label="Monthly platform cost versus user adoption"></canvas>
+                <div class="chart-fallback">Chart.js is required for this chart.</div>
+              </div>
+            </div>
+          </article>
+        </section>
+
+        <section class="panel" aria-label="Sensitivity analysis table">
+          <div class="panel-header">
+            <h2>Sensitivity Analysis</h2>
+            <p>Workers by minutes saved per week.</p>
+          </div>
+          <div class="panel-body">
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Workers</th>
+                    <th>15 min/week</th>
+                    <th>30 min/week</th>
+                    <th>60 min/week</th>
+                    <th>120 min/week</th>
+                  </tr>
+                </thead>
+                <tbody id="sensitivityBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      </div>
+    </section>
+  </main>
+  <script src="/app.js"></script>
+</body>
+</html>
+
