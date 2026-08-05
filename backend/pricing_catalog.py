@@ -11,8 +11,8 @@ from urllib.parse import urlencode
 import requests
 
 
-ROOT = Path(__file__).resolve().parent
-CACHE_PATH = ROOT / "model_catalog_cache.json"
+ROOT = Path(__file__).resolve().parent.parent
+CACHE_PATH = ROOT / "data" / "model_catalog_cache.json"
 AZURE_PRICES_URL = "https://prices.azure.com/api/retail/prices"
 
 DEFAULT_MODELS: list[dict[str, Any]] = [

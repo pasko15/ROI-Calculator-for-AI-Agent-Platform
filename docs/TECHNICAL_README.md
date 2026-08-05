@@ -2,12 +2,14 @@
 
 This application separates ROI calculation logic from presentation:
 
-- `ROI_Model.py` contains the calculation model and dashboard data builder.
-- `app.py` exposes a small local HTTP API using Python standard library tools.
-- `pricing_catalog.py` manages model catalog data, cached manual entries, and Azure Retail Prices API refresh.
-- `index.html` contains the dashboard layout, form controls, cards, agent table, model catalog modal, and token guidance modal.
-- `app.js` collects inputs, applies catalog pricing from the selected model, calls the Python API, and renders the returned results.
-- `model_catalog_cache.json` stores the cached model catalog used by the UI.
+- `app.py` is the root launcher for local development.
+- `backend/server.py` exposes a small local HTTP API using Python standard library tools.
+- `backend/roi_model.py` contains the calculation model and dashboard data builder.
+- `backend/pricing_catalog.py` manages model catalog data, cached manual entries, and Azure Retail Prices API refresh.
+- `frontend/index.html` contains the dashboard layout, form controls, cards, agent table, model catalog modal, and token guidance modal.
+- `frontend/app.js` collects inputs, applies catalog pricing from the selected model, calls the Python API, and renders the returned results.
+- `frontend/assets/` contains UI assets such as the logo.
+- `data/model_catalog_cache.json` stores the cached model catalog used by the UI.
 
 The browser does not duplicate the business formulas. It sends assumptions to Python and renders the response.
 
@@ -16,7 +18,7 @@ The browser does not duplicate the business formulas. It sends assumptions to Py
 1. The user opens the dashboard in the browser.
 2. `app.js` reads the current form inputs.
 3. The browser sends a JSON payload to `POST /api/calculate`.
-4. `app.py` passes that payload to `calculate_dashboard(...)` in `ROI_Model.py`.
+4. `backend/server.py` passes that payload to `calculate_dashboard(...)` in `backend/roi_model.py`.
 5. Python returns summary KPIs, model mix costs, chart series, and sensitivity table data.
 6. `app.js` updates KPI cards and the agent/model mix table.
 
@@ -82,11 +84,11 @@ If no usable model mix is supplied, Python falls back to the manual cost overrid
 
 ### `GET /`
 
-Serves `index.html`.
+Serves `frontend/index.html`.
 
 ### `GET /app.js`
 
-Serves the frontend JavaScript.
+Serves `frontend/app.js`.
 
 ### `POST /api/calculate`
 
@@ -127,7 +129,7 @@ The backend still returns chart and sensitivity data so charts can be reintroduc
 
 ### `GET /api/model-catalog`
 
-Returns the cached model catalog from `model_catalog_cache.json`.
+Returns the cached model catalog from `data/model_catalog_cache.json`.
 
 Use:
 
@@ -146,13 +148,13 @@ Adds or updates one manual model in the cache.
 Compile-check Python:
 
 ```powershell
-python -m py_compile ROI_Model.py app.py pricing_catalog.py
+python -m py_compile app.py backend/server.py backend/roi_model.py backend/pricing_catalog.py
 ```
 
 Check JavaScript syntax:
 
 ```powershell
-node --check app.js
+node --check frontend/app.js
 ```
 
 Run the server:

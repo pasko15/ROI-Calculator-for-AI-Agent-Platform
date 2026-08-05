@@ -51,6 +51,14 @@ Then open:
 http://127.0.0.1:8001
 ```
 
+## Project Structure
+
+- `app.py` starts the local dashboard server.
+- `backend/` contains the Python API, pricing catalog integration, and ROI model.
+- `frontend/` contains the HTML, browser JavaScript, and UI assets.
+- `data/` contains the local model catalog cache.
+- `docs/` contains technical notes and future ideas.
+
 ## Current Scope
 
 The model does not currently include fixed platform costs, because those cost drivers are not defined yet for this use case. The monthly platform cost shown in the dashboard should currently be read as monthly standard pay-as-you-go AI model usage cost.
