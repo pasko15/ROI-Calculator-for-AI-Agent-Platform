@@ -828,6 +828,179 @@
       background: var(--surface-soft);
     }
 
+    .insight-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: var(--space-4);
+    }
+
+    .insight-card {
+      min-height: 255px;
+      display: grid;
+      align-content: start;
+      gap: var(--space-3);
+      padding: var(--space-4);
+      border-radius: var(--radius);
+    }
+
+    .insight-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: var(--space-3);
+    }
+
+    .insight-head h3 {
+      font-size: 0.92rem;
+      font-weight: 760;
+    }
+
+    .insight-note {
+      color: var(--muted);
+      font-size: 0.76rem;
+      line-height: 1.45;
+    }
+
+    .bar-list {
+      display: grid;
+      gap: var(--space-3);
+    }
+
+    .bar-row {
+      display: grid;
+      gap: 6px;
+    }
+
+    .bar-meta {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: var(--space-3);
+      font-size: 0.78rem;
+    }
+
+    .bar-name {
+      font-weight: 760;
+    }
+
+    .bar-value {
+      color: var(--muted);
+      font-weight: 750;
+      white-space: nowrap;
+    }
+
+    .bar-track {
+      height: 10px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: #edf3f5;
+    }
+
+    .bar-fill {
+      width: var(--bar-width, 0%);
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      transition: width 180ms ease;
+    }
+
+    .comparison-chart {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--space-4);
+      align-items: end;
+      min-height: 150px;
+      padding-top: var(--space-2);
+    }
+
+    .comparison-column {
+      display: grid;
+      gap: var(--space-2);
+      align-items: end;
+      min-height: 150px;
+    }
+
+    .column-bar {
+      height: var(--bar-height, 0%);
+      min-height: 8px;
+      border-radius: var(--radius) var(--radius) 2px 2px;
+      background: linear-gradient(180deg, var(--accent-2), var(--accent));
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.42);
+      transition: height 180ms ease;
+    }
+
+    .column-bar.cost {
+      background: linear-gradient(180deg, #7e96a5, #40505f);
+    }
+
+    .column-label {
+      color: var(--muted);
+      font-size: 0.72rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .column-value {
+      font-size: 1rem;
+      font-weight: 760;
+    }
+
+    .bridge-list {
+      display: grid;
+      gap: var(--space-3);
+    }
+
+    .bridge-row {
+      display: grid;
+      grid-template-columns: 92px minmax(0, 1fr) auto;
+      gap: var(--space-3);
+      align-items: center;
+    }
+
+    .bridge-label {
+      color: var(--muted);
+      font-size: 0.72rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .bridge-track {
+      height: 12px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: #edf3f5;
+    }
+
+    .bridge-fill {
+      width: var(--bar-width, 0%);
+      height: 100%;
+      border-radius: inherit;
+      background: var(--accent);
+      transition: width 180ms ease;
+    }
+
+    .bridge-fill.cost {
+      background: #687586;
+    }
+
+    .bridge-fill.net {
+      background: var(--positive);
+    }
+
+    .bridge-fill.net.negative {
+      background: var(--negative);
+    }
+
+    .bridge-value {
+      min-width: 74px;
+      text-align: right;
+      font-size: 0.82rem;
+      font-weight: 760;
+      white-space: nowrap;
+    }
+
     @keyframes button-ghost {
       0% {
         opacity: 0.42;
@@ -908,7 +1081,8 @@
       }
 
       .kpi-grid,
-      .two-col {
+      .two-col,
+      .insight-grid {
         grid-template-columns: 1fr;
       }
 
@@ -1021,20 +1195,6 @@
         <section class="card blueprint">
           <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
           <div class="card-title">
-            <h2>Usage assumptions</h2>
-          </div>
-          <p class="card-note">1 interaction = 1 user task, typically made up of 1-3 user-entered messages.</p>
-          <div class="input-stack">
-            <div class="field">
-              <label for="manualCostPerInteraction" class="label-with-info">Manual override ($/interaction) <span class="info-icon" tabindex="0" data-tip="Fallback cost used only if no model catalog pricing is available.">i</span></label>
-              <input id="manualCostPerInteraction" data-input="manualCostPerInteraction" type="number" min="0" step="0.01" value="0.13">
-            </div>
-          </div>
-        </section>
-
-        <section class="card blueprint">
-          <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
-          <div class="card-title">
             <h2>Model pricing source</h2>
             <span class="info-icon" tabindex="0" data-tip="Manual for now. Later, Azure can auto-fill prices and usage from deployments.">i</span>
           </div>
@@ -1126,6 +1286,41 @@
               </div>
             </div>
           </div>
+        </section>
+
+        <section class="insight-grid" aria-label="Management insight charts">
+          <article class="insight-card blueprint">
+            <div class="insight-head">
+              <div>
+                <h3>Cost by agent</h3>
+                <p class="insight-note">Shows which agents drive monthly spend.</p>
+              </div>
+              <span class="info-icon" tabindex="0" data-tip="Each bar is one agent's monthly cost as a share of the highest-cost agent.">i</span>
+            </div>
+            <div id="costByAgentChart" class="bar-list"></div>
+          </article>
+
+          <article class="insight-card blueprint">
+            <div class="insight-head">
+              <div>
+                <h3>Value vs cost</h3>
+                <p class="insight-note">Compares monthly productivity value with monthly AI cost.</p>
+              </div>
+              <span class="info-icon" tabindex="0" data-tip="Monthly value is active users times weekly time saved times hourly cost times 4.33 weeks.">i</span>
+            </div>
+            <div id="valueCostChart" class="comparison-chart"></div>
+          </article>
+
+          <article class="insight-card blueprint">
+            <div class="insight-head">
+              <div>
+                <h3>ROI bridge</h3>
+                <p class="insight-note">Shows value, cost, and net monthly benefit together.</p>
+              </div>
+              <span class="info-icon" tabindex="0" data-tip="Net monthly benefit equals monthly value minus total monthly costs.">i</span>
+            </div>
+            <div id="roiBridgeChart" class="bridge-list"></div>
+          </article>
         </section>
 
         <div id="usageContext" hidden>0 per active user per day</div>

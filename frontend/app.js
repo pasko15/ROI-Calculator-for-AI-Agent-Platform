@@ -2,20 +2,17 @@ const PRESETS = {
   pilot: {
     activeMonthlyUsers: 10,
     modelOneMonthlyInteractions: 210,
-    modelTwoMonthlyInteractions: 840,
-    manualCostPerInteraction: 0.36
+    modelTwoMonthlyInteractions: 840
   },
   department: {
     activeMonthlyUsers: 40,
     modelOneMonthlyInteractions: 840,
-    modelTwoMonthlyInteractions: 3360,
-    manualCostPerInteraction: 0.13
+    modelTwoMonthlyInteractions: 3360
   },
   enterprise: {
     activeMonthlyUsers: 200,
     modelOneMonthlyInteractions: 4200,
-    modelTwoMonthlyInteractions: 16800,
-    manualCostPerInteraction: 0.18
+    modelTwoMonthlyInteractions: 16800
   }
 };
 
@@ -111,7 +108,10 @@ const output = {
   catalogViewToggle: document.getElementById("toggleCatalogRowsButton"),
   catalogSourceNote: document.getElementById("catalogSourceNote"),
   tokenGuidanceDialog: document.getElementById("tokenGuidanceDialog"),
-  tokenGuidanceBody: document.getElementById("tokenGuidanceBody")
+  tokenGuidanceBody: document.getElementById("tokenGuidanceBody"),
+  costByAgentChart: document.getElementById("costByAgentChart"),
+  valueCostChart: document.getElementById("valueCostChart"),
+  roiBridgeChart: document.getElementById("roiBridgeChart")
 };
 
 const catalogFields = {
@@ -180,7 +180,6 @@ function getPayload(overrides = {}) {
     active_monthly_users: Math.max(0, readInput("activeMonthlyUsers")),
     hourly_cost_per_worker: Math.max(0, readInput("hourlyCost")),
     time_saved_minutes_per_user_per_week: Math.max(0, readInput("minutesSaved")),
-    manual_cost_per_interaction: Math.max(0, readInput("manualCostPerInteraction")),
     model_mix: [
       modelPayload("modelOne", agentNames.modelOne),
       modelPayload("modelTwo", agentNames.modelTwo)
@@ -268,6 +267,13 @@ function formatMinutes(value) {
 
   const formatted = value >= 10 ? formatWholeNumber(value) : formatNumber(value);
   return `${formatted} min`;
+}
+
+function clampPercent(value) {
+  if (!Number.isFinite(value)) {
+    return 0;
+  }
+  return Math.min(Math.max(value, 0), 100);
 }
 
 function formatMonths(value) {
@@ -555,6 +561,86 @@ function renderModelCosts(modelMix, summary) {
   }
 }
 
+function renderCostByAgent(modelMix) {
+  if (!output.costByAgentChart) {
+    return;
+  }
+
+  const maxCost = Math.max(...modelMix.map((model) => model.monthly_cost || 0), 0);
+  output.costByAgentChart.innerHTML = modelMix.map((model, index) => {
+    const prefix = index === 0 ? "modelOne" : "modelTwo";
+    const width = maxCost > 0 ? clampPercent((model.monthly_cost / maxCost) * 100) : 0;
+    return `
+      <div class="bar-row">
+        <div class="bar-meta">
+          <span class="bar-name">${agentNames[prefix]}</span>
+          <span class="bar-value">${formatMoney(model.monthly_cost || 0)}</span>
+        </div>
+        <div class="bar-track">
+          <div class="bar-fill" style="--bar-width:${width}%"></div>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+function renderValueCostChart(summary) {
+  if (!output.valueCostChart) {
+    return;
+  }
+
+  const monthlyValue = summary.monthly_value || 0;
+  const monthlyCost = summary.monthly_platform_cost || 0;
+  const maxValue = Math.max(monthlyValue, monthlyCost, 1);
+  const valueHeight = clampPercent((monthlyValue / maxValue) * 100);
+  const costHeight = clampPercent((monthlyCost / maxValue) * 100);
+
+  output.valueCostChart.innerHTML = `
+    <div class="comparison-column">
+      <div class="column-value">${formatMoney(monthlyValue)}</div>
+      <div class="column-bar" style="--bar-height:${valueHeight}%"></div>
+      <div class="column-label">Value</div>
+    </div>
+    <div class="comparison-column">
+      <div class="column-value">${formatMoney(monthlyCost)}</div>
+      <div class="column-bar cost" style="--bar-height:${costHeight}%"></div>
+      <div class="column-label">Cost</div>
+    </div>
+  `;
+}
+
+function renderRoiBridge(summary) {
+  if (!output.roiBridgeChart) {
+    return;
+  }
+
+  const monthlyValue = summary.monthly_value || 0;
+  const monthlyCost = summary.monthly_platform_cost || 0;
+  const monthlyNet = summary.monthly_net_benefit || 0;
+  const maxValue = Math.max(Math.abs(monthlyValue), Math.abs(monthlyCost), Math.abs(monthlyNet), 1);
+  const rows = [
+    { label: "Value", value: monthlyValue, className: "" },
+    { label: "Cost", value: monthlyCost, className: "cost" },
+    { label: "Net", value: monthlyNet, className: `net ${monthlyNet < 0 ? "negative" : ""}` }
+  ];
+
+  output.roiBridgeChart.innerHTML = rows.map((row) => `
+    <div class="bridge-row">
+      <div class="bridge-label">${row.label}</div>
+      <div class="bridge-track">
+        <div class="bridge-fill ${row.className}" style="--bar-width:${clampPercent((Math.abs(row.value) / maxValue) * 100)}%"></div>
+      </div>
+      <div class="bridge-value">${formatMoney(row.value)}</div>
+    </div>
+  `).join("");
+}
+
+function renderInsightCharts(data) {
+  renderCostByAgent(data.model_mix || []);
+  renderValueCostChart(data.summary);
+  renderRoiBridge(data.summary);
+}
+
 function renderTokenGuidance() {
   if (!output.tokenGuidanceBody) {
     return;
@@ -627,6 +713,7 @@ function renderDashboard(data) {
   setSignedClass(output.roiKpi, summary.monthly_roi_percent);
 
   renderModelCosts(data.model_mix, summary);
+  renderInsightCharts(data);
 }
 
 let pendingUpdate = 0;

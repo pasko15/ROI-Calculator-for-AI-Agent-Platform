@@ -51,7 +51,6 @@ Represents the full ROI scenario:
 - active monthly users
 - per-agent monthly usage volume
 - model mix
-- optional manual cost override
 - time saved
 - hourly employee cost
 
@@ -72,12 +71,6 @@ The model calculates:
 The current model mix assumes standard pay-as-you-go token pricing. The selected catalog model provides input and output prices per 1 million tokens, and each agent contributes cost through its tokens per interaction.
 
 Dedicated capacity options such as PTUs, batch processing, and other commitment-based pricing models are intentionally out of scope for the current calculation layer. They should be added later as explicit deployment or pricing modes rather than blended into the standard pay-as-you-go path.
-
-## Manual Cost Override
-
-The dashboard includes a manual cost override for quick scenario testing and fallback use. In the current UI, visible per-agent shares are removed. The frontend sends equal internal weights for the configured agents, and Python blends their catalog-derived per-interaction costs.
-
-If no usable model mix is supplied, Python falls back to the manual cost override.
 
 ## API
 
@@ -100,7 +93,6 @@ Example payload shape:
   "active_monthly_users": 100,
   "hourly_cost_per_worker": 75,
   "time_saved_minutes_per_user_per_week": 45,
-  "manual_cost_per_interaction": 0.13,
   "model_mix": [
     {
       "name": "Data Extract Agent - GPT-5.5",
