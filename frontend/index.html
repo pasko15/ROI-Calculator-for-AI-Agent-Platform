@@ -538,6 +538,38 @@
       text-transform: uppercase;
     }
 
+    .cost-driver-panel {
+      border-color: rgba(37, 160, 168, 0.55);
+      background:
+        linear-gradient(180deg, rgba(37, 160, 168, 0.075), rgba(255, 255, 255, 0.94) 220px),
+        rgba(255, 255, 255, 0.94);
+      box-shadow: 0 22px 58px rgba(21, 111, 124, 0.14);
+    }
+
+    .cost-driver-panel::before {
+      content: "";
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 4px;
+      border-radius: var(--radius) 0 0 var(--radius);
+      background: linear-gradient(180deg, var(--accent-2), var(--accent));
+    }
+
+    .cost-driver-tag {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      border: 1px solid rgba(37, 160, 168, 0.38);
+      border-radius: 999px;
+      padding: 3px 9px;
+      color: var(--accent);
+      background: rgba(240, 251, 251, 0.92);
+      font-size: 0.68rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
     .agent-actions {
       display: flex;
       align-items: center;
@@ -1017,11 +1049,12 @@
       </aside>
 
       <div class="workbench">
-        <section id="model-mix" class="card blueprint">
+        <section id="model-mix" class="card blueprint cost-driver-panel">
           <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
           <div class="card-title">
             <h2>Agent & model mix</h2>
             <div class="agent-actions">
+              <span class="cost-driver-tag">Main cost driver</span>
               <button id="openGuidanceButton" class="btn" type="button">Token guidance</button>
               <button id="openCatalogButton" class="btn" type="button">Model catalog</button>
               <span class="info-icon" tabindex="0" data-tip="Each agent contributes to cost based on token usage and selected model input/output prices.">i</span>
