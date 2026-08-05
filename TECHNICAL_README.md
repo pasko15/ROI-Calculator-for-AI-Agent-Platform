@@ -66,6 +66,12 @@ The model calculates:
 - break-even minutes
 - payback period
 
+## Pricing Scope
+
+The current model mix assumes standard pay-as-you-go token pricing. The selected catalog model provides input and output prices per 1 million tokens, and each agent contributes cost through its tokens per interaction.
+
+Dedicated capacity options such as PTUs, batch processing, and other commitment-based pricing models are intentionally out of scope for the current calculation layer. They should be added later as explicit deployment or pricing modes rather than blended into the standard pay-as-you-go path.
+
 ## Manual Cost Override
 
 The dashboard includes a manual cost override for quick scenario testing and fallback use. In the current UI, visible per-agent shares are removed. The frontend sends equal internal weights for the configured agents, and Python blends their catalog-derived per-interaction costs.
@@ -172,5 +178,7 @@ The model is designed so manually entered model values can later be replaced or 
 - token usage telemetry
 - per-agent invocation counts
 - deployment type selection, such as Global vs Data Zone
+- dedicated capacity modes, such as PTUs
+- batch processing pricing
 
 Those features should feed the existing payload shape instead of moving formulas into the frontend.

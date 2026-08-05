@@ -20,6 +20,8 @@ The model currently focuses on usage-based AI costs:
 - Time saved per worker
 - Average hourly employee cost
 
+The current model and agent mix assumes standard pay-as-you-go pricing. Dedicated capacity options such as PTUs, batch processing, and other commitment-based pricing models are not included yet and are planned as future additions.
+
 An interaction is defined as one user task made up of roughly 1-3 user-entered messages.
 
 The dashboard blends per-agent model costs into an effective cost per interaction, estimates monthly AI cost, converts expected time savings into financial value, and calculates ROI and payback. The figures are intended to be as accurate as possible from the available assumptions, while remaining easy to update as better usage data becomes available.
@@ -52,6 +54,6 @@ http://127.0.0.1:8001
 
 ## Current Scope
 
-The model does not currently include fixed platform costs, because those cost drivers are not defined yet for this use case. The monthly platform cost shown in the dashboard should currently be read as monthly usage-based AI model cost.
+The model does not currently include fixed platform costs, because those cost drivers are not defined yet for this use case. The monthly platform cost shown in the dashboard should currently be read as monthly standard pay-as-you-go AI model usage cost.
 
-Future versions may add Azure Resource API integration to automatically pull deployment, pricing, quota, and usage data.
+Future versions may add Azure Resource API integration to automatically pull deployment, pricing, quota, and usage data, including dedicated capacity, PTUs, and batch processing.
