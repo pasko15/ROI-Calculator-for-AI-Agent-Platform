@@ -117,7 +117,41 @@
     .nav-menu-button {
       display: inline-flex;
       align-items: center;
-      gap: 7px;
+      gap: 8px;
+      min-height: 38px;
+      border-color: rgba(37, 160, 168, 0.55);
+      background:
+        linear-gradient(180deg, rgba(37, 160, 168, 0.075), rgba(255, 255, 255, 0.94) 170px),
+        rgba(255, 255, 255, 0.94);
+      color: var(--accent);
+      box-shadow: 0 22px 58px rgba(21, 111, 124, 0.14);
+    }
+
+    .nav-menu-button:hover,
+    .nav-menu-button:focus-visible {
+      border-color: rgba(21, 111, 124, 0.62);
+      color: var(--accent);
+      background:
+        linear-gradient(180deg, rgba(37, 160, 168, 0.11), rgba(255, 255, 255, 0.96) 170px),
+        rgba(255, 255, 255, 0.96);
+    }
+
+    .nav-menu-label {
+      font-weight: 850;
+    }
+
+    .nav-menu-badge {
+      display: inline-grid;
+      min-width: 22px;
+      height: 22px;
+      place-items: center;
+      border: 1px solid rgba(37, 160, 168, 0.38);
+      border-radius: 999px;
+      padding: 0 6px;
+      background: rgba(240, 251, 251, 0.92);
+      color: var(--accent);
+      font-size: 0.72rem;
+      font-weight: 850;
     }
 
     .seg {
@@ -1291,7 +1325,8 @@
     <div class="nav-actions">
       <button id="openUseCasesButton" class="btn blueprint nav-menu-button" type="button">
         <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
-        Use cases
+        <span class="nav-menu-label">Use cases</span>
+        <span id="useCaseNavBadge" class="nav-menu-badge">0</span>
       </button>
       <button class="btn blueprint" type="button" disabled title="Future Azure Resource API integration">
         <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
@@ -1534,8 +1569,8 @@
                 <input id="useCaseOccurrences" type="number" min="0" step="1" value="12">
               </div>
               <div class="field">
-                <label for="useCaseMinutesSaved">Minutes saved per occurrence</label>
-                <input id="useCaseMinutesSaved" type="number" min="0" step="1" value="30">
+                <label for="useCaseHoursSaved">Hours saved per occurrence</label>
+                <input id="useCaseHoursSaved" type="number" min="0" step="0.25" value="0.5">
               </div>
               <div class="field">
                 <label>Agents used</label>

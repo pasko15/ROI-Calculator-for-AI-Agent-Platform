@@ -118,6 +118,7 @@ const output = {
   agentConfigTitle: document.getElementById("agentConfigTitle"),
   useCasesDialog: document.getElementById("useCasesDialog"),
   useCaseList: document.getElementById("useCaseList"),
+  useCaseNavBadge: document.getElementById("useCaseNavBadge"),
   useCaseCount: document.getElementById("useCaseCount"),
   useCaseAnnualTotal: document.getElementById("useCaseAnnualTotal"),
   useCaseMonthlyTotal: document.getElementById("useCaseMonthlyTotal"),
@@ -147,7 +148,7 @@ const useCaseFields = {
   name: document.getElementById("useCaseName"),
   description: document.getElementById("useCaseDescription"),
   occurrences: document.getElementById("useCaseOccurrences"),
-  minutesSaved: document.getElementById("useCaseMinutesSaved")
+  hoursSaved: document.getElementById("useCaseHoursSaved")
 };
 
 const moneyFormatter = new Intl.NumberFormat("en-US", {
@@ -440,7 +441,7 @@ function defaultUseCases() {
       description: "Extract source data and draft the recurring operational report.",
       agents: ["modelOne", "modelTwo"],
       annualOccurrences: 12,
-      minutesSavedPerOccurrence: 45
+      hoursSavedPerOccurrence: 0.75
     },
     {
       id: "ad-hoc-data-extract",
@@ -448,7 +449,7 @@ function defaultUseCases() {
       description: "Pull structured values from source material for business analysis.",
       agents: ["modelOne"],
       annualOccurrences: 120,
-      minutesSavedPerOccurrence: 15
+      hoursSavedPerOccurrence: 0.25
     }
   ];
 }
@@ -467,9 +468,10 @@ function loadUseCases() {
             ? item.agents.filter((agent) => agentNames[agent])
             : [],
           annualOccurrences: Math.max(0, Number(item.annualOccurrences) || 0),
-          minutesSavedPerOccurrence: Math.max(
+          hoursSavedPerOccurrence: Math.max(
             0,
-            Number(item.minutesSavedPerOccurrence) || 0
+            Number(item.hoursSavedPerOccurrence) ||
+              (Number(item.minutesSavedPerOccurrence) || 0) / 60
           )
         }))
         .filter((item) => item.name);
@@ -489,12 +491,12 @@ function useCaseRollup() {
   return useCases.reduce(
     (totals, useCase) => {
       const occurrences = Math.max(0, Number(useCase.annualOccurrences) || 0);
-      const minutesSaved = Math.max(
+      const hoursSaved = Math.max(
         0,
-        Number(useCase.minutesSavedPerOccurrence) || 0
+        Number(useCase.hoursSavedPerOccurrence) || 0
       );
       totals.annualOccurrences += occurrences;
-      totals.annualHoursSaved += (occurrences * minutesSaved) / 60;
+      totals.annualHoursSaved += occurrences * hoursSaved;
       useCase.agents.forEach((agent) => {
         totals.agentAnnualInteractions[agent] =
           (totals.agentAnnualInteractions[agent] || 0) + occurrences;
@@ -534,6 +536,7 @@ function renderUseCases() {
     .reduce((total, value) => total + value, 0) / 12;
 
   output.useCaseCount.textContent = formatWholeNumber(useCases.length);
+  output.useCaseNavBadge.textContent = formatWholeNumber(useCases.length);
   output.useCaseAnnualTotal.textContent = formatWholeNumber(rollup.annualOccurrences);
   output.useCaseMonthlyTotal.textContent = formatNumber(monthlyInteractions);
   output.useCaseAnnualHoursSaved.textContent = formatNumber(rollup.annualHoursSaved);
@@ -559,8 +562,8 @@ function renderUseCases() {
         <div class="use-case-meta">
           <span class="use-case-pill">${formatWholeNumber(useCase.annualOccurrences)} times/year</span>
           <span class="use-case-pill">${formatNumber(useCase.annualOccurrences / 12)} times/month</span>
-          <span class="use-case-pill">${formatWholeNumber(useCase.minutesSavedPerOccurrence || 0)} min saved/occurrence</span>
-          <span class="use-case-pill">${formatNumber((useCase.annualOccurrences * (useCase.minutesSavedPerOccurrence || 0)) / 60)} hrs saved/year</span>
+          <span class="use-case-pill">${formatNumber(useCase.hoursSavedPerOccurrence || 0)} hrs saved/occurrence</span>
+          <span class="use-case-pill">${formatNumber(useCase.annualOccurrences * (useCase.hoursSavedPerOccurrence || 0))} hrs saved/year</span>
           ${agents.map((agent) => `<span class="use-case-pill">${escapeHtml(agent)}</span>`).join("")}
         </div>
       </article>
@@ -586,7 +589,7 @@ function clearUseCaseForm() {
   useCaseFields.name.value = "";
   useCaseFields.description.value = "";
   useCaseFields.occurrences.value = 12;
-  useCaseFields.minutesSaved.value = 30;
+  useCaseFields.hoursSaved.value = 0.5;
   output.useCaseAgentChoices.querySelectorAll("input[type='checkbox']").forEach((checkbox) => {
     checkbox.checked = true;
   });
@@ -596,9 +599,9 @@ function saveUseCase() {
   const name = useCaseFields.name.value.trim();
   const description = useCaseFields.description.value.trim();
   const annualOccurrences = Math.max(0, Number.parseFloat(useCaseFields.occurrences.value) || 0);
-  const minutesSavedPerOccurrence = Math.max(
+  const hoursSavedPerOccurrence = Math.max(
     0,
-    Number.parseFloat(useCaseFields.minutesSaved.value) || 0
+    Number.parseFloat(useCaseFields.hoursSaved.value) || 0
   );
   const agents = Array.from(
     output.useCaseAgentChoices.querySelectorAll("input[type='checkbox']:checked")
@@ -619,7 +622,7 @@ function saveUseCase() {
     description,
     agents,
     annualOccurrences,
-    minutesSavedPerOccurrence
+    hoursSavedPerOccurrence
   });
   saveUseCases();
   renderUseCases();
