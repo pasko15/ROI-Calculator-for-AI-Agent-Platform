@@ -45,8 +45,7 @@ The per-interaction cost is:
 
 Represents the full ROI scenario:
 
-- workforce size
-- adoption rate
+- active monthly users
 - usage volume
 - model mix
 - optional manual cost override
@@ -60,6 +59,7 @@ The model calculates:
 - monthly interactions
 - blended cost per interaction
 - monthly variable AI cost
+- monthly cost per active user
 - monthly and annual value
 - monthly and annual net benefit
 - ROI
@@ -96,10 +96,9 @@ Example payload shape:
 
 ```json
 {
-  "number_of_workers": 100,
-  "adoption_rate": 70,
+  "active_monthly_users": 100,
   "hourly_cost_per_worker": 75,
-  "time_saved_minutes_per_worker_per_week": 45,
+  "time_saved_minutes_per_user_per_week": 45,
   "interactions_per_user_per_day": 10,
   "working_days_per_month": 21,
   "manual_cost_per_interaction": 0.13,

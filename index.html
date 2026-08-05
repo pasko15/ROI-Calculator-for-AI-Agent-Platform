@@ -821,7 +821,7 @@
           <span class="info-icon" tabindex="0" data-tip="Monthly net value divided by monthly AI model cost.">i</span>
         </div>
         <div id="roiKpi" class="kpi-value">0%</div>
-        <div id="effectiveWorkersContext" class="kpi-context">0 effective workers</div>
+        <div id="effectiveWorkersContext" class="kpi-context">0 active monthly users</div>
       </article>
 
       <article class="kpi-card blueprint">
@@ -831,7 +831,7 @@
           <span class="info-icon" tabindex="0" data-tip="Months until cumulative value exceeds the optional implementation cost.">i</span>
         </div>
         <div id="paybackKpi" class="kpi-value">0 mo</div>
-        <div id="breakEvenKpi" class="kpi-context">0 min break-even per worker/week</div>
+        <div id="breakEvenKpi" class="kpi-context">0 min break-even per user/week</div>
       </article>
 
       <article class="kpi-card blueprint">
@@ -854,20 +854,14 @@
         <section class="card blueprint">
           <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
           <div class="card-title">
-            <h2>Workforce & adoption</h2>
+            <h2>Users & value</h2>
           </div>
           <div class="input-stack">
             <div class="field">
               <div class="field-row">
-                <label for="workers" class="label-with-info">Workforce size <span class="info-icon" tabindex="0" data-tip="Total employees eligible to use the agent platform.">i</span></label>
+                <label for="activeMonthlyUsers" class="label-with-info">Active monthly users <span class="info-icon" tabindex="0" data-tip="Estimated number of people who use the agents at least once in a month.">i</span></label>
               </div>
-              <input id="workers" data-input="workers" type="number" min="0" step="1" value="100">
-            </div>
-            <div class="field">
-              <div class="field-row">
-                <label for="adoptionRate" class="label-with-info">Adoption rate (%) <span class="info-icon" tabindex="0" data-tip="Share of eligible workers expected to actively use the agents.">i</span></label>
-              </div>
-              <input id="adoptionRate" data-input="adoptionRate" type="number" min="0" max="100" step="1" value="70">
+              <input id="activeMonthlyUsers" data-input="activeMonthlyUsers" type="number" min="0" step="1" value="100">
             </div>
             <div class="field">
               <div class="field-row">
@@ -877,7 +871,7 @@
             </div>
             <div class="field">
               <div class="field-row">
-                <label for="minutesSaved" class="label-with-info">Minutes saved / worker / week <span class="info-icon" tabindex="0" data-tip="Estimated productivity gain for each active user per week.">i</span></label>
+                <label for="minutesSaved" class="label-with-info">Minutes saved / user / week <span class="info-icon" tabindex="0" data-tip="Estimated productivity gain for each active monthly user per week.">i</span></label>
               </div>
               <input id="minutesSaved" data-input="minutesSaved" type="number" min="0" step="1" value="45">
             </div>

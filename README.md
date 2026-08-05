@@ -10,21 +10,20 @@ This dashboard solves that by using a mathematical model based on known cost dri
 
 The model currently focuses on usage-based AI costs:
 
-- Number of workers
-- Expected adoption rate
+- Active monthly users
 - Interactions per active user
 - Working days per month
 - Per-agent model selection from a model catalog
 - Average input and output tokens per interaction
 - Input and output model pricing per 1 million tokens from the selected catalog model
-- Time saved per worker
+- Time saved per active user
 - Average hourly employee cost
 
 The current model and agent mix assumes standard pay-as-you-go pricing. Dedicated capacity options such as PTUs, batch processing, and other commitment-based pricing models are not included yet and are planned as future additions.
 
 An interaction is defined as one user task made up of roughly 1-3 user-entered messages.
 
-The dashboard blends per-agent model costs into an effective cost per interaction, estimates monthly AI cost, converts expected time savings into financial value, and calculates ROI and payback. The figures are intended to be as accurate as possible from the available assumptions, while remaining easy to update as better usage data becomes available.
+The dashboard blends per-agent model costs into an effective cost per interaction, estimates monthly AI cost and cost per active user, converts expected time savings into financial value, and calculates ROI and payback. The figures are intended to be as accurate as possible from the available assumptions, while remaining easy to update as better usage data becomes available.
 
 ## Preview
 

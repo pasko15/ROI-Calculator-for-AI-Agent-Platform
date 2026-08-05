@@ -1,19 +1,16 @@
 const PRESETS = {
   pilot: {
-    workers: 25,
-    adoptionRate: 50,
+    activeMonthlyUsers: 25,
     interactionsPerDay: 5,
     manualCostPerInteraction: 0.36
   },
   department: {
-    workers: 100,
-    adoptionRate: 70,
+    activeMonthlyUsers: 100,
     interactionsPerDay: 10,
     manualCostPerInteraction: 0.13
   },
   enterprise: {
-    workers: 500,
-    adoptionRate: 80,
+    activeMonthlyUsers: 500,
     interactionsPerDay: 20,
     manualCostPerInteraction: 0.18
   }
@@ -177,10 +174,9 @@ function modelPayload(prefix, name) {
 
 function getPayload(overrides = {}) {
   return {
-    number_of_workers: Math.max(0, readInput("workers")),
-    adoption_rate: Math.min(Math.max(readInput("adoptionRate"), 0), 100),
+    active_monthly_users: Math.max(0, readInput("activeMonthlyUsers")),
     hourly_cost_per_worker: Math.max(0, readInput("hourlyCost")),
-    time_saved_minutes_per_worker_per_week: Math.max(0, readInput("minutesSaved")),
+    time_saved_minutes_per_user_per_week: Math.max(0, readInput("minutesSaved")),
     interactions_per_user_per_day: Math.max(0, readInput("interactionsPerDay")),
     working_days_per_month: Math.min(Math.max(readInput("workingDays"), 0), 31),
     manual_cost_per_interaction: Math.max(0, readInput("manualCostPerInteraction")),
@@ -582,15 +578,15 @@ function renderDashboard(data) {
   output.monthlyNetBenefitKpi.textContent = formatMoney(summary.monthly_net_benefit);
   output.annualNetBenefitKpi.textContent = formatMoney(summary.annual_net_benefit);
   output.roiKpi.textContent = formatPercent(summary.monthly_roi_percent);
-  output.breakEvenKpi.textContent = `${formatMinutes(summary.break_even_minutes_per_worker_per_week)} break-even per worker/week`;
+  output.breakEvenKpi.textContent = `${formatMinutes(summary.break_even_minutes_per_worker_per_week)} break-even per user/week`;
   output.monthlyInteractionsKpi.textContent = formatWholeNumber(
     summary.monthly_interactions
   );
 
-  output.costMixContext.textContent = `${formatMoney(summary.monthly_variable_ai_cost)} model usage cost`;
+  output.costMixContext.textContent = `${formatPreciseMoney(summary.monthly_cost_per_user)} per active user/month`;
   output.monthlyHoursContext.textContent = `${formatNumber(summary.monthly_hours_saved)} monthly hours saved`;
   output.annualHoursContext.textContent = `${formatNumber(summary.annual_hours_saved)} annual hours saved`;
-  output.effectiveWorkersContext.textContent = `${formatNumber(summary.active_users)} effective workers`;
+  output.effectiveWorkersContext.textContent = `${formatNumber(summary.active_users)} active monthly users`;
   output.usageContext.textContent = `${formatNumber(readInput("interactionsPerDay"))} per active user per day`;
 
   setSignedClass(output.monthlyNetBenefitKpi, summary.monthly_net_benefit);

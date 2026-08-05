@@ -2,17 +2,15 @@
 Simple ROI model for an AI/platform investment.
 
 Variables:
-    N = number of workers
-    A = adoption factor, from 0.0 to 1.0
+    U = active monthly users
     I = interactions per active user per day
     D = working days per month
-    T = time saved per worker per week, in hours
-    S = hourly cost per worker
+    T = time saved per user per week, in hours
+    S = hourly employee cost
     C = monthly platform cost
 
 Formulas:
-    Active users = N * A
-    Monthly interactions = active users * I * D
+    Monthly interactions = U * I * D
 
     Model interaction cost =
         (avg input tokens / 1_000_000 * input price)
@@ -23,14 +21,15 @@ Formulas:
     Monthly variable AI cost = monthly interactions * effective interaction cost
     Total monthly platform cost = monthly variable AI cost
 
-    Weekly value  = active users * T * S
+    Monthly cost per user = total monthly platform cost / U
+    Weekly value  = U * T * S
     Monthly value = weekly value * 4.33
     Annual value  = weekly value * 52
 
     Monthly net value = monthly value - total monthly platform cost
     ROI percent       = monthly net value / total monthly platform cost * 100
 
-    Break-even T = total monthly platform cost / (N * A * S * 4.33)
+    Break-even T = total monthly platform cost / (U * S * 4.33)
 """
 
 from __future__ import annotations
@@ -118,7 +117,7 @@ class FixedMonthlyCosts:
 class ROIModel:
     """Calculate value, benefit, ROI, and break-even time."""
 
-    number_of_workers: int
+    active_monthly_users: int
     time_saved_hours_per_worker_per_week: float
     hourly_cost_per_worker: float
     adoption_factor: float = 1.0
@@ -132,11 +131,12 @@ class ROIModel:
 
     def __init__(
         self,
-        number_of_workers: int,
         time_saved_hours_per_worker_per_week: float,
         hourly_cost_per_worker: float,
+        active_monthly_users: int | None = None,
         monthly_platform_cost: float | None = None,
         adoption_factor: float = 1.0,
+        number_of_workers: int | None = None,
         interactions_per_user_per_day: float = 0,
         working_days_per_month: float = 21,
         model_mix: tuple[ModelUsage, ...] | list[ModelUsage] = (),
@@ -144,7 +144,10 @@ class ROIModel:
         fixed_monthly_costs: FixedMonthlyCosts | None = None,
         one_time_implementation_cost: float = 0,
     ) -> None:
-        object.__setattr__(self, "number_of_workers", number_of_workers)
+        if active_monthly_users is None:
+            active_monthly_users = int((number_of_workers or 0) * adoption_factor)
+        object.__setattr__(self, "active_monthly_users", active_monthly_users)
+        object.__setattr__(self, "number_of_workers", active_monthly_users)
         object.__setattr__(
             self,
             "time_saved_hours_per_worker_per_week",
@@ -171,8 +174,8 @@ class ROIModel:
         self.__post_init__(monthly_platform_cost)
 
     def __post_init__(self, monthly_platform_cost: float | None) -> None:
-        if self.number_of_workers < 0:
-            raise ValueError("number_of_workers cannot be negative.")
+        if self.active_monthly_users < 0:
+            raise ValueError("active_monthly_users cannot be negative.")
         if self.time_saved_hours_per_worker_per_week < 0:
             raise ValueError(
                 "time_saved_hours_per_worker_per_week cannot be negative."
@@ -199,7 +202,7 @@ class ROIModel:
 
     @property
     def active_users(self) -> float:
-        return self.number_of_workers * self.adoption_factor
+        return self.active_monthly_users
 
     @property
     def monthly_interactions(self) -> float:
@@ -242,6 +245,12 @@ class ROIModel:
     @property
     def monthly_variable_ai_cost(self) -> float:
         return self.monthly_interactions * self.effective_cost_per_interaction
+
+    @property
+    def monthly_cost_per_user(self) -> float:
+        if self.active_users == 0:
+            return float("inf")
+        return self.monthly_platform_cost / self.active_users
 
     @property
     def total_fixed_monthly_cost(self) -> float:
@@ -294,8 +303,7 @@ class ROIModel:
     @property
     def break_even_hours_per_worker_per_week(self) -> float:
         effective_worker_cost = (
-            self.number_of_workers
-            * self.adoption_factor
+            self.active_users
             * self.hourly_cost_per_worker
             * WEEKS_PER_MONTH
         )
@@ -328,6 +336,7 @@ class ROIModel:
             "monthly_variable_ai_cost": self.monthly_variable_ai_cost,
             "total_fixed_monthly_cost": self.total_fixed_monthly_cost,
             "monthly_platform_cost": self.monthly_platform_cost,
+            "monthly_cost_per_user": self.monthly_cost_per_user,
             "weekly_value": self.weekly_value,
             "monthly_value": self.monthly_value,
             "annual_value": self.annual_value,
@@ -354,25 +363,24 @@ def percent(value: float) -> str:
 
 
 def sensitivity_table(
-    worker_counts: list[int],
+    user_counts: list[int],
     hourly_cost_per_worker: float,
     monthly_platform_cost: float,
     adoption_factor: float = 1.0,
 ) -> list[dict[str, float]]:
-    """Calculate break-even minutes for multiple workforce sizes."""
+    """Calculate break-even minutes for multiple active user counts."""
 
     rows = []
-    for workers in worker_counts:
+    for active_users in user_counts:
         model = ROIModel(
-            number_of_workers=workers,
+            active_monthly_users=active_users,
             time_saved_hours_per_worker_per_week=0,
             hourly_cost_per_worker=hourly_cost_per_worker,
             monthly_platform_cost=monthly_platform_cost,
-            adoption_factor=adoption_factor,
         )
         rows.append(
             {
-                "workers": workers,
+                "active_monthly_users": active_users,
                 "hourly_cost_per_worker": hourly_cost_per_worker,
                 "adoption_factor": adoption_factor,
                 "break_even_minutes_per_worker_per_week": (
@@ -475,12 +483,28 @@ def _build_model(payload: dict[str, Any], overrides: dict[str, Any] | None = Non
         manual_cost = None
 
     return ROIModel(
-        number_of_workers=int(max(0, _number(data, "number_of_workers"))),
+        active_monthly_users=int(
+            max(
+                0,
+                _number(
+                    data,
+                    "active_monthly_users",
+                    _number(data, "number_of_workers")
+                    * min(max(_number(data, "adoption_rate", 100) / 100, 0), 1),
+                ),
+            )
+        ),
         time_saved_hours_per_worker_per_week=max(
-            0, _number(data, "time_saved_minutes_per_worker_per_week") / 60
+            0,
+            _number(
+                data,
+                "time_saved_minutes_per_user_per_week",
+                _number(data, "time_saved_minutes_per_worker_per_week"),
+            )
+            / 60,
         ),
         hourly_cost_per_worker=max(0, _number(data, "hourly_cost_per_worker")),
-        adoption_factor=min(max(_number(data, "adoption_rate") / 100, 0), 1),
+        adoption_factor=1.0,
         interactions_per_user_per_day=max(
             0, _number(data, "interactions_per_user_per_day")
         ),
@@ -519,8 +543,8 @@ def calculate_dashboard(payload: dict[str, Any]) -> dict[str, Any]:
     def monthly_cost_for(overrides: dict[str, Any]) -> float:
         return _build_model(payload, overrides).monthly_platform_cost
 
-    worker_values = sorted(
-        set([25, 50, 100, 250, 500, 750, 1000, int(model.number_of_workers)])
+    user_values = sorted(
+        set([25, 50, 100, 250, 500, 750, 1000, int(model.active_monthly_users)])
     )
     minute_values = sorted(
         set(
@@ -553,21 +577,17 @@ def calculate_dashboard(payload: dict[str, Any]) -> dict[str, Any]:
             ]
         )
     )
-    adoption_values = sorted(
-        set([0, 10, 25, 50, 70, 80, 90, 100, round(model.adoption_factor * 100)])
-    )
-
-    sensitivity_workers = [25, 50, 100, 250, 500]
+    sensitivity_users = [25, 50, 100, 250, 500]
     sensitivity_minutes = [15, 30, 60, 120]
     sensitivity_rows = []
-    for workers in sensitivity_workers:
+    for active_users in sensitivity_users:
         cells = []
         for minutes in sensitivity_minutes:
             scenario = _build_model(
                 payload,
                 {
-                    "number_of_workers": workers,
-                    "time_saved_minutes_per_worker_per_week": minutes,
+                    "active_monthly_users": active_users,
+                    "time_saved_minutes_per_user_per_week": minutes,
                 },
             )
             cells.append(
@@ -579,7 +599,7 @@ def calculate_dashboard(payload: dict[str, Any]) -> dict[str, Any]:
                     "roi_percent": scenario.monthly_roi_percent,
                 }
             )
-        sensitivity_rows.append({"workers": workers, "cells": cells})
+        sensitivity_rows.append({"active_monthly_users": active_users, "cells": cells})
 
     result = {
         "summary": {
@@ -591,17 +611,17 @@ def calculate_dashboard(payload: dict[str, Any]) -> dict[str, Any]:
         },
         "model_mix": model_mix_table(model.model_mix),
         "charts": {
-            "workers": {
-                "labels": [str(value) for value in worker_values],
+            "active_users": {
+                "labels": [str(value) for value in user_values],
                 "values": [
-                    roi_for({"number_of_workers": value})
-                    for value in worker_values
+                    roi_for({"active_monthly_users": value})
+                    for value in user_values
                 ],
             },
             "minutes": {
                 "labels": [str(value) for value in minute_values],
                 "values": [
-                    roi_for({"time_saved_minutes_per_worker_per_week": value})
+                    roi_for({"time_saved_minutes_per_user_per_week": value})
                     for value in minute_values
                 ],
             },
@@ -626,13 +646,6 @@ def calculate_dashboard(payload: dict[str, Any]) -> dict[str, Any]:
                     for row in model_monthly_cost_table(model)
                 ],
             },
-            "adoption_cost": {
-                "labels": [f"{value}%" for value in adoption_values],
-                "values": [
-                    monthly_cost_for({"adoption_rate": value})
-                    for value in adoption_values
-                ],
-            },
         },
         "sensitivity": {
             "minutes": sensitivity_minutes,
@@ -646,10 +659,9 @@ def print_example() -> None:
     """Print the example from the business case."""
 
     model = ROIModel(
-        number_of_workers=50,
+        active_monthly_users=50,
         time_saved_hours_per_worker_per_week=0.77,
         hourly_cost_per_worker=30,
-        adoption_factor=1.0,
         interactions_per_user_per_day=10,
         working_days_per_month=21,
         model_mix=(
@@ -683,11 +695,11 @@ def print_example() -> None:
     )
     print(f"Monthly Variable AI Cost: {money(model.monthly_variable_ai_cost)}")
     print(f"Platform Cost: {money(model.monthly_platform_cost)}/month")
+    print(f"Cost per Active User: {money(model.monthly_cost_per_user)}/month")
     print(
-        f"Workers: {model.number_of_workers} at "
+        f"Active Monthly Users: {model.active_monthly_users} at "
         f"{money(model.hourly_cost_per_worker)}/hour"
     )
-    print(f"Adoption Factor: {model.adoption_factor:.0%}")
     print()
     print(f"Weekly Value: {money(model.weekly_value)}")
     print(f"Monthly Value: {money(model.monthly_value)}")
@@ -706,10 +718,10 @@ def print_example() -> None:
     print()
     print("Sensitivity Table")
     print("-----------------")
-    print("Workers | Hourly Cost | Break-even Time/Week")
+    print("Active Users | Hourly Cost | Break-even Time/Week")
     for row in sensitivity_table([25, 50, 100, 200], 30, 5_000):
         print(
-            f"{row['workers']:>7} | "
+            f"{row['active_monthly_users']:>12} | "
             f"{money(row['hourly_cost_per_worker']):>11} | "
             f"{row['break_even_minutes_per_worker_per_week']:>7.0f} min"
         )
