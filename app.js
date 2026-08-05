@@ -35,6 +35,8 @@ const inputElements = Array.from(document.querySelectorAll("[data-input]")).redu
 
 const output = {
   heroBreakEven: document.getElementById("heroBreakEven"),
+  paybackKpi: document.getElementById("paybackKpi"),
+  monthlyHoursKpi: document.getElementById("monthlyHoursKpi"),
   monthlyPlatformCostKpi: document.getElementById("monthlyPlatformCostKpi"),
   annualPlatformCostKpi: document.getElementById("annualPlatformCostKpi"),
   monthlyValueKpi: document.getElementById("monthlyValueKpi"),
@@ -49,12 +51,10 @@ const output = {
   annualHoursContext: document.getElementById("annualHoursContext"),
   effectiveWorkersContext: document.getElementById("effectiveWorkersContext"),
   usageContext: document.getElementById("usageContext"),
-  sensitivityBody: document.getElementById("sensitivityBody"),
+  agentMixBody: document.getElementById("agentMixBody"),
   modelCostLines: document.getElementById("modelCostLines"),
   statusLine: document.getElementById("statusLine")
 };
-
-const charts = {};
 
 const moneyFormatter = new Intl.NumberFormat("en-US", {
   style: "currency",
@@ -172,6 +172,16 @@ function formatMinutes(value) {
   return `${formatted} min`;
 }
 
+function formatMonths(value) {
+  if (!Number.isFinite(value)) {
+    return "N/A";
+  }
+  if (value === 0) {
+    return "0 mo";
+  }
+  return `${numberFormatter.format(value)} mo`;
+}
+
 function setSignedClass(element, value) {
   element.classList.toggle("positive", Number.isFinite(value) && value > 0);
   element.classList.toggle("negative", Number.isFinite(value) && value < 0);
@@ -190,173 +200,6 @@ function roiTone(value) {
   return "neutral";
 }
 
-function createLineChart(canvasId, label, color, yMode) {
-  const canvas = document.getElementById(canvasId);
-
-  return new Chart(canvas, {
-    type: "line",
-    data: {
-      labels: [],
-      datasets: [{
-        label,
-        data: [],
-        borderColor: color,
-        backgroundColor: `${color}20`,
-        pointBackgroundColor: color,
-        pointBorderColor: "#ffffff",
-        pointBorderWidth: 2,
-        pointRadius: 3,
-        pointHoverRadius: 6,
-        borderWidth: 3,
-        fill: true,
-        tension: 0.32
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      interaction: {
-        intersect: false,
-        mode: "index"
-      },
-      plugins: {
-        legend: {
-          display: false
-        },
-        tooltip: {
-          callbacks: {
-            label: (context) => {
-              const value = context.parsed.y;
-              const formatted = yMode === "money"
-                ? formatMoney(value)
-                : formatPercent(value);
-              return `${context.dataset.label}: ${formatted}`;
-            }
-          }
-        }
-      },
-      scales: {
-        x: {
-          grid: {
-            display: false
-          },
-          ticks: {
-            maxRotation: 0,
-            autoSkip: true
-          }
-        },
-        y: {
-          ticks: {
-            callback: (value) => yMode === "money" ? formatCompactMoney(value) : `${value}%`
-          },
-          grid: {
-            color: "rgba(100, 112, 132, 0.16)"
-          }
-        }
-      }
-    }
-  });
-}
-
-function createDoughnutChart(canvasId) {
-  return new Chart(document.getElementById(canvasId), {
-    type: "doughnut",
-    data: {
-      labels: ["Data Extract Agent", "Report Generating Agent"],
-      datasets: [{
-        data: [0, 0],
-        backgroundColor: ["#2f6fbb", "#0f8b8d"],
-        borderColor: "#ffffff",
-        borderWidth: 3,
-        hoverOffset: 8
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      cutout: "62%",
-      plugins: {
-        legend: {
-          position: "bottom",
-          labels: {
-            boxWidth: 12,
-            boxHeight: 12,
-            usePointStyle: true
-          }
-        },
-        tooltip: {
-          callbacks: {
-            label: (context) => {
-              const total = context.dataset.data.reduce((sum, value) => sum + value, 0);
-              const share = total > 0 ? (context.parsed / total) * 100 : 0;
-              return `${context.label}: ${formatMoney(context.parsed)} (${formatNumber(share)}%)`;
-            }
-          }
-        }
-      }
-    }
-  });
-}
-
-function initializeCharts() {
-  if (!window.Chart) {
-    document.documentElement.classList.add("charts-unavailable");
-    return;
-  }
-
-  Chart.defaults.font.family = '"Segoe UI", Arial, sans-serif';
-  Chart.defaults.color = "#647084";
-  Chart.defaults.plugins.tooltip.backgroundColor = "#17202a";
-  Chart.defaults.plugins.tooltip.padding = 12;
-  Chart.defaults.plugins.tooltip.cornerRadius = 6;
-  Chart.defaults.plugins.tooltip.titleFont = { weight: "700" };
-
-  charts.workers = createLineChart("workersChart", "ROI", "#2f6fbb", "percent");
-  charts.minutes = createLineChart("minutesChart", "ROI", "#0f8b8d", "percent");
-  charts.interactionCost = createLineChart("interactionCostChart", "ROI", "#b7791f", "percent");
-  charts.costBreakdown = createDoughnutChart("costBreakdownChart");
-  charts.adoptionCost = createLineChart("adoptionCostChart", "Monthly Platform Cost", "#1b8f5a", "money");
-}
-
-function updateLineChart(chart, labels, values) {
-  if (!chart) {
-    return;
-  }
-
-  chart.data.labels = labels;
-  chart.data.datasets[0].data = values;
-  chart.update();
-}
-
-function updateCharts(chartsData) {
-  updateLineChart(
-    charts.workers,
-    chartsData.workers.labels,
-    chartsData.workers.values
-  );
-  updateLineChart(
-    charts.minutes,
-    chartsData.minutes.labels,
-    chartsData.minutes.values
-  );
-  updateLineChart(
-    charts.interactionCost,
-    chartsData.interaction_cost.labels,
-    chartsData.interaction_cost.values
-  );
-  updateLineChart(
-    charts.adoptionCost,
-    chartsData.adoption_cost.labels,
-    chartsData.adoption_cost.values
-  );
-
-  if (charts.costBreakdown) {
-    charts.costBreakdown.data.labels = chartsData.cost_breakdown.labels;
-    charts.costBreakdown.data.datasets[0].data = chartsData.cost_breakdown.values;
-    charts.costBreakdown.update();
-  }
-}
-
 function renderModelCosts(modelMix, summary) {
   const modelLines = modelMix.map((model) => `
     <div class="model-cost-line">
@@ -372,28 +215,25 @@ function renderModelCosts(modelMix, summary) {
       <strong>${formatPreciseMoney(summary.effective_cost_per_interaction)}/interaction</strong>
     </div>
   `;
-}
 
-function renderSensitivityTable(sensitivity) {
-  output.sensitivityBody.innerHTML = sensitivity.rows.map((row) => {
-    const cells = row.cells.map((cell) => `
-      <td>
-        <div class="matrix-cell">
-          <div class="matrix-line"><span>Monthly Value</span><strong>${formatMoney(cell.monthly_value)}</strong></div>
-          <div class="matrix-line"><span>Monthly Cost</span><strong>${formatMoney(cell.monthly_cost)}</strong></div>
-          <div class="matrix-line"><span>Monthly Net Benefit</span><strong class="${cell.monthly_net_benefit >= 0 ? "positive" : "negative"}">${formatMoney(cell.monthly_net_benefit)}</strong></div>
-          <div class="matrix-line"><span>ROI</span><span class="roi-pill ${roiTone(cell.roi_percent)}">${formatPercent(cell.roi_percent)}</span></div>
-        </div>
-      </td>
-    `).join("");
+  if (output.agentMixBody) {
+    const rows = modelMix.map((model, index) => {
+      const prefix = index === 0 ? "modelOne" : "modelTwo";
+      return `
+        <tr>
+          <td>${model.model}</td>
+          <td>${formatNumber(model.usage_share)}%</td>
+          <td>${formatWholeNumber(readInput(`${prefix}InputTokens`))}</td>
+          <td>${formatWholeNumber(readInput(`${prefix}OutputTokens`))}</td>
+          <td>${formatPreciseMoney(readInput(`${prefix}InputPrice`))}</td>
+          <td>${formatPreciseMoney(readInput(`${prefix}OutputPrice`))}</td>
+          <td>${formatPreciseMoney(model.cost_per_interaction)}</td>
+        </tr>
+      `;
+    }).join("");
 
-    return `
-      <tr>
-        <th scope="row">${row.workers}</th>
-        ${cells}
-      </tr>
-    `;
-  }).join("");
+    output.agentMixBody.innerHTML = rows;
+  }
 }
 
 function renderDashboard(data) {
@@ -402,6 +242,12 @@ function renderDashboard(data) {
   output.heroBreakEven.textContent = formatMinutes(
     summary.break_even_minutes_per_worker_per_week
   );
+  if (output.paybackKpi) {
+    output.paybackKpi.textContent = formatMonths(summary.payback_period_months);
+  }
+  if (output.monthlyHoursKpi) {
+    output.monthlyHoursKpi.textContent = `${formatWholeNumber(summary.monthly_hours_saved)} hrs`;
+  }
   output.monthlyPlatformCostKpi.textContent = formatMoney(summary.monthly_platform_cost);
   output.annualPlatformCostKpi.textContent = formatMoney(summary.annual_platform_cost);
   output.monthlyValueKpi.textContent = formatMoney(summary.monthly_value);
@@ -409,9 +255,7 @@ function renderDashboard(data) {
   output.monthlyNetBenefitKpi.textContent = formatMoney(summary.monthly_net_benefit);
   output.annualNetBenefitKpi.textContent = formatMoney(summary.annual_net_benefit);
   output.roiKpi.textContent = formatPercent(summary.monthly_roi_percent);
-  output.breakEvenKpi.textContent = formatMinutes(
-    summary.break_even_minutes_per_worker_per_week
-  );
+  output.breakEvenKpi.textContent = `${formatMinutes(summary.break_even_minutes_per_worker_per_week)} break-even per worker/week`;
   output.monthlyInteractionsKpi.textContent = formatWholeNumber(
     summary.monthly_interactions
   );
@@ -427,8 +271,6 @@ function renderDashboard(data) {
   setSignedClass(output.roiKpi, summary.monthly_roi_percent);
 
   renderModelCosts(data.model_mix, summary);
-  updateCharts(data.charts);
-  renderSensitivityTable(data.sensitivity);
 }
 
 let pendingUpdate = 0;
@@ -488,5 +330,4 @@ document.querySelectorAll("[data-scenario]").forEach((button) => {
   button.addEventListener("click", () => applyPreset(button.dataset.scenario));
 });
 
-initializeCharts();
 updateDashboard();

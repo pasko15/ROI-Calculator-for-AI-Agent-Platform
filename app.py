@@ -22,6 +22,9 @@ class ROIRequestHandler(BaseHTTPRequestHandler):
         if self.path == "/app.js":
             self._send_file(ROOT / "app.js", "text/javascript; charset=utf-8")
             return
+        if self.path == "/roirobot.png":
+            self._send_file(ROOT / "roirobot.png", "image/png")
+            return
 
         self.send_error(404, "Not found")
 
