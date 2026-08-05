@@ -48,6 +48,24 @@ const agentNames = {
 
 let useCases = [];
 
+const WEEKS_PER_YEAR = 52;
+
+const COMMON_USAGE_WEEKLY_INTERACTIONS = {
+  1: 5,
+  2: 8,
+  3: 65,
+  4: 150,
+  5: 350
+};
+
+const COMMON_EFFICIENCY_MINUTES_PER_WEEK = {
+  1: 5,
+  2: 15,
+  3: 30,
+  4: 60,
+  5: 120
+};
+
 const TOKEN_GUIDANCE = {
   modelOne: {
     title: "Data Extract Agent",
@@ -177,7 +195,12 @@ const useCaseFields = {
   name: document.getElementById("useCaseName"),
   description: document.getElementById("useCaseDescription"),
   occurrences: document.getElementById("useCaseOccurrences"),
-  hoursSaved: document.getElementById("useCaseHoursSaved")
+  basis: document.getElementById("useCaseBasis"),
+  hoursSaved: document.getElementById("useCaseHoursSaved"),
+  usageIntensity: document.getElementById("useCaseUsageIntensity"),
+  efficiencyRating: document.getElementById("useCaseEfficiencyRating"),
+  nicheFields: document.getElementById("nicheUseCaseFields"),
+  commonFields: document.getElementById("commonUseCaseFields")
 };
 
 const moneyFormatter = new Intl.NumberFormat("en-US", {
@@ -464,7 +487,10 @@ function defaultUseCases() {
       description: "Extract source data and draft the recurring operational report.",
       agents: ["modelOne", "modelTwo"],
       annualOccurrences: 12,
-      hoursSavedPerOccurrence: 0.75
+      occurrenceBasis: "total",
+      hoursSavedPerOccurrence: 0.75,
+      usageIntensity: 3,
+      efficiencyRating: 3
     },
     {
       id: "ad-hoc-data-extract",
@@ -472,9 +498,30 @@ function defaultUseCases() {
       description: "Pull structured values from source material for business analysis.",
       agents: ["modelOne"],
       annualOccurrences: 120,
-      hoursSavedPerOccurrence: 0.25
+      occurrenceBasis: "total",
+      hoursSavedPerOccurrence: 0.25,
+      usageIntensity: 3,
+      efficiencyRating: 3
     }
   ];
+}
+
+function clampRating(value, fallback = 3) {
+  const rating = Math.round(Number(value) || fallback);
+  return Math.min(Math.max(rating, 1), 5);
+}
+
+function ratingFromAnnualPerUser(annualOccurrences) {
+  const weeklyInteractions = Math.max(0, Number(annualOccurrences) || 0) / WEEKS_PER_YEAR;
+  return Object.entries(COMMON_USAGE_WEEKLY_INTERACTIONS).reduce(
+    (closest, [rating, weeklyValue]) => (
+      Math.abs(weeklyValue - weeklyInteractions) <
+        Math.abs(COMMON_USAGE_WEEKLY_INTERACTIONS[closest] - weeklyInteractions)
+        ? Number(rating)
+        : closest
+    ),
+    3
+  );
 }
 
 function loadUseCases() {
@@ -491,11 +538,14 @@ function loadUseCases() {
             ? item.agents.filter((agent) => agentNames[agent])
             : [],
           annualOccurrences: Math.max(0, Number(item.annualOccurrences) || 0),
+          occurrenceBasis: item.occurrenceBasis === "perUser" ? "perUser" : "total",
           hoursSavedPerOccurrence: Math.max(
             0,
             Number(item.hoursSavedPerOccurrence) ||
               (Number(item.minutesSavedPerOccurrence) || 0) / 60
-          )
+          ),
+          usageIntensity: clampRating(item.usageIntensity || ratingFromAnnualPerUser(item.annualOccurrences)),
+          efficiencyRating: clampRating(item.efficiencyRating)
         }))
         .filter((item) => item.name);
     }
@@ -514,15 +564,25 @@ function useCaseRollup() {
   return useCases.reduce(
     (totals, useCase) => {
       const occurrences = Math.max(0, Number(useCase.annualOccurrences) || 0);
+      const activeUsers = Math.max(0, readInput("activeMonthlyUsers"));
+      const usageIntensity = clampRating(useCase.usageIntensity);
+      const efficiencyRating = clampRating(useCase.efficiencyRating);
+      const weeklyInteractionsPerUser = COMMON_USAGE_WEEKLY_INTERACTIONS[usageIntensity];
+      const minutesSavedPerUserPerWeek = COMMON_EFFICIENCY_MINUTES_PER_WEEK[efficiencyRating];
+      const effectiveOccurrences = useCase.occurrenceBasis === "perUser"
+        ? weeklyInteractionsPerUser * activeUsers * WEEKS_PER_YEAR
+        : occurrences;
       const hoursSaved = Math.max(
         0,
         Number(useCase.hoursSavedPerOccurrence) || 0
       );
-      totals.annualOccurrences += occurrences;
-      totals.annualHoursSaved += occurrences * hoursSaved;
+      totals.annualOccurrences += effectiveOccurrences;
+      totals.annualHoursSaved += useCase.occurrenceBasis === "perUser"
+        ? activeUsers * (minutesSavedPerUserPerWeek / 60) * WEEKS_PER_YEAR
+        : effectiveOccurrences * hoursSaved;
       useCase.agents.forEach((agent) => {
         totals.agentAnnualInteractions[agent] =
-          (totals.agentAnnualInteractions[agent] || 0) + occurrences;
+          (totals.agentAnnualInteractions[agent] || 0) + effectiveOccurrences;
       });
       return totals;
     },
@@ -573,6 +633,35 @@ function renderUseCases() {
 
   output.useCaseList.innerHTML = useCases.map((useCase) => {
     const agents = useCase.agents.map((agent) => agentNames[agent]).filter(Boolean);
+    const activeUsers = Math.max(0, readInput("activeMonthlyUsers"));
+    const usageIntensity = clampRating(useCase.usageIntensity);
+    const efficiencyRating = clampRating(useCase.efficiencyRating);
+    const weeklyInteractionsPerUser = COMMON_USAGE_WEEKLY_INTERACTIONS[usageIntensity];
+    const minutesSavedPerUserPerWeek = COMMON_EFFICIENCY_MINUTES_PER_WEEK[efficiencyRating];
+    const effectiveOccurrences = useCase.occurrenceBasis === "perUser"
+      ? weeklyInteractionsPerUser * activeUsers * WEEKS_PER_YEAR
+      : useCase.annualOccurrences;
+    const frequencyLabel = useCase.occurrenceBasis === "perUser"
+      ? `${formatWholeNumber(weeklyInteractionsPerUser)} / user / week`
+      : `${formatWholeNumber(useCase.annualOccurrences)} total / year`;
+    const patternLabel = useCase.occurrenceBasis === "perUser"
+      ? "General/common usage"
+      : "Specific niche use case";
+    const driverLabel = useCase.occurrenceBasis === "perUser"
+      ? "Scales with active users"
+      : "Fixed by use-case volume";
+    const savedHours = useCase.occurrenceBasis === "perUser"
+      ? activeUsers * (minutesSavedPerUserPerWeek / 60) * WEEKS_PER_YEAR
+      : effectiveOccurrences * (useCase.hoursSavedPerOccurrence || 0);
+    const patternMetrics = useCase.occurrenceBasis === "perUser"
+      ? `
+          <span class="use-case-pill">Usage intensity ${usageIntensity}/5</span>
+          <span class="use-case-pill">Efficiency improvement ${efficiencyRating}/5</span>
+          <span class="use-case-pill">${formatWholeNumber(minutesSavedPerUserPerWeek)} min saved/user/week</span>
+        `
+      : `
+          <span class="use-case-pill">${formatNumber(useCase.hoursSavedPerOccurrence || 0)} hrs saved/occurrence</span>
+        `;
     return `
       <article class="use-case-card">
         <div class="use-case-card-head">
@@ -583,10 +672,13 @@ function renderUseCases() {
           <button class="btn" type="button" data-delete-use-case="${escapeHtml(useCase.id)}">Remove</button>
         </div>
         <div class="use-case-meta">
-          <span class="use-case-pill">${formatWholeNumber(useCase.annualOccurrences)} times/year</span>
-          <span class="use-case-pill">${formatNumber(useCase.annualOccurrences / 12)} times/month</span>
-          <span class="use-case-pill">${formatNumber(useCase.hoursSavedPerOccurrence || 0)} hrs saved/occurrence</span>
-          <span class="use-case-pill">${formatNumber(useCase.annualOccurrences * (useCase.hoursSavedPerOccurrence || 0))} hrs saved/year</span>
+          <span class="use-case-pill">${frequencyLabel}</span>
+          <span class="use-case-pill">${formatWholeNumber(effectiveOccurrences)} total runs/year</span>
+          <span class="use-case-pill">${formatNumber(effectiveOccurrences / 12)} runs/month</span>
+          <span class="use-case-pill">${patternLabel}</span>
+          <span class="use-case-pill">${driverLabel}</span>
+          ${patternMetrics}
+          <span class="use-case-pill">${formatNumber(savedHours)} hrs saved/year</span>
           ${agents.map((agent) => `<span class="use-case-pill">${escapeHtml(agent)}</span>`).join("")}
         </div>
       </article>
@@ -596,6 +688,7 @@ function renderUseCases() {
 
 function openUseCases(trigger) {
   renderUseCases();
+  updateUseCasePatternFields();
   setDialogLaunch(output.useCasesDialog, trigger);
   output.useCasesDialog.classList.remove("is-open");
   void output.useCasesDialog.offsetWidth;
@@ -608,11 +701,21 @@ function closeUseCases() {
   output.useCasesDialog.setAttribute("aria-hidden", "true");
 }
 
+function updateUseCasePatternFields() {
+  const isCommon = useCaseFields.basis.value === "perUser";
+  useCaseFields.nicheFields.hidden = isCommon;
+  useCaseFields.commonFields.hidden = !isCommon;
+}
+
 function clearUseCaseForm() {
   useCaseFields.name.value = "";
   useCaseFields.description.value = "";
   useCaseFields.occurrences.value = 12;
+  useCaseFields.basis.value = "total";
   useCaseFields.hoursSaved.value = 0.5;
+  useCaseFields.usageIntensity.value = 3;
+  useCaseFields.efficiencyRating.value = 3;
+  updateUseCasePatternFields();
   output.useCaseAgentChoices.querySelectorAll("input[type='checkbox']").forEach((checkbox) => {
     checkbox.checked = true;
   });
@@ -622,10 +725,13 @@ function saveUseCase() {
   const name = useCaseFields.name.value.trim();
   const description = useCaseFields.description.value.trim();
   const annualOccurrences = Math.max(0, Number.parseFloat(useCaseFields.occurrences.value) || 0);
+  const occurrenceBasis = useCaseFields.basis.value === "perUser" ? "perUser" : "total";
   const hoursSavedPerOccurrence = Math.max(
     0,
     Number.parseFloat(useCaseFields.hoursSaved.value) || 0
   );
+  const usageIntensity = clampRating(useCaseFields.usageIntensity.value);
+  const efficiencyRating = clampRating(useCaseFields.efficiencyRating.value);
   const agents = Array.from(
     output.useCaseAgentChoices.querySelectorAll("input[type='checkbox']:checked")
   ).map((checkbox) => checkbox.value);
@@ -645,7 +751,10 @@ function saveUseCase() {
     description,
     agents,
     annualOccurrences,
-    hoursSavedPerOccurrence
+    occurrenceBasis,
+    hoursSavedPerOccurrence,
+    usageIntensity,
+    efficiencyRating
   });
   saveUseCases();
   renderUseCases();
@@ -947,10 +1056,6 @@ function renderTokenGuidance() {
           <h3>${escapeHtml(config.title)}</h3>
           <p>${escapeHtml(config.prompt)}</p>
         </div>
-        <label class="guidance-usage-field">
-          <span>Monthly interactions</span>
-          <input type="number" min="0" step="1" value="${Math.max(0, readInput(`${agent}MonthlyInteractions`))}" data-guidance-monthly-agent="${agent}">
-        </label>
         <div class="guidance-options">
           ${config.options.map((guidance, index) => {
             const isSelected = guidance.custom
@@ -1043,19 +1148,6 @@ function applyCustomTokenGuidance(input, shouldRender = false) {
   if (shouldRender) {
     renderTokenGuidance();
   }
-}
-
-function applyGuidanceMonthlyInteractions(input) {
-  const agent = input.dataset.guidanceMonthlyAgent;
-  if (!agent) {
-    return;
-  }
-
-  setInputValue(`${agent}MonthlyInteractions`, Math.max(0, Number.parseFloat(input.value) || 0));
-  document.querySelectorAll("[data-scenario]").forEach((button) => {
-    button.classList.remove("is-active");
-  });
-  scheduleUpdate();
 }
 
 function renderDashboard(data) {
@@ -1154,6 +1246,9 @@ Object.values(inputElements).forEach((input) => {
     document.querySelectorAll("[data-scenario]").forEach((button) => {
       button.classList.remove("is-active");
     });
+    if (input.dataset.input === "activeMonthlyUsers") {
+      renderUseCases();
+    }
     scheduleUpdate();
   });
 });
@@ -1176,6 +1271,7 @@ document.getElementById("closeUseCasesButton").addEventListener("click", closeUs
 document.getElementById("cancelUseCasesButton").addEventListener("click", closeUseCases);
 document.getElementById("saveUseCaseButton").addEventListener("click", saveUseCase);
 document.getElementById("applyUseCasesButton").addEventListener("click", applyUseCasesToAgentUsage);
+useCaseFields.basis.addEventListener("change", updateUseCasePatternFields);
 document.getElementById("closeCatalogButton").addEventListener("click", closeCatalog);
 document.getElementById("cancelCatalogButton").addEventListener("click", closeCatalog);
 document.getElementById("saveCatalogModelButton").addEventListener("click", saveCatalogModel);
@@ -1230,16 +1326,10 @@ output.tokenGuidanceDialog.addEventListener("input", (event) => {
   if (event.target.matches("[data-custom-token-agent]")) {
     applyCustomTokenGuidance(event.target);
   }
-  if (event.target.matches("[data-guidance-monthly-agent]")) {
-    applyGuidanceMonthlyInteractions(event.target);
-  }
 });
 output.tokenGuidanceDialog.addEventListener("change", (event) => {
   if (event.target.matches("[data-custom-token-agent]")) {
     applyCustomTokenGuidance(event.target, true);
-  }
-  if (event.target.matches("[data-guidance-monthly-agent]")) {
-    applyGuidanceMonthlyInteractions(event.target);
   }
 });
 output.agentMixBody.addEventListener("change", (event) => {
@@ -1258,6 +1348,7 @@ output.agentMixBody.addEventListener("change", (event) => {
 async function initializeDashboard() {
   useCases = loadUseCases();
   renderUseCaseAgentChoices();
+  updateUseCasePatternFields();
   renderUseCases();
   renderTokenGuidance();
   await loadModelCatalog(false);

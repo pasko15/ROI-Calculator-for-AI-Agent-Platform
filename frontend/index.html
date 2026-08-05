@@ -457,6 +457,11 @@
       gap: 10px;
     }
 
+    .input-stack[hidden],
+    [hidden] {
+      display: none !important;
+    }
+
     .field {
       display: grid;
       gap: 5px;
@@ -713,29 +718,6 @@
     .guidance-section-head p {
       color: var(--muted);
       font-size: 0.8rem;
-    }
-
-    .guidance-usage-field {
-      display: grid;
-      grid-template-columns: minmax(160px, 1fr) minmax(120px, 180px);
-      gap: var(--space-3);
-      align-items: center;
-      padding: 8px 10px;
-      border: 1px solid rgba(37, 160, 168, 0.28);
-      border-radius: var(--radius);
-      background: rgba(240, 251, 251, 0.68);
-    }
-
-    .guidance-usage-field span {
-      color: var(--text);
-      font-size: 0.82rem;
-      font-weight: 800;
-    }
-
-    .guidance-usage-field input {
-      min-height: 32px;
-      padding: 6px 8px;
-      text-align: right;
     }
 
     .guidance-options {
@@ -1392,10 +1374,6 @@
         grid-template-columns: 1fr;
       }
 
-      .guidance-usage-field {
-        grid-template-columns: 1fr;
-      }
-
       input[type="number"] {
         text-align: left;
       }
@@ -1488,12 +1466,6 @@
               </div>
               <input id="hourlyCost" data-input="hourlyCost" type="number" min="0" step="1" value="75">
             </div>
-            <div class="field">
-              <div class="field-row">
-                <label for="minutesSaved" class="label-with-info">Minutes saved / user / week <span class="info-icon" tabindex="0" data-tip="Estimated productivity gain for each active monthly user per week.">i</span></label>
-              </div>
-              <input id="minutesSaved" data-input="minutesSaved" type="number" min="0" step="1" value="45">
-            </div>
           </div>
         </section>
 
@@ -1526,12 +1498,12 @@
             <h2>Agent & model mix</h2>
             <div class="agent-actions">
               <span class="cost-driver-tag">Main cost driver</span>
-              <button id="openGuidanceButton" class="btn" type="button">Usage & token guidance</button>
+              <button id="openGuidanceButton" class="btn" type="button">Token guidance</button>
               <button id="openCatalogButton" class="btn" type="button">Model catalog</button>
               <span class="info-icon" tabindex="0" data-tip="Each agent contributes to cost based on token usage and selected model input/output prices.">i</span>
             </div>
           </div>
-          <p class="card-note">Current model mix pricing assumes standard pay-as-you-go usage. Dedicated capacity, PTUs, batch processing, and other commitment-based options will be added later.</p>
+          <p class="card-note">Monthly interactions are total agent calls per month, derived from presets or the use-case rollup. Add use cases to model niche workflows and common agent usage.</p>
 
           <div class="table-wrap">
             <table class="agent-table">
@@ -1539,7 +1511,7 @@
                 <tr>
                   <th>Agent</th>
                   <th>Model</th>
-                  <th style="text-align:right">Monthly interactions</th>
+                  <th style="text-align:right">Total monthly interactions</th>
                   <th style="text-align:right">Input tokens / interaction</th>
                   <th style="text-align:right">Output tokens / interaction</th>
                   <th style="text-align:right">Cost / interaction</th>
@@ -1553,6 +1525,7 @@
           </div>
 
           <div class="agent-state" aria-hidden="true">
+            <input id="minutesSaved" data-input="minutesSaved" type="number" min="0" step="1" value="0">
             <select id="modelOneModel" data-model-select="modelOne"></select>
             <input id="modelOneMonthlyInteractions" data-input="modelOneMonthlyInteractions" type="number" min="0" step="1" value="2100">
             <input id="modelOneInputTokens" data-input="modelOneInputTokens" type="number" min="0" step="50" value="68000">
@@ -1608,7 +1581,7 @@
       <div class="dialog-title">
         <div>
           <h2 id="useCasesTitle">Use cases</h2>
-          <p class="card-note" style="margin:4px 0 0">Map recurring business use cases to the agents they consume and turn yearly volume into monthly interaction assumptions.</p>
+          <p class="card-note" style="margin:4px 0 0">Map recurring business use cases to agent calls. Choose niche for specific low-volume workflows, or common for agent usage that scales with active users.</p>
         </div>
         <button id="closeUseCasesButton" class="btn icon-btn" type="button" aria-label="Close use cases">x</button>
       </div>
@@ -1619,11 +1592,11 @@
             <div id="useCaseCount" class="use-case-stat-value">0</div>
           </div>
           <div class="use-case-stat">
-            <div class="kpi-label">Annual occurrences</div>
+            <div class="kpi-label">Annual use-case runs</div>
             <div id="useCaseAnnualTotal" class="use-case-stat-value">0</div>
           </div>
           <div class="use-case-stat">
-            <div class="kpi-label">Monthly interactions</div>
+            <div class="kpi-label">Monthly agent interactions</div>
             <div id="useCaseMonthlyTotal" class="use-case-stat-value">0</div>
           </div>
           <div class="use-case-stat">
@@ -1655,12 +1628,43 @@
                 <textarea id="useCaseDescription" placeholder="What business process does this cover?"></textarea>
               </div>
               <div class="field">
-                <label for="useCaseOccurrences">Times per year</label>
-                <input id="useCaseOccurrences" type="number" min="0" step="1" value="12">
+                <label for="useCaseBasis">Use pattern</label>
+                <select id="useCaseBasis">
+                  <option value="total">Specific niche use case</option>
+                  <option value="perUser">General/common agent usage</option>
+                </select>
               </div>
-              <div class="field">
-                <label for="useCaseHoursSaved">Hours saved per occurrence</label>
-                <input id="useCaseHoursSaved" type="number" min="0" step="0.25" value="0.5">
+              <div id="nicheUseCaseFields" class="input-stack">
+                <div class="field">
+                  <label for="useCaseOccurrences">Frequency per year</label>
+                  <input id="useCaseOccurrences" type="number" min="0" step="1" value="12">
+                </div>
+                <div class="field">
+                  <label for="useCaseHoursSaved">Hours saved per occurrence</label>
+                  <input id="useCaseHoursSaved" type="number" min="0" step="0.25" value="0.5">
+                </div>
+              </div>
+              <div id="commonUseCaseFields" class="input-stack" hidden>
+                <div class="field">
+                  <label for="useCaseUsageIntensity">Usage intensity</label>
+                  <select id="useCaseUsageIntensity">
+                    <option value="1">1 - 1-10 uses/user/week</option>
+                    <option value="2">2 - 5-10 uses/user/week</option>
+                    <option value="3" selected>3 - 30-100 uses/user/week</option>
+                    <option value="4">4 - 100+ uses/user/week</option>
+                    <option value="5">5 - 300+ uses/user/week</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="useCaseEfficiencyRating">Efficiency improvement</label>
+                  <select id="useCaseEfficiencyRating">
+                    <option value="1">1 - small assist</option>
+                    <option value="2">2 - modest improvement</option>
+                    <option value="3" selected>3 - meaningful improvement</option>
+                    <option value="4">4 - major improvement</option>
+                    <option value="5">5 - automates most of the process</option>
+                  </select>
+                </div>
               </div>
               <div class="field">
                 <label>Agents used</label>
@@ -1757,8 +1761,8 @@
       <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
       <div class="dialog-title">
         <div>
-          <h2 id="tokenGuidanceTitle">Usage & token guidance</h2>
-          <p class="card-note" style="margin:4px 0 0">Set monthly interactions for each agent, then choose the closest workload shape to update token assumptions.</p>
+          <h2 id="tokenGuidanceTitle">Token guidance</h2>
+          <p class="card-note" style="margin:4px 0 0">Choose the closest workload shape for each agent to update token assumptions. Interaction volume comes from use cases.</p>
         </div>
         <button id="closeGuidanceButton" class="btn icon-btn" type="button" aria-label="Close token guidance">x</button>
       </div>
