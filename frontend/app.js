@@ -36,14 +36,30 @@ const fallbackModelCatalog = [
 ];
 
 let modelCatalog = [...fallbackModelCatalog];
+let benchmarkCatalog = [];
+let benchmarkStatus = "loading";
 let catalogRowsExpanded = false;
 const CATALOG_PREVIEW_LIMIT = 4;
 const LOCAL_CATALOG_KEY = "agent-roi-model-catalog";
 const LOCAL_USE_CASES_KEY = "agent-roi-use-cases";
+const MODELGREP_MODELS_URL = "https://modelgrep.com/api/v1/models";
 
 const agentNames = {
   modelOne: "Data Extract Agent",
   modelTwo: "Report Generating Agent"
+};
+
+const agentBenchmarkMetrics = {
+  modelOne: {
+    label: "AA Agentic",
+    path: ["benchmarks", "artificial_analysis", "agentic"],
+    title: "Artificial Analysis Agentic score from ModelGrep. Used here as the closest benchmark for tool use, retrieval, and data extraction workflows."
+  },
+  modelTwo: {
+    label: "AA Intelligence",
+    path: ["benchmarks", "artificial_analysis", "intelligence"],
+    title: "Artificial Analysis Intelligence score from ModelGrep. Used here as the closest benchmark for report synthesis and generation quality."
+  }
 };
 
 let useCases = [];
@@ -307,6 +323,34 @@ async function fetchModelCatalog(refresh = false) {
   return body;
 }
 
+async function fetchBenchmarkCatalog() {
+  const models = [];
+  let offset = 0;
+  let hasMore = true;
+
+  while (hasMore && offset < 1000) {
+    const params = new URLSearchParams({
+      benchmarked: "1",
+      limit: "200",
+      offset: String(offset)
+    });
+    const response = await fetch(`${MODELGREP_MODELS_URL}?${params.toString()}`);
+    const body = await readJsonResponse(response, "Model benchmark API is not available.");
+    if (!response.ok) {
+      throw new Error(body.error || "Model benchmark request failed.");
+    }
+
+    models.push(...(Array.isArray(body.data) ? body.data : []));
+    hasMore = Boolean(body.meta?.has_more);
+    offset = Number(body.meta?.next_offset);
+    if (!Number.isFinite(offset)) {
+      hasMore = false;
+    }
+  }
+
+  return models;
+}
+
 async function postManualModel(model) {
   const response = await fetch("api/model-catalog", {
     method: "POST",
@@ -358,6 +402,10 @@ function formatPercent(value) {
   return Number.isFinite(value) ? `${numberFormatter.format(value)}%` : "N/A";
 }
 
+function formatBenchmarkValue(value) {
+  return Number.isFinite(value) ? numberFormatter.format(value) : "-";
+}
+
 function formatMinutes(value) {
   if (!Number.isFinite(value)) {
     return "N/A";
@@ -387,6 +435,55 @@ function formatMonths(value) {
 function getSelectedModel(prefix) {
   const selectedName = modelSelects[prefix]?.value;
   return modelCatalog.find((model) => model.name === selectedName) || modelCatalog[0];
+}
+
+function normalizeModelName(value) {
+  return String(value || "")
+    .toLowerCase()
+    .replace(/\b(openai|azure|microsoft|google|anthropic|meta|xai)\b/g, "")
+    .replace(/[^a-z0-9]+/g, "");
+}
+
+function benchmarkModelKeys(model) {
+  const id = String(model?.id || "");
+  const name = String(model?.name || "");
+  const shortId = id.split("/").pop() || id;
+  const shortName = name.includes(":") ? name.split(":").pop() : name;
+
+  return [id, shortId, name, shortName]
+    .map(normalizeModelName)
+    .filter(Boolean);
+}
+
+function findBenchmarkModel(catalogModel) {
+  const selectedKey = normalizeModelName(catalogModel?.name);
+  if (!selectedKey || benchmarkCatalog.length === 0) {
+    return null;
+  }
+
+  return benchmarkCatalog.find((model) => (
+    benchmarkModelKeys(model).includes(selectedKey)
+  )) || benchmarkCatalog.find((model) => (
+    benchmarkModelKeys(model).some((key) => key.endsWith(selectedKey) || selectedKey.endsWith(key))
+  )) || null;
+}
+
+function readPath(object, path) {
+  return path.reduce((value, key) => value?.[key], object);
+}
+
+function benchmarkForAgent(prefix, catalogModel) {
+  const metric = agentBenchmarkMetrics[prefix];
+  const benchmarkModel = findBenchmarkModel(catalogModel);
+  const value = metric && benchmarkModel ? Number(readPath(benchmarkModel, metric.path)) : NaN;
+
+  return {
+    label: metric?.label || "Benchmark",
+    title: metric?.title || "",
+    value: Number.isFinite(value) ? value : NaN,
+    sourceUrl: benchmarkModel?.url || "",
+    modelName: benchmarkModel?.name || ""
+  };
 }
 
 function setInputValue(name, value) {
@@ -452,6 +549,18 @@ async function loadModelCatalog(refresh = false) {
     });
     output.statusLine.textContent = "Using browser-local model catalog. Run python app.py for Azure refresh and shared cache.";
   }
+}
+
+async function loadBenchmarkCatalog() {
+  benchmarkStatus = "loading";
+  try {
+    benchmarkCatalog = await fetchBenchmarkCatalog();
+    benchmarkStatus = "ready";
+  } catch {
+    benchmarkCatalog = [];
+    benchmarkStatus = "unavailable";
+  }
+  scheduleUpdate();
 }
 
 function loadLocalCatalog() {
@@ -974,6 +1083,13 @@ function renderModelCosts(modelMix, summary) {
     const rows = modelMix.map((model, index) => {
       const prefix = index === 0 ? "modelOne" : "modelTwo";
       const selectedModel = getSelectedModel(prefix);
+      const benchmark = benchmarkForAgent(prefix, selectedModel);
+      const benchmarkValue = benchmarkStatus === "loading"
+        ? "..."
+        : formatBenchmarkValue(benchmark.value);
+      const benchmarkCell = benchmark.sourceUrl
+        ? `<a class="benchmark-link" href="${escapeHtml(benchmark.sourceUrl)}" target="_blank" rel="noopener" title="${escapeHtml(`${benchmark.title} Matched to ${benchmark.modelName}.`)}">${benchmarkValue}</a>`
+        : `<span class="benchmark-empty" title="${escapeHtml(benchmarkStatus === "unavailable" ? "ModelGrep benchmarks are unavailable right now." : benchmark.title)}">${benchmarkValue}</span>`;
       const modelOptions = modelCatalog.map((catalogModel) => (
         `<option value="${escapeHtml(catalogModel.name)}" ${catalogModel.name === selectedModel.name ? "selected" : ""}>${escapeHtml(catalogModel.name)}</option>`
       )).join("");
@@ -989,6 +1105,12 @@ function renderModelCosts(modelMix, summary) {
               ${modelOptions}
             </select>
           </td>
+          <td>
+            <div class="benchmark-cell">
+              <span class="benchmark-label">${escapeHtml(benchmark.label)}</span>
+              <span class="benchmark-value">${benchmarkCell}</span>
+            </div>
+          </td>
           <td>${formatWholeNumber(readInput(`${prefix}MonthlyInteractions`))}</td>
           <td>${formatWholeNumber(readInput(`${prefix}InputTokens`))}</td>
           <td>${formatWholeNumber(readInput(`${prefix}OutputTokens`))}</td>
@@ -1000,7 +1122,7 @@ function renderModelCosts(modelMix, summary) {
 
     output.agentMixBody.innerHTML = `${rows}
       <tr class="add-agent-row">
-        <td colspan="7">
+        <td colspan="8">
           <button class="btn add-agent-button" type="button" disabled title="Future Foundry sync or manual agent creation">
             + Add agent
           </button>
@@ -1386,6 +1508,7 @@ async function initializeDashboard() {
   renderUseCases();
   renderTokenGuidance();
   await loadModelCatalog(false);
+  loadBenchmarkCatalog();
   modelSelects.modelOne.value = modelCatalog.some((model) => model.name === "GPT-5.5")
     ? "GPT-5.5"
     : modelCatalog[0].name;

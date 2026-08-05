@@ -659,6 +659,39 @@
       font-weight: 700;
     }
 
+    .benchmark-cell {
+      display: grid;
+      gap: 2px;
+      text-align: right;
+    }
+
+    .benchmark-label {
+      color: var(--muted);
+      font-size: 0.64rem;
+      font-weight: 800;
+      line-height: 1.1;
+      text-transform: uppercase;
+    }
+
+    .benchmark-value {
+      font-weight: 850;
+    }
+
+    .benchmark-link {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .benchmark-link:hover,
+    .benchmark-link:focus-visible {
+      outline: 0;
+      text-decoration: underline;
+    }
+
+    .benchmark-empty {
+      color: var(--muted);
+    }
+
     .agent-table tbody tr {
       background: rgba(255, 255, 255, 0.72);
     }
@@ -978,7 +1011,7 @@
     }
 
     .table-wrap {
-      overflow: hidden;
+      overflow: auto;
       border: 1px solid var(--line);
       border-radius: var(--radius);
       background: #ffffff;
@@ -992,8 +1025,23 @@
     }
 
     .agent-table {
-      min-width: 0;
+      min-width: 980px;
       table-layout: fixed;
+    }
+
+    .agent-table th:nth-child(1),
+    .agent-table td:nth-child(1) {
+      width: 15%;
+    }
+
+    .agent-table th:nth-child(2),
+    .agent-table td:nth-child(2) {
+      width: 15%;
+    }
+
+    .agent-table th:nth-child(3),
+    .agent-table td:nth-child(3) {
+      width: 11%;
     }
 
     th,
@@ -1528,6 +1576,7 @@
                 <tr>
                   <th>Agent</th>
                   <th>Model</th>
+                  <th style="text-align:right">Benchmark</th>
                   <th style="text-align:right">Total monthly interactions</th>
                   <th style="text-align:right">Input tokens / interaction</th>
                   <th style="text-align:right">Output tokens / interaction</th>
@@ -1536,7 +1585,7 @@
                 </tr>
               </thead>
               <tbody id="agentMixBody">
-                <tr><td colspan="7">Loading model mix...</td></tr>
+                <tr><td colspan="8">Loading model mix...</td></tr>
               </tbody>
             </table>
           </div>
