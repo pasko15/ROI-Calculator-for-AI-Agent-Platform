@@ -401,7 +401,7 @@ function populateModelSelects() {
 
     const currentValue = select.value;
     select.innerHTML = modelCatalog.map((model) => (
-      `<option value="${model.name}">${model.name}</option>`
+      `<option value="${escapeHtml(model.name)}">${escapeHtml(model.name)}</option>`
     )).join("");
 
     if (modelCatalog.some((model) => model.name === currentValue)) {
@@ -424,7 +424,7 @@ function applyCatalog(catalog) {
   }
 
   populateModelSelects();
-  renderCatalog(catalog);
+  renderCatalog();
   if (output.catalogSourceNote) {
     const source = catalog.source || "manual";
     const updated = catalog.lastUpdated ? new Date(catalog.lastUpdated).toLocaleString() : "not refreshed yet";
