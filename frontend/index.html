@@ -647,38 +647,11 @@
       font-weight: 800;
     }
 
-    .config-btn {
-      width: 28px;
-      min-width: 28px;
-      min-height: 28px;
-      padding: 0;
-      display: inline-grid;
-      place-items: center;
-      border: 1px solid rgba(184, 198, 210, 0.72);
-      border-radius: 50%;
-      background: rgba(255, 255, 255, 0.72);
-      box-shadow: none;
-      transition: background 120ms ease, border-color 120ms ease, transform 120ms ease;
-    }
-
-    .config-btn:hover,
-    .config-btn:focus-visible {
-      border-color: rgba(21, 111, 124, 0.48);
-      background: rgba(240, 251, 251, 0.96);
-      color: var(--accent);
-      transform: translateY(-1px);
-    }
-
-    .config-btn img {
-      width: 19px;
-      height: 19px;
-      display: block;
-      opacity: 0.8;
-    }
-
-    .config-btn:hover img,
-    .config-btn:focus-visible img {
-      opacity: 1;
+    .table-model-select {
+      min-height: 32px;
+      padding: 5px 28px 5px 8px;
+      font-size: 0.82rem;
+      font-weight: 700;
     }
 
     .agent-table tbody tr {
@@ -740,6 +713,29 @@
     .guidance-section-head p {
       color: var(--muted);
       font-size: 0.8rem;
+    }
+
+    .guidance-usage-field {
+      display: grid;
+      grid-template-columns: minmax(160px, 1fr) minmax(120px, 180px);
+      gap: var(--space-3);
+      align-items: center;
+      padding: 8px 10px;
+      border: 1px solid rgba(37, 160, 168, 0.28);
+      border-radius: var(--radius);
+      background: rgba(240, 251, 251, 0.68);
+    }
+
+    .guidance-usage-field span {
+      color: var(--text);
+      font-size: 0.82rem;
+      font-weight: 800;
+    }
+
+    .guidance-usage-field input {
+      min-height: 32px;
+      padding: 6px 8px;
+      text-align: right;
     }
 
     .guidance-options {
@@ -1396,6 +1392,10 @@
         grid-template-columns: 1fr;
       }
 
+      .guidance-usage-field {
+        grid-template-columns: 1fr;
+      }
+
       input[type="number"] {
         text-align: left;
       }
@@ -1526,7 +1526,7 @@
             <h2>Agent & model mix</h2>
             <div class="agent-actions">
               <span class="cost-driver-tag">Main cost driver</span>
-              <button id="openGuidanceButton" class="btn" type="button">Token guidance</button>
+              <button id="openGuidanceButton" class="btn" type="button">Usage & token guidance</button>
               <button id="openCatalogButton" class="btn" type="button">Model catalog</button>
               <span class="info-icon" tabindex="0" data-tip="Each agent contributes to cost based on token usage and selected model input/output prices.">i</span>
             </div>
@@ -1757,8 +1757,8 @@
       <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
       <div class="dialog-title">
         <div>
-          <h2 id="tokenGuidanceTitle">Token guidance</h2>
-          <p class="card-note" style="margin:4px 0 0">Choose the closest workload shape for each agent. The selected option updates that agent's token assumptions.</p>
+          <h2 id="tokenGuidanceTitle">Usage & token guidance</h2>
+          <p class="card-note" style="margin:4px 0 0">Set monthly interactions for each agent, then choose the closest workload shape to update token assumptions.</p>
         </div>
         <button id="closeGuidanceButton" class="btn icon-btn" type="button" aria-label="Close token guidance">x</button>
       </div>
@@ -1767,41 +1767,6 @@
       </div>
       <div class="dialog-actions">
         <button id="cancelGuidanceButton" class="btn" type="button">Close</button>
-      </div>
-    </section>
-  </div>
-
-  <div id="agentConfigDialog" class="dialog-backdrop" aria-hidden="true">
-    <section class="dialog token-dialog blueprint" role="dialog" aria-modal="true" aria-labelledby="agentConfigTitle">
-      <div class="dialog-title">
-        <div>
-          <h2 id="agentConfigTitle">Configure agent</h2>
-          <p class="card-note" style="margin:4px 0 0">Adjust model, monthly interactions, and token assumptions for this agent.</p>
-        </div>
-        <button id="closeAgentConfigButton" class="btn icon-btn" type="button" aria-label="Close agent configuration">x</button>
-      </div>
-      <div class="dialog-body">
-        <div class="two-col">
-          <div class="field">
-            <label for="configAgentModel" class="label-with-info">Model <span class="info-icon" tabindex="0" data-tip="Selected catalog model used by this agent.">i</span></label>
-            <select id="configAgentModel"></select>
-          </div>
-          <div class="field">
-            <label for="configMonthlyInteractions" class="label-with-info">Monthly interactions <span class="info-icon" tabindex="0" data-tip="Estimated total monthly invocations for this agent across all users.">i</span></label>
-            <input id="configMonthlyInteractions" type="number" min="0" step="1">
-          </div>
-          <div class="field">
-            <label for="configInputTokens" class="label-with-info">Input tokens / interaction <span class="info-icon" tabindex="0" data-tip="Average input tokens consumed by one interaction.">i</span></label>
-            <input id="configInputTokens" type="number" min="0" step="50">
-          </div>
-          <div class="field">
-            <label for="configOutputTokens" class="label-with-info">Output tokens / interaction <span class="info-icon" tabindex="0" data-tip="Average generated output tokens for one interaction.">i</span></label>
-            <input id="configOutputTokens" type="number" min="0" step="50">
-          </div>
-        </div>
-      </div>
-      <div class="dialog-actions">
-        <button id="cancelAgentConfigButton" class="btn" type="button">Close</button>
       </div>
     </section>
   </div>

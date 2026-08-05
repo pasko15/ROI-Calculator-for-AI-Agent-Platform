@@ -154,8 +154,6 @@ const output = {
   tokenGuidanceBody: document.getElementById("tokenGuidanceBody"),
   costByAgentChart: document.getElementById("costByAgentChart"),
   valueCostChart: document.getElementById("valueCostChart"),
-  agentConfigDialog: document.getElementById("agentConfigDialog"),
-  agentConfigTitle: document.getElementById("agentConfigTitle"),
   useCasesDialog: document.getElementById("useCasesDialog"),
   useCaseList: document.getElementById("useCaseList"),
   useCaseNavBadge: document.getElementById("useCaseNavBadge"),
@@ -165,15 +163,6 @@ const output = {
   useCaseAnnualHoursSaved: document.getElementById("useCaseAnnualHoursSaved"),
   useCaseAgentChoices: document.getElementById("useCaseAgentChoices")
 };
-
-const configFields = {
-  model: document.getElementById("configAgentModel"),
-  monthlyInteractions: document.getElementById("configMonthlyInteractions"),
-  inputTokens: document.getElementById("configInputTokens"),
-  outputTokens: document.getElementById("configOutputTokens")
-};
-
-let activeConfigPrefix = null;
 
 const catalogFields = {
   name: document.getElementById("catalogModelName"),
@@ -397,15 +386,6 @@ function populateModelSelects() {
     }
   });
 
-  if (configFields.model) {
-    const currentValue = configFields.model.value;
-    configFields.model.innerHTML = modelCatalog.map((model) => (
-      `<option value="${model.name}">${model.name}</option>`
-    )).join("");
-    if (modelCatalog.some((model) => model.name === currentValue)) {
-      configFields.model.value = currentValue;
-    }
-  }
 }
 
 function applyCatalog(catalog) {
@@ -858,17 +838,21 @@ function renderModelCosts(modelMix, summary) {
     const rows = modelMix.map((model, index) => {
       const prefix = index === 0 ? "modelOne" : "modelTwo";
       const selectedModel = getSelectedModel(prefix);
+      const modelOptions = modelCatalog.map((catalogModel) => (
+        `<option value="${escapeHtml(catalogModel.name)}" ${catalogModel.name === selectedModel.name ? "selected" : ""}>${escapeHtml(catalogModel.name)}</option>`
+      )).join("");
       return `
         <tr>
           <td>
             <div class="agent-cell">
               <span class="agent-name">${agentNames[prefix]}</span>
-              <button class="btn config-btn" type="button" data-config-agent="${prefix}" aria-label="Configure ${agentNames[prefix]}" title="Configure ${agentNames[prefix]}">
-                <img src="gear.png" alt="">
-              </button>
             </div>
           </td>
-          <td>${selectedModel.name}</td>
+          <td>
+            <select class="table-model-select" data-agent-model="${prefix}" aria-label="Model for ${agentNames[prefix]}">
+              ${modelOptions}
+            </select>
+          </td>
           <td>${formatWholeNumber(readInput(`${prefix}MonthlyInteractions`))}</td>
           <td>${formatWholeNumber(readInput(`${prefix}InputTokens`))}</td>
           <td>${formatWholeNumber(readInput(`${prefix}OutputTokens`))}</td>
@@ -888,48 +872,6 @@ function renderModelCosts(modelMix, summary) {
       </tr>
     `;
   }
-}
-
-function syncConfigFields(prefix) {
-  if (!prefix) {
-    return;
-  }
-
-  activeConfigPrefix = prefix;
-  output.agentConfigTitle.textContent = `Configure ${agentNames[prefix]}`;
-  configFields.model.value = modelSelects[prefix].value;
-  configFields.monthlyInteractions.value = readInput(`${prefix}MonthlyInteractions`);
-  configFields.inputTokens.value = readInput(`${prefix}InputTokens`);
-  configFields.outputTokens.value = readInput(`${prefix}OutputTokens`);
-}
-
-function openAgentConfig(prefix, trigger) {
-  syncConfigFields(prefix);
-  setDialogLaunch(output.agentConfigDialog, trigger);
-  output.agentConfigDialog.classList.remove("is-open");
-  void output.agentConfigDialog.offsetWidth;
-  output.agentConfigDialog.classList.add("is-open");
-  output.agentConfigDialog.setAttribute("aria-hidden", "false");
-}
-
-function closeAgentConfig() {
-  output.agentConfigDialog.classList.remove("is-open");
-  output.agentConfigDialog.setAttribute("aria-hidden", "true");
-}
-
-function applyAgentConfig() {
-  if (!activeConfigPrefix) {
-    return;
-  }
-
-  modelSelects[activeConfigPrefix].value = configFields.model.value;
-  setInputValue(`${activeConfigPrefix}MonthlyInteractions`, configFields.monthlyInteractions.value);
-  setInputValue(`${activeConfigPrefix}InputTokens`, configFields.inputTokens.value);
-  setInputValue(`${activeConfigPrefix}OutputTokens`, configFields.outputTokens.value);
-  document.querySelectorAll("[data-scenario]").forEach((button) => {
-    button.classList.remove("is-active");
-  });
-  scheduleUpdate();
 }
 
 function renderCostByAgent(modelMix) {
@@ -1005,6 +947,10 @@ function renderTokenGuidance() {
           <h3>${escapeHtml(config.title)}</h3>
           <p>${escapeHtml(config.prompt)}</p>
         </div>
+        <label class="guidance-usage-field">
+          <span>Monthly interactions</span>
+          <input type="number" min="0" step="1" value="${Math.max(0, readInput(`${agent}MonthlyInteractions`))}" data-guidance-monthly-agent="${agent}">
+        </label>
         <div class="guidance-options">
           ${config.options.map((guidance, index) => {
             const isSelected = guidance.custom
@@ -1097,6 +1043,19 @@ function applyCustomTokenGuidance(input, shouldRender = false) {
   if (shouldRender) {
     renderTokenGuidance();
   }
+}
+
+function applyGuidanceMonthlyInteractions(input) {
+  const agent = input.dataset.guidanceMonthlyAgent;
+  if (!agent) {
+    return;
+  }
+
+  setInputValue(`${agent}MonthlyInteractions`, Math.max(0, Number.parseFloat(input.value) || 0));
+  document.querySelectorAll("[data-scenario]").forEach((button) => {
+    button.classList.remove("is-active");
+  });
+  scheduleUpdate();
 }
 
 function renderDashboard(data) {
@@ -1203,11 +1162,6 @@ Object.entries(modelSelects).forEach(([prefix, select]) => {
   select.addEventListener("change", () => applyModelToAgent(prefix));
 });
 
-Object.values(configFields).forEach((field) => {
-  field.addEventListener("input", applyAgentConfig);
-  field.addEventListener("change", applyAgentConfig);
-});
-
 document.querySelectorAll("[data-scenario]").forEach((button) => {
   button.addEventListener("click", () => applyPreset(button.dataset.scenario));
 });
@@ -1230,8 +1184,6 @@ document.getElementById("openGuidanceButton").addEventListener("click", (event) 
 });
 document.getElementById("closeGuidanceButton").addEventListener("click", closeGuidance);
 document.getElementById("cancelGuidanceButton").addEventListener("click", closeGuidance);
-document.getElementById("closeAgentConfigButton").addEventListener("click", closeAgentConfig);
-document.getElementById("cancelAgentConfigButton").addEventListener("click", closeAgentConfig);
 document.getElementById("toggleCatalogRowsButton").addEventListener("click", () => {
   catalogRowsExpanded = !catalogRowsExpanded;
   renderCatalog();
@@ -1278,23 +1230,29 @@ output.tokenGuidanceDialog.addEventListener("input", (event) => {
   if (event.target.matches("[data-custom-token-agent]")) {
     applyCustomTokenGuidance(event.target);
   }
+  if (event.target.matches("[data-guidance-monthly-agent]")) {
+    applyGuidanceMonthlyInteractions(event.target);
+  }
 });
 output.tokenGuidanceDialog.addEventListener("change", (event) => {
   if (event.target.matches("[data-custom-token-agent]")) {
     applyCustomTokenGuidance(event.target, true);
   }
-});
-output.agentConfigDialog.addEventListener("click", (event) => {
-  if (event.target === output.agentConfigDialog) {
-    closeAgentConfig();
+  if (event.target.matches("[data-guidance-monthly-agent]")) {
+    applyGuidanceMonthlyInteractions(event.target);
   }
 });
-output.agentMixBody.addEventListener("click", (event) => {
-  const button = event.target.closest("[data-config-agent]");
-  if (!button) {
+output.agentMixBody.addEventListener("change", (event) => {
+  const select = event.target.closest("[data-agent-model]");
+  if (!select) {
     return;
   }
-  openAgentConfig(button.dataset.configAgent, button);
+
+  modelSelects[select.dataset.agentModel].value = select.value;
+  document.querySelectorAll("[data-scenario]").forEach((button) => {
+    button.classList.remove("is-active");
+  });
+  updateDashboard();
 });
 
 async function initializeDashboard() {
