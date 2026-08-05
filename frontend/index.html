@@ -114,6 +114,12 @@
       gap: var(--space-3);
     }
 
+    .nav-menu-button {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+    }
+
     .seg {
       display: inline-flex;
       padding: 3px;
@@ -717,6 +723,134 @@
       font-size: 0.8rem;
     }
 
+    .use-case-summary {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: var(--space-3);
+      margin-bottom: var(--space-3);
+    }
+
+    .use-case-stat {
+      padding: 9px 10px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface-soft);
+    }
+
+    .use-case-stat-value {
+      margin-top: 2px;
+      color: var(--text);
+      font-size: 1.15rem;
+      font-weight: 800;
+    }
+
+    .use-case-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.25fr) minmax(260px, 0.75fr);
+      gap: var(--space-4);
+      align-items: start;
+    }
+
+    .use-case-list {
+      display: grid;
+      gap: var(--space-3);
+    }
+
+    .use-case-card {
+      display: grid;
+      gap: 7px;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #ffffff;
+    }
+
+    .use-case-card-head {
+      display: flex;
+      justify-content: space-between;
+      gap: var(--space-3);
+      align-items: start;
+    }
+
+    .use-case-card h3 {
+      font-size: 0.94rem;
+      font-weight: 800;
+    }
+
+    .use-case-description {
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+
+    .use-case-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .use-case-pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 22px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 2px 8px;
+      background: var(--surface-soft);
+      color: var(--muted);
+      font-size: 0.72rem;
+      font-weight: 760;
+    }
+
+    .empty-state {
+      padding: 14px;
+      border: 1px dashed var(--line-strong);
+      border-radius: var(--radius);
+      color: var(--muted);
+      background: var(--surface-soft);
+      font-size: 0.82rem;
+    }
+
+    .checkbox-stack {
+      display: grid;
+      gap: 8px;
+    }
+
+    .check-option {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 34px;
+      padding: 6px 8px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface-soft);
+      cursor: pointer;
+    }
+
+    .check-option input {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--accent);
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 92px;
+      resize: vertical;
+      border: 1px solid #c8d3dd;
+      border-radius: var(--radius);
+      color: var(--text);
+      background: var(--surface-soft);
+      padding: 7px 9px;
+      font: inherit;
+    }
+
+    textarea:focus {
+      outline: 3px solid rgba(21, 111, 124, 0.16);
+      border-color: var(--accent);
+      background: #ffffff;
+    }
+
     .status-line {
       min-height: 18px;
       color: var(--negative);
@@ -850,6 +984,10 @@
 
     .catalog-dialog {
       width: min(860px, 100%);
+    }
+
+    .use-cases-dialog {
+      width: min(980px, 100%);
     }
 
     .dialog-title {
@@ -1124,6 +1262,8 @@
 
       .kpi-grid,
       .two-col,
+      .use-case-summary,
+      .use-case-layout,
       .insight-grid {
         grid-template-columns: 1fr;
       }
@@ -1149,6 +1289,10 @@
   <nav class="nav" aria-label="Dashboard navigation">
     <div class="nav-brand"><img class="brand-mark" src="roirobot.png" alt="Agent ROI logo">Agent ROI</div>
     <div class="nav-actions">
+      <button id="openUseCasesButton" class="btn blueprint nav-menu-button" type="button">
+        <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+        Use cases
+      </button>
       <button class="btn blueprint" type="button" disabled title="Future Azure Resource API integration">
         <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
         Connect Azure
@@ -1332,6 +1476,81 @@
       </div>
     </section>
   </main>
+
+  <div id="useCasesDialog" class="dialog-backdrop" aria-hidden="true">
+    <section class="dialog use-cases-dialog blueprint" role="dialog" aria-modal="true" aria-labelledby="useCasesTitle">
+      <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+      <div class="dialog-title">
+        <div>
+          <h2 id="useCasesTitle">Use cases</h2>
+          <p class="card-note" style="margin:4px 0 0">Map recurring business use cases to the agents they consume and turn yearly volume into monthly interaction assumptions.</p>
+        </div>
+        <button id="closeUseCasesButton" class="btn icon-btn" type="button" aria-label="Close use cases">x</button>
+      </div>
+      <div class="dialog-body">
+        <div class="use-case-summary" aria-label="Use case summary">
+          <div class="use-case-stat">
+            <div class="kpi-label">Use cases</div>
+            <div id="useCaseCount" class="use-case-stat-value">0</div>
+          </div>
+          <div class="use-case-stat">
+            <div class="kpi-label">Annual occurrences</div>
+            <div id="useCaseAnnualTotal" class="use-case-stat-value">0</div>
+          </div>
+          <div class="use-case-stat">
+            <div class="kpi-label">Monthly interactions</div>
+            <div id="useCaseMonthlyTotal" class="use-case-stat-value">0</div>
+          </div>
+          <div class="use-case-stat">
+            <div class="kpi-label">Annual hours saved</div>
+            <div id="useCaseAnnualHoursSaved" class="use-case-stat-value">0</div>
+          </div>
+        </div>
+
+        <div class="use-case-layout">
+          <section>
+            <div class="card-title">
+              <h3>Existing use cases</h3>
+              <button id="applyUseCasesButton" class="btn" type="button">Apply to ROI assumptions</button>
+            </div>
+            <div id="useCaseList" class="use-case-list"></div>
+          </section>
+
+          <section>
+            <div class="card-title">
+              <h3>Add use case</h3>
+            </div>
+            <div class="input-stack">
+              <div class="field">
+                <label for="useCaseName">Name</label>
+                <input id="useCaseName" type="text" placeholder="e.g. Monthly production report">
+              </div>
+              <div class="field">
+                <label for="useCaseDescription">Description</label>
+                <textarea id="useCaseDescription" placeholder="What business process does this cover?"></textarea>
+              </div>
+              <div class="field">
+                <label for="useCaseOccurrences">Times per year</label>
+                <input id="useCaseOccurrences" type="number" min="0" step="1" value="12">
+              </div>
+              <div class="field">
+                <label for="useCaseMinutesSaved">Minutes saved per occurrence</label>
+                <input id="useCaseMinutesSaved" type="number" min="0" step="1" value="30">
+              </div>
+              <div class="field">
+                <label>Agents used</label>
+                <div id="useCaseAgentChoices" class="checkbox-stack"></div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+      <div class="dialog-actions">
+        <button id="cancelUseCasesButton" class="btn" type="button">Close</button>
+        <button id="saveUseCaseButton" class="btn btn-primary" type="button">Save use case</button>
+      </div>
+    </section>
+  </div>
 
   <div id="modelCatalogDialog" class="dialog-backdrop" aria-hidden="true">
     <section class="dialog catalog-dialog blueprint" role="dialog" aria-modal="true" aria-labelledby="modelCatalogTitle">

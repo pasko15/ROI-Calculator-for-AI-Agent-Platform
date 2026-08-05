@@ -39,11 +39,14 @@ let modelCatalog = [...fallbackModelCatalog];
 let catalogRowsExpanded = false;
 const CATALOG_PREVIEW_LIMIT = 4;
 const LOCAL_CATALOG_KEY = "agent-roi-model-catalog";
+const LOCAL_USE_CASES_KEY = "agent-roi-use-cases";
 
 const agentNames = {
   modelOne: "Data Extract Agent",
   modelTwo: "Report Generating Agent"
 };
+
+let useCases = [];
 
 const TOKEN_GUIDANCE = [
   {
@@ -112,7 +115,14 @@ const output = {
   costByAgentChart: document.getElementById("costByAgentChart"),
   valueCostChart: document.getElementById("valueCostChart"),
   agentConfigDialog: document.getElementById("agentConfigDialog"),
-  agentConfigTitle: document.getElementById("agentConfigTitle")
+  agentConfigTitle: document.getElementById("agentConfigTitle"),
+  useCasesDialog: document.getElementById("useCasesDialog"),
+  useCaseList: document.getElementById("useCaseList"),
+  useCaseCount: document.getElementById("useCaseCount"),
+  useCaseAnnualTotal: document.getElementById("useCaseAnnualTotal"),
+  useCaseMonthlyTotal: document.getElementById("useCaseMonthlyTotal"),
+  useCaseAnnualHoursSaved: document.getElementById("useCaseAnnualHoursSaved"),
+  useCaseAgentChoices: document.getElementById("useCaseAgentChoices")
 };
 
 const configFields = {
@@ -131,6 +141,13 @@ const catalogFields = {
   outputGlobal: document.getElementById("catalogOutputGlobal"),
   inputDataZone: document.getElementById("catalogInputDataZone"),
   outputDataZone: document.getElementById("catalogOutputDataZone")
+};
+
+const useCaseFields = {
+  name: document.getElementById("useCaseName"),
+  description: document.getElementById("useCaseDescription"),
+  occurrences: document.getElementById("useCaseOccurrences"),
+  minutesSaved: document.getElementById("useCaseMinutesSaved")
 };
 
 const moneyFormatter = new Intl.NumberFormat("en-US", {
@@ -169,6 +186,15 @@ function readInput(name) {
 
   const value = Number.parseFloat(element.value);
   return Number.isFinite(value) ? value : 0;
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 }
 
 function modelPayload(prefix, name) {
@@ -404,6 +430,224 @@ function saveLocalCatalog(models) {
   };
   localStorage.setItem(LOCAL_CATALOG_KEY, JSON.stringify(catalog));
   return catalog;
+}
+
+function defaultUseCases() {
+  return [
+    {
+      id: "monthly-production-report",
+      name: "Monthly production report",
+      description: "Extract source data and draft the recurring operational report.",
+      agents: ["modelOne", "modelTwo"],
+      annualOccurrences: 12,
+      minutesSavedPerOccurrence: 45
+    },
+    {
+      id: "ad-hoc-data-extract",
+      name: "Ad hoc data extract",
+      description: "Pull structured values from source material for business analysis.",
+      agents: ["modelOne"],
+      annualOccurrences: 120,
+      minutesSavedPerOccurrence: 15
+    }
+  ];
+}
+
+function loadUseCases() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(LOCAL_USE_CASES_KEY) || "null");
+    if (Array.isArray(saved)) {
+      return saved
+        .filter((item) => item && typeof item === "object")
+        .map((item) => ({
+          id: String(item.id || `use-case-${Date.now()}`),
+          name: String(item.name || "").trim(),
+          description: String(item.description || "").trim(),
+          agents: Array.isArray(item.agents)
+            ? item.agents.filter((agent) => agentNames[agent])
+            : [],
+          annualOccurrences: Math.max(0, Number(item.annualOccurrences) || 0),
+          minutesSavedPerOccurrence: Math.max(
+            0,
+            Number(item.minutesSavedPerOccurrence) || 0
+          )
+        }))
+        .filter((item) => item.name);
+    }
+  } catch {
+    // Ignore corrupt browser state and fall back to starter use cases.
+  }
+
+  return defaultUseCases();
+}
+
+function saveUseCases() {
+  localStorage.setItem(LOCAL_USE_CASES_KEY, JSON.stringify(useCases));
+}
+
+function useCaseRollup() {
+  return useCases.reduce(
+    (totals, useCase) => {
+      const occurrences = Math.max(0, Number(useCase.annualOccurrences) || 0);
+      const minutesSaved = Math.max(
+        0,
+        Number(useCase.minutesSavedPerOccurrence) || 0
+      );
+      totals.annualOccurrences += occurrences;
+      totals.annualHoursSaved += (occurrences * minutesSaved) / 60;
+      useCase.agents.forEach((agent) => {
+        totals.agentAnnualInteractions[agent] =
+          (totals.agentAnnualInteractions[agent] || 0) + occurrences;
+      });
+      return totals;
+    },
+    {
+      annualOccurrences: 0,
+      annualHoursSaved: 0,
+      agentAnnualInteractions: Object.fromEntries(
+        Object.keys(agentNames).map((agent) => [agent, 0])
+      )
+    }
+  );
+}
+
+function renderUseCaseAgentChoices() {
+  if (!output.useCaseAgentChoices) {
+    return;
+  }
+
+  output.useCaseAgentChoices.innerHTML = Object.entries(agentNames).map(([key, name]) => `
+    <label class="check-option">
+      <input type="checkbox" value="${key}" checked>
+      <span>${escapeHtml(name)}</span>
+    </label>
+  `).join("");
+}
+
+function renderUseCases() {
+  if (!output.useCaseList) {
+    return;
+  }
+
+  const rollup = useCaseRollup();
+  const monthlyInteractions = Object.values(rollup.agentAnnualInteractions)
+    .reduce((total, value) => total + value, 0) / 12;
+
+  output.useCaseCount.textContent = formatWholeNumber(useCases.length);
+  output.useCaseAnnualTotal.textContent = formatWholeNumber(rollup.annualOccurrences);
+  output.useCaseMonthlyTotal.textContent = formatNumber(monthlyInteractions);
+  output.useCaseAnnualHoursSaved.textContent = formatNumber(rollup.annualHoursSaved);
+
+  if (useCases.length === 0) {
+    output.useCaseList.innerHTML = `
+      <div class="empty-state">No use cases yet. Add one to start mapping business volume to agent usage.</div>
+    `;
+    return;
+  }
+
+  output.useCaseList.innerHTML = useCases.map((useCase) => {
+    const agents = useCase.agents.map((agent) => agentNames[agent]).filter(Boolean);
+    return `
+      <article class="use-case-card">
+        <div class="use-case-card-head">
+          <div>
+            <h3>${escapeHtml(useCase.name)}</h3>
+            <p class="use-case-description">${escapeHtml(useCase.description || "No description entered.")}</p>
+          </div>
+          <button class="btn" type="button" data-delete-use-case="${escapeHtml(useCase.id)}">Remove</button>
+        </div>
+        <div class="use-case-meta">
+          <span class="use-case-pill">${formatWholeNumber(useCase.annualOccurrences)} times/year</span>
+          <span class="use-case-pill">${formatNumber(useCase.annualOccurrences / 12)} times/month</span>
+          <span class="use-case-pill">${formatWholeNumber(useCase.minutesSavedPerOccurrence || 0)} min saved/occurrence</span>
+          <span class="use-case-pill">${formatNumber((useCase.annualOccurrences * (useCase.minutesSavedPerOccurrence || 0)) / 60)} hrs saved/year</span>
+          ${agents.map((agent) => `<span class="use-case-pill">${escapeHtml(agent)}</span>`).join("")}
+        </div>
+      </article>
+    `;
+  }).join("");
+}
+
+function openUseCases(trigger) {
+  renderUseCases();
+  setDialogLaunch(output.useCasesDialog, trigger);
+  output.useCasesDialog.classList.remove("is-open");
+  void output.useCasesDialog.offsetWidth;
+  output.useCasesDialog.classList.add("is-open");
+  output.useCasesDialog.setAttribute("aria-hidden", "false");
+}
+
+function closeUseCases() {
+  output.useCasesDialog.classList.remove("is-open");
+  output.useCasesDialog.setAttribute("aria-hidden", "true");
+}
+
+function clearUseCaseForm() {
+  useCaseFields.name.value = "";
+  useCaseFields.description.value = "";
+  useCaseFields.occurrences.value = 12;
+  useCaseFields.minutesSaved.value = 30;
+  output.useCaseAgentChoices.querySelectorAll("input[type='checkbox']").forEach((checkbox) => {
+    checkbox.checked = true;
+  });
+}
+
+function saveUseCase() {
+  const name = useCaseFields.name.value.trim();
+  const description = useCaseFields.description.value.trim();
+  const annualOccurrences = Math.max(0, Number.parseFloat(useCaseFields.occurrences.value) || 0);
+  const minutesSavedPerOccurrence = Math.max(
+    0,
+    Number.parseFloat(useCaseFields.minutesSaved.value) || 0
+  );
+  const agents = Array.from(
+    output.useCaseAgentChoices.querySelectorAll("input[type='checkbox']:checked")
+  ).map((checkbox) => checkbox.value);
+
+  if (!name) {
+    output.statusLine.textContent = "Use case name is required.";
+    return;
+  }
+  if (agents.length === 0) {
+    output.statusLine.textContent = "Select at least one agent for the use case.";
+    return;
+  }
+
+  useCases.push({
+    id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+    name,
+    description,
+    agents,
+    annualOccurrences,
+    minutesSavedPerOccurrence
+  });
+  saveUseCases();
+  renderUseCases();
+  clearUseCaseForm();
+  output.statusLine.textContent = "";
+}
+
+function deleteUseCase(id) {
+  useCases = useCases.filter((useCase) => useCase.id !== id);
+  saveUseCases();
+  renderUseCases();
+}
+
+function applyUseCasesToAgentUsage() {
+  const rollup = useCaseRollup();
+  Object.entries(rollup.agentAnnualInteractions).forEach(([agent, annualInteractions]) => {
+    setInputValue(`${agent}MonthlyInteractions`, Math.round(annualInteractions / 12));
+  });
+  const activeUsers = Math.max(0, readInput("activeMonthlyUsers"));
+  const minutesSavedPerUserPerWeek = activeUsers > 0
+    ? (rollup.annualHoursSaved * 60) / 52 / activeUsers
+    : 0;
+  setInputValue("minutesSaved", Math.round(minutesSavedPerUserPerWeek));
+  document.querySelectorAll("[data-scenario]").forEach((button) => {
+    button.classList.remove("is-active");
+  });
+  closeUseCases();
+  scheduleUpdate();
 }
 
 function applyModelToAgent(prefix) {
@@ -850,6 +1094,13 @@ document.querySelectorAll("[data-scenario]").forEach((button) => {
 document.getElementById("openCatalogButton").addEventListener("click", (event) => {
   openCatalog(event.currentTarget);
 });
+document.getElementById("openUseCasesButton").addEventListener("click", (event) => {
+  openUseCases(event.currentTarget);
+});
+document.getElementById("closeUseCasesButton").addEventListener("click", closeUseCases);
+document.getElementById("cancelUseCasesButton").addEventListener("click", closeUseCases);
+document.getElementById("saveUseCaseButton").addEventListener("click", saveUseCase);
+document.getElementById("applyUseCasesButton").addEventListener("click", applyUseCasesToAgentUsage);
 document.getElementById("closeCatalogButton").addEventListener("click", closeCatalog);
 document.getElementById("cancelCatalogButton").addEventListener("click", closeCatalog);
 document.getElementById("saveCatalogModelButton").addEventListener("click", saveCatalogModel);
@@ -872,6 +1123,17 @@ document.getElementById("refreshCatalogButton").addEventListener("click", async 
 output.modelCatalogDialog.addEventListener("click", (event) => {
   if (event.target === output.modelCatalogDialog) {
     closeCatalog();
+  }
+});
+output.useCasesDialog.addEventListener("click", (event) => {
+  if (event.target === output.useCasesDialog) {
+    closeUseCases();
+    return;
+  }
+
+  const deleteButton = event.target.closest("[data-delete-use-case]");
+  if (deleteButton) {
+    deleteUseCase(deleteButton.dataset.deleteUseCase);
   }
 });
 output.tokenGuidanceDialog.addEventListener("click", (event) => {
@@ -904,6 +1166,9 @@ output.agentMixBody.addEventListener("click", (event) => {
 });
 
 async function initializeDashboard() {
+  useCases = loadUseCases();
+  renderUseCaseAgentChoices();
+  renderUseCases();
   renderTokenGuidance();
   await loadModelCatalog(false);
   modelSelects.modelOne.value = modelCatalog.some((model) => model.name === "GPT-5.5")
