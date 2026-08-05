@@ -272,7 +272,7 @@
 
     .kpi-grid {
       display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: var(--space-4);
       margin-bottom: var(--space-6);
     }
@@ -804,7 +804,7 @@
       <div>
         <div class="eyebrow">Python-backed ROI model</div>
         <h1>ROI overview</h1>
-        <p class="subtitle">Usage-based AI model cost, productivity value, and payback from visible assumptions.</p>
+        <p class="subtitle">Usage-based AI model cost and productivity value from visible assumptions.</p>
       </div>
       <div class="scenario-actions" aria-label="Preset scenarios">
         <button class="scenario-button" type="button" data-scenario="pilot">Small Pilot</button>
@@ -818,7 +818,7 @@
         <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
         <div class="kpi-head">
           <div class="kpi-label">Net ROI</div>
-          <span class="info-icon" tabindex="0" data-tip="Monthly net value divided by monthly AI model cost.">i</span>
+          <span class="info-icon" tabindex="0" data-tip="Monthly net value divided by total monthly cost.">i</span>
         </div>
         <div id="roiKpi" class="kpi-value">0%</div>
         <div id="effectiveWorkersContext" class="kpi-context">0 active monthly users</div>
@@ -827,23 +827,19 @@
       <article class="kpi-card blueprint">
         <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
         <div class="kpi-head">
-          <div class="kpi-label">Payback period</div>
-          <span class="info-icon" tabindex="0" data-tip="Months until cumulative value exceeds the optional implementation cost.">i</span>
+          <div class="kpi-label">Total monthly costs</div>
+          <span class="info-icon" tabindex="0" data-tip="Estimated monthly usage cost for all configured Foundry agents, based on active users, per-agent interactions, token usage, and selected model prices.">i</span>
         </div>
-        <div id="paybackKpi" class="kpi-value">0 mo</div>
-        <div id="breakEvenKpi" class="kpi-context">0 min break-even per user/week</div>
-      </article>
-
-      <article class="kpi-card blueprint">
-        <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
-        <div class="kpi-label">Monthly AI model cost</div>
         <div id="monthlyPlatformCostKpi" class="kpi-value">$0</div>
         <span id="costMixContext" class="tag">$0 model usage cost</span>
       </article>
 
       <article class="kpi-card blueprint">
         <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
-        <div class="kpi-label">Time saved / month</div>
+        <div class="kpi-head">
+          <div class="kpi-label">Time saved / month</div>
+          <span class="info-icon" tabindex="0" data-tip="Active monthly users multiplied by average weekly time saved per user and 4.33 average weeks per month.">i</span>
+        </div>
         <div id="monthlyHoursKpi" class="kpi-value">0 hrs</div>
         <div id="monthlyHoursContext" class="kpi-context">0 monthly hours saved</div>
       </article>
@@ -881,14 +877,10 @@
         <section class="card blueprint">
           <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
           <div class="card-title">
-            <h2>Interaction volume</h2>
+            <h2>Usage assumptions</h2>
           </div>
           <p class="card-note">1 interaction = 1 user task, typically made up of 1-3 user-entered messages.</p>
           <div class="input-stack">
-            <div class="field">
-              <label for="interactionsPerDay" class="label-with-info">Interactions / active user / day <span class="info-icon" tabindex="0" data-tip="Average number of agent tasks each active user starts per workday.">i</span></label>
-              <input id="interactionsPerDay" data-input="interactionsPerDay" type="number" min="0" step="1" value="10">
-            </div>
             <div class="field">
               <label for="workingDays" class="label-with-info">Working days / month <span class="info-icon" tabindex="0" data-tip="Business days used to convert daily interaction volume into monthly usage.">i</span></label>
               <input id="workingDays" data-input="workingDays" type="number" min="0" max="31" step="1" value="21">
@@ -913,17 +905,7 @@
           <p class="card-note" style="margin: var(--space-3) 0 0;">All model prices are entered manually as dollars per 1 million tokens.</p>
         </section>
 
-        <section class="card blueprint">
-          <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
-          <div class="card-title">
-            <h2>Implementation</h2>
-          </div>
-          <div class="field">
-            <label for="implementationCost" class="label-with-info">One-time implementation cost ($) <span class="info-icon" tabindex="0" data-tip="Optional upfront cost used only for payback period.">i</span></label>
-            <input id="implementationCost" data-input="implementationCost" type="number" min="0" step="1000" value="15000">
-          </div>
-          <div id="statusLine" class="status-line" role="status"></div>
-        </section>
+        <div id="statusLine" class="status-line" role="status"></div>
       </aside>
 
       <div class="workbench">
@@ -945,15 +927,16 @@
                 <tr>
                   <th>Agent</th>
                   <th>Model</th>
+                  <th style="text-align:right">Interactions / user / day</th>
                   <th style="text-align:right">Input tokens / interaction</th>
                   <th style="text-align:right">Output tokens / interaction</th>
-                  <th style="text-align:right">Input $/1M</th>
-                  <th style="text-align:right">Output $/1M</th>
                   <th style="text-align:right">Cost / interaction</th>
+                  <th style="text-align:right">Cost / user / month</th>
+                  <th style="text-align:right">Monthly cost</th>
                 </tr>
               </thead>
               <tbody id="agentMixBody">
-                <tr><td colspan="7">Loading model mix...</td></tr>
+                <tr><td colspan="8">Loading model mix...</td></tr>
               </tbody>
             </table>
           </div>
@@ -965,6 +948,10 @@
                 <div class="field">
                   <label for="modelOneModel" class="label-with-info">Model <span class="info-icon" tabindex="0" data-tip="Select the model deployment used by this agent. Prices fill from the catalog.">i</span></label>
                   <select id="modelOneModel" data-model-select="modelOne"></select>
+                </div>
+                <div class="field">
+                  <label for="modelOneInteractions" class="label-with-info">Interactions / user / day <span class="info-icon" tabindex="0" data-tip="Average number of times one active user invokes this specific agent per workday.">i</span></label>
+                  <input id="modelOneInteractions" data-input="modelOneInteractions" type="number" min="0" step="0.1" value="1">
                 </div>
                 <div class="field">
                   <label for="modelOneInputTokens" class="label-with-info">Input tokens / interaction <span class="info-icon" tabindex="0" data-tip="Average input tokens consumed by one interaction. An interaction is one user task, typically 1-3 user-entered messages.">i</span></label>
@@ -983,6 +970,10 @@
                 <div class="field">
                   <label for="modelTwoModel" class="label-with-info">Model <span class="info-icon" tabindex="0" data-tip="Select the model deployment used by this agent. Prices fill from the catalog.">i</span></label>
                   <select id="modelTwoModel" data-model-select="modelTwo"></select>
+                </div>
+                <div class="field">
+                  <label for="modelTwoInteractions" class="label-with-info">Interactions / user / day <span class="info-icon" tabindex="0" data-tip="Average number of times one active user invokes this specific agent per workday.">i</span></label>
+                  <input id="modelTwoInteractions" data-input="modelTwoInteractions" type="number" min="0" step="0.1" value="4">
                 </div>
                 <div class="field">
                   <label for="modelTwoInputTokens" class="label-with-info">Input tokens / interaction <span class="info-icon" tabindex="0" data-tip="Average input tokens consumed by one interaction. An interaction is one user task, typically 1-3 user-entered messages.">i</span></label>

@@ -23,7 +23,7 @@ The current model and agent mix assumes standard pay-as-you-go pricing. Dedicate
 
 An interaction is defined as one user task made up of roughly 1-3 user-entered messages.
 
-The dashboard blends per-agent model costs into an effective cost per interaction, estimates monthly AI cost and cost per active user, converts expected time savings into financial value, and calculates ROI and payback. The figures are intended to be as accurate as possible from the available assumptions, while remaining easy to update as better usage data becomes available.
+The dashboard blends per-agent model costs into an effective cost per interaction, estimates total monthly cost and cost per active user, converts expected time savings into financial value, and calculates ROI. The figures are intended to be as accurate as possible from the available assumptions, while remaining easy to update as better usage data becomes available.
 
 ## Preview
 

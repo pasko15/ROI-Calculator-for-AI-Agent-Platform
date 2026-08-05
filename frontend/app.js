@@ -1,17 +1,20 @@
 const PRESETS = {
   pilot: {
     activeMonthlyUsers: 25,
-    interactionsPerDay: 5,
+    modelOneInteractions: 0.5,
+    modelTwoInteractions: 2,
     manualCostPerInteraction: 0.36
   },
   department: {
     activeMonthlyUsers: 100,
-    interactionsPerDay: 10,
+    modelOneInteractions: 1,
+    modelTwoInteractions: 4,
     manualCostPerInteraction: 0.13
   },
   enterprise: {
     activeMonthlyUsers: 500,
-    interactionsPerDay: 20,
+    modelOneInteractions: 2,
+    modelTwoInteractions: 8,
     manualCostPerInteraction: 0.18
   }
 };
@@ -86,7 +89,6 @@ const inputElements = Array.from(document.querySelectorAll("[data-input]")).redu
 
 const output = {
   heroBreakEven: document.getElementById("heroBreakEven"),
-  paybackKpi: document.getElementById("paybackKpi"),
   monthlyHoursKpi: document.getElementById("monthlyHoursKpi"),
   monthlyPlatformCostKpi: document.getElementById("monthlyPlatformCostKpi"),
   annualPlatformCostKpi: document.getElementById("annualPlatformCostKpi"),
@@ -95,7 +97,6 @@ const output = {
   monthlyNetBenefitKpi: document.getElementById("monthlyNetBenefitKpi"),
   annualNetBenefitKpi: document.getElementById("annualNetBenefitKpi"),
   roiKpi: document.getElementById("roiKpi"),
-  breakEvenKpi: document.getElementById("breakEvenKpi"),
   monthlyInteractionsKpi: document.getElementById("monthlyInteractionsKpi"),
   costMixContext: document.getElementById("costMixContext"),
   monthlyHoursContext: document.getElementById("monthlyHoursContext"),
@@ -168,7 +169,8 @@ function modelPayload(prefix, name) {
     input_price_per_1m_tokens: Math.max(0, Number(selectedModel.inputGlobal) || 0),
     output_price_per_1m_tokens: Math.max(0, Number(selectedModel.outputGlobal) || 0),
     avg_input_tokens_per_interaction: Math.max(0, readInput(`${prefix}InputTokens`)),
-    avg_output_tokens_per_interaction: Math.max(0, readInput(`${prefix}OutputTokens`))
+    avg_output_tokens_per_interaction: Math.max(0, readInput(`${prefix}OutputTokens`)),
+    interactions_per_user_per_day: Math.max(0, readInput(`${prefix}Interactions`))
   };
 }
 
@@ -177,14 +179,12 @@ function getPayload(overrides = {}) {
     active_monthly_users: Math.max(0, readInput("activeMonthlyUsers")),
     hourly_cost_per_worker: Math.max(0, readInput("hourlyCost")),
     time_saved_minutes_per_user_per_week: Math.max(0, readInput("minutesSaved")),
-    interactions_per_user_per_day: Math.max(0, readInput("interactionsPerDay")),
     working_days_per_month: Math.min(Math.max(readInput("workingDays"), 0), 31),
     manual_cost_per_interaction: Math.max(0, readInput("manualCostPerInteraction")),
     model_mix: [
       modelPayload("modelOne", agentNames.modelOne),
       modelPayload("modelTwo", agentNames.modelTwo)
     ],
-    one_time_implementation_cost: Math.max(0, readInput("implementationCost")),
     ...overrides
   };
 }
@@ -508,11 +508,12 @@ function renderModelCosts(modelMix, summary) {
         <tr>
           <td>${agentNames[prefix]}</td>
           <td>${selectedModel.name}</td>
+          <td>${formatNumber(readInput(`${prefix}Interactions`))}</td>
           <td>${formatWholeNumber(readInput(`${prefix}InputTokens`))}</td>
           <td>${formatWholeNumber(readInput(`${prefix}OutputTokens`))}</td>
-          <td>${formatPreciseMoney(selectedModel.inputGlobal)}</td>
-          <td>${formatPreciseMoney(selectedModel.outputGlobal)}</td>
           <td>${formatPreciseMoney(model.cost_per_interaction)}</td>
+          <td>${formatPreciseMoney(model.monthly_cost_per_user)}</td>
+          <td>${formatMoney(model.monthly_cost)}</td>
         </tr>
       `;
     }).join("");
@@ -565,9 +566,6 @@ function renderDashboard(data) {
   output.heroBreakEven.textContent = formatMinutes(
     summary.break_even_minutes_per_worker_per_week
   );
-  if (output.paybackKpi) {
-    output.paybackKpi.textContent = formatMonths(summary.payback_period_months);
-  }
   if (output.monthlyHoursKpi) {
     output.monthlyHoursKpi.textContent = `${formatWholeNumber(summary.monthly_hours_saved)} hrs`;
   }
@@ -578,7 +576,6 @@ function renderDashboard(data) {
   output.monthlyNetBenefitKpi.textContent = formatMoney(summary.monthly_net_benefit);
   output.annualNetBenefitKpi.textContent = formatMoney(summary.annual_net_benefit);
   output.roiKpi.textContent = formatPercent(summary.monthly_roi_percent);
-  output.breakEvenKpi.textContent = `${formatMinutes(summary.break_even_minutes_per_worker_per_week)} break-even per user/week`;
   output.monthlyInteractionsKpi.textContent = formatWholeNumber(
     summary.monthly_interactions
   );
@@ -587,7 +584,7 @@ function renderDashboard(data) {
   output.monthlyHoursContext.textContent = `${formatNumber(summary.monthly_hours_saved)} monthly hours saved`;
   output.annualHoursContext.textContent = `${formatNumber(summary.annual_hours_saved)} annual hours saved`;
   output.effectiveWorkersContext.textContent = `${formatNumber(summary.active_users)} active monthly users`;
-  output.usageContext.textContent = `${formatNumber(readInput("interactionsPerDay"))} per active user per day`;
+  output.usageContext.textContent = `${formatNumber(summary.monthly_interactions)} monthly interactions`;
 
   setSignedClass(output.monthlyNetBenefitKpi, summary.monthly_net_benefit);
   setSignedClass(output.annualNetBenefitKpi, summary.annual_net_benefit);

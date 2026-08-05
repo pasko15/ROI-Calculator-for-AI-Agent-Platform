@@ -54,6 +54,7 @@ class ModelUsage:
     output_price_per_1m_tokens: float
     avg_input_tokens_per_interaction: float
     avg_output_tokens_per_interaction: float
+    interactions_per_user_per_day: float = 0
 
     def __post_init__(self) -> None:
         if not self.name:
@@ -64,6 +65,7 @@ class ModelUsage:
             "output_price_per_1m_tokens",
             "avg_input_tokens_per_interaction",
             "avg_output_tokens_per_interaction",
+            "interactions_per_user_per_day",
         ):
             if getattr(self, field_name) < 0:
                 raise ValueError(f"{field_name} cannot be negative.")
@@ -126,7 +128,6 @@ class ROIModel:
     model_mix: tuple[ModelUsage, ...] = ()
     manual_cost_per_interaction: float | None = None
     fixed_monthly_costs: FixedMonthlyCosts = field(default_factory=FixedMonthlyCosts)
-    one_time_implementation_cost: float = 0
     _legacy_monthly_platform_cost: float | None = field(init=False, repr=False)
 
     def __init__(
@@ -142,7 +143,6 @@ class ROIModel:
         model_mix: tuple[ModelUsage, ...] | list[ModelUsage] = (),
         manual_cost_per_interaction: float | None = None,
         fixed_monthly_costs: FixedMonthlyCosts | None = None,
-        one_time_implementation_cost: float = 0,
     ) -> None:
         if active_monthly_users is None:
             active_monthly_users = int((number_of_workers or 0) * adoption_factor)
@@ -168,9 +168,6 @@ class ROIModel:
             "fixed_monthly_costs",
             fixed_monthly_costs or FixedMonthlyCosts(),
         )
-        object.__setattr__(
-            self, "one_time_implementation_cost", one_time_implementation_cost
-        )
         self.__post_init__(monthly_platform_cost)
 
     def __post_init__(self, monthly_platform_cost: float | None) -> None:
@@ -195,9 +192,6 @@ class ROIModel:
             and self.manual_cost_per_interaction < 0
         ):
             raise ValueError("manual_cost_per_interaction cannot be negative.")
-        if self.one_time_implementation_cost < 0:
-            raise ValueError("one_time_implementation_cost cannot be negative.")
-
         object.__setattr__(self, "_legacy_monthly_platform_cost", monthly_platform_cost)
 
     @property
@@ -206,6 +200,11 @@ class ROIModel:
 
     @property
     def monthly_interactions(self) -> float:
+        model_interactions = sum(
+            model.interactions_per_user_per_day for model in self.model_mix
+        )
+        if model_interactions > 0:
+            return self.active_users * model_interactions * self.working_days_per_month
         return (
             self.active_users
             * self.interactions_per_user_per_day
@@ -223,6 +222,18 @@ class ROIModel:
 
     @property
     def blended_cost_per_interaction(self) -> float:
+        interaction_total = sum(
+            model.interactions_per_user_per_day for model in self.model_mix
+        )
+        if interaction_total > 0:
+            return (
+                sum(
+                    model.interactions_per_user_per_day * model.cost_per_interaction
+                    for model in self.model_mix
+                )
+                / interaction_total
+            )
+
         share_total = self.model_mix_share_total
         if share_total == 0:
             return 0
@@ -244,6 +255,17 @@ class ROIModel:
 
     @property
     def monthly_variable_ai_cost(self) -> float:
+        interaction_total = sum(
+            model.interactions_per_user_per_day for model in self.model_mix
+        )
+        if interaction_total > 0:
+            return sum(
+                self.active_users
+                * model.interactions_per_user_per_day
+                * self.working_days_per_month
+                * model.cost_per_interaction
+                for model in self.model_mix
+            )
         return self.monthly_interactions * self.effective_cost_per_interaction
 
     @property
@@ -315,14 +337,6 @@ class ROIModel:
     def break_even_minutes_per_worker_per_week(self) -> float:
         return self.break_even_hours_per_worker_per_week * 60
 
-    @property
-    def payback_period_months(self) -> float:
-        if self.one_time_implementation_cost == 0:
-            return 0
-        if self.monthly_net_benefit <= 0:
-            return float("inf")
-        return self.one_time_implementation_cost / self.monthly_net_benefit
-
     def summary(self) -> dict[str, float | bool]:
         """Return all core outputs in a reporting-friendly dictionary."""
 
@@ -350,7 +364,6 @@ class ROIModel:
             "break_even_minutes_per_worker_per_week": (
                 self.break_even_minutes_per_worker_per_week
             ),
-            "payback_period_months": self.payback_period_months,
         }
 
 
@@ -398,6 +411,7 @@ def model_mix_table(model_mix: tuple[ModelUsage, ...]) -> list[dict[str, float |
         {
             "model": model.name,
             "usage_share": model.usage_share,
+            "interactions_per_user_per_day": model.interactions_per_user_per_day,
             "cost_per_interaction": model.cost_per_interaction,
         }
         for model in model_mix
@@ -408,16 +422,35 @@ def model_monthly_cost_table(model: ROIModel) -> list[dict[str, float | str]]:
     """Return weighted monthly cost contribution for each model."""
 
     share_total = model.model_mix_share_total
-    if share_total == 0:
+    interaction_total = sum(
+        entry.interactions_per_user_per_day for entry in model.model_mix
+    )
+    if share_total == 0 and interaction_total == 0:
         return []
 
     return [
         {
             "model": item.name,
             "usage_share": item.usage_share,
+            "interactions_per_user_per_day": item.interactions_per_user_per_day,
             "cost_per_interaction": item.cost_per_interaction,
+            "monthly_interactions": (
+                model.active_users
+                * item.interactions_per_user_per_day
+                * model.working_days_per_month
+            ),
+            "monthly_cost_per_user": (
+                item.interactions_per_user_per_day
+                * model.working_days_per_month
+                * item.cost_per_interaction
+            ),
             "monthly_cost": (
-                model.monthly_interactions
+                model.active_users
+                * item.interactions_per_user_per_day
+                * model.working_days_per_month
+                * item.cost_per_interaction
+                if interaction_total > 0
+                else model.monthly_interactions
                 * (item.usage_share / share_total)
                 * item.cost_per_interaction
             ),
@@ -474,6 +507,9 @@ def _build_model(payload: dict[str, Any], overrides: dict[str, Any] | None = Non
             avg_output_tokens_per_interaction=_number(
                 item, "avg_output_tokens_per_interaction"
             ),
+            interactions_per_user_per_day=max(
+                0, _number(item, "interactions_per_user_per_day")
+            ),
         )
         for index, item in enumerate(model_mix_items)
     )
@@ -521,9 +557,6 @@ def _build_model(payload: dict[str, Any], overrides: dict[str, Any] | None = Non
             ),
             storage=max(0, _number(fixed_costs, "storage")),
             monitoring_logging=max(0, _number(fixed_costs, "monitoring_logging")),
-        ),
-        one_time_implementation_cost=max(
-            0, _number(data, "one_time_implementation_cost")
         ),
     )
 
@@ -609,7 +642,7 @@ def calculate_dashboard(payload: dict[str, Any]) -> dict[str, Any]:
             "annual_hours_saved": weekly_hours_saved * WEEKS_PER_YEAR,
             "annual_platform_cost": model.monthly_platform_cost * MONTHS_PER_YEAR,
         },
-        "model_mix": model_mix_table(model.model_mix),
+        "model_mix": model_monthly_cost_table(model),
         "charts": {
             "active_users": {
                 "labels": [str(value) for value in user_values],
@@ -675,7 +708,6 @@ def print_example() -> None:
                 64,
             ),
         ),
-        one_time_implementation_cost=15_000,
     )
 
     print("ROI Model Example")
@@ -708,7 +740,6 @@ def print_example() -> None:
     print(f"Annual Net Benefit: {money(model.annual_net_benefit)}")
     print(f"Monthly ROI: {percent(model.monthly_roi_percent)}")
     print(f"Annual ROI: {percent(model.annual_roi_percent)}")
-    print(f"Payback Period: {model.payback_period_months:.1f} months")
     print()
     print(
         "Break-even: "

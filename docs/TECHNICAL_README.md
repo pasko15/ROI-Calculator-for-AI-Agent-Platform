@@ -53,7 +53,6 @@ Represents the full ROI scenario:
 - optional manual cost override
 - time saved
 - hourly employee cost
-- optional implementation cost
 
 The model calculates:
 
@@ -66,7 +65,6 @@ The model calculates:
 - monthly and annual net benefit
 - ROI
 - break-even minutes
-- payback period
 
 ## Pricing Scope
 
@@ -101,7 +99,6 @@ Example payload shape:
   "active_monthly_users": 100,
   "hourly_cost_per_worker": 75,
   "time_saved_minutes_per_user_per_week": 45,
-  "interactions_per_user_per_day": 10,
   "working_days_per_month": 21,
   "manual_cost_per_interaction": 0.13,
   "model_mix": [
@@ -111,10 +108,10 @@ Example payload shape:
       "input_price_per_1m_tokens": 5,
       "output_price_per_1m_tokens": 30,
       "avg_input_tokens_per_interaction": 68000,
-      "avg_output_tokens_per_interaction": 710
+      "avg_output_tokens_per_interaction": 710,
+      "interactions_per_user_per_day": 1
     }
-  ],
-  "one_time_implementation_cost": 15000
+  ]
 }
 ```
 
