@@ -25,6 +25,35 @@ const PRESETS = {
   }
 };
 
+const modelCatalog = [
+  {
+    name: "GPT-5.5",
+    publisher: "OpenAI",
+    inputGlobal: 5.00,
+    outputGlobal: 30.00,
+    inputDataZone: 5.50,
+    outputDataZone: 33.00
+  },
+  {
+    name: "GPT-5.4 mini",
+    publisher: "OpenAI",
+    inputGlobal: 0.75,
+    outputGlobal: 4.50,
+    inputDataZone: 0.83,
+    outputDataZone: 4.95
+  }
+];
+
+const agentNames = {
+  modelOne: "Data Extract Agent",
+  modelTwo: "Report Generating Agent"
+};
+
+const modelSelects = {
+  modelOne: document.getElementById("modelOneModel"),
+  modelTwo: document.getElementById("modelTwoModel")
+};
+
 const inputElements = Array.from(document.querySelectorAll("[data-input]")).reduce(
   (accumulator, input) => {
     accumulator[input.dataset.input] = input;
@@ -52,8 +81,18 @@ const output = {
   effectiveWorkersContext: document.getElementById("effectiveWorkersContext"),
   usageContext: document.getElementById("usageContext"),
   agentMixBody: document.getElementById("agentMixBody"),
-  modelCostLines: document.getElementById("modelCostLines"),
-  statusLine: document.getElementById("statusLine")
+  statusLine: document.getElementById("statusLine"),
+  modelCatalogDialog: document.getElementById("modelCatalogDialog"),
+  catalogBody: document.getElementById("catalogBody")
+};
+
+const catalogFields = {
+  name: document.getElementById("catalogModelName"),
+  publisher: document.getElementById("catalogPublisher"),
+  inputGlobal: document.getElementById("catalogInputGlobal"),
+  outputGlobal: document.getElementById("catalogOutputGlobal"),
+  inputDataZone: document.getElementById("catalogInputDataZone"),
+  outputDataZone: document.getElementById("catalogOutputDataZone")
 };
 
 const moneyFormatter = new Intl.NumberFormat("en-US", {
@@ -95,8 +134,10 @@ function readInput(name) {
 }
 
 function modelPayload(prefix, name) {
+  const selectedModel = getSelectedModel(prefix);
+
   return {
-    name,
+    name: `${name} - ${selectedModel.name}`,
     usage_share: Math.max(0, readInput(`${prefix}Share`)),
     input_price_per_1m_tokens: Math.max(0, readInput(`${prefix}InputPrice`)),
     output_price_per_1m_tokens: Math.max(0, readInput(`${prefix}OutputPrice`)),
@@ -115,8 +156,8 @@ function getPayload(overrides = {}) {
     working_days_per_month: Math.min(Math.max(readInput("workingDays"), 0), 31),
     manual_cost_per_interaction: Math.max(0, readInput("manualCostPerInteraction")),
     model_mix: [
-      modelPayload("modelOne", "Data Extract Agent - GPT-5.5"),
-      modelPayload("modelTwo", "Report Generating Agent - GPT-5.4 mini")
+      modelPayload("modelOne", agentNames.modelOne),
+      modelPayload("modelTwo", agentNames.modelTwo)
     ],
     one_time_implementation_cost: Math.max(0, readInput("implementationCost")),
     ...overrides
@@ -182,6 +223,112 @@ function formatMonths(value) {
   return `${numberFormatter.format(value)} mo`;
 }
 
+function getSelectedModel(prefix) {
+  const selectedName = modelSelects[prefix]?.value;
+  return modelCatalog.find((model) => model.name === selectedName) || modelCatalog[0];
+}
+
+function setInputValue(name, value) {
+  if (inputElements[name]) {
+    inputElements[name].value = value;
+  }
+}
+
+function populateModelSelects() {
+  Object.values(modelSelects).forEach((select) => {
+    if (!select) {
+      return;
+    }
+
+    const currentValue = select.value;
+    select.innerHTML = modelCatalog.map((model) => (
+      `<option value="${model.name}">${model.name}</option>`
+    )).join("");
+
+    if (modelCatalog.some((model) => model.name === currentValue)) {
+      select.value = currentValue;
+    }
+  });
+}
+
+function applyModelToAgent(prefix) {
+  const model = getSelectedModel(prefix);
+  setInputValue(`${prefix}InputPrice`, model.inputGlobal);
+  setInputValue(`${prefix}OutputPrice`, model.outputGlobal);
+  scheduleUpdate();
+}
+
+function renderCatalog() {
+  if (!output.catalogBody) {
+    return;
+  }
+
+  output.catalogBody.innerHTML = modelCatalog.map((model) => `
+    <tr>
+      <td>${model.name}</td>
+      <td>${model.publisher}</td>
+      <td>${formatPreciseMoney(model.inputGlobal)}</td>
+      <td>${formatPreciseMoney(model.outputGlobal)}</td>
+      <td>${Number.isFinite(model.inputDataZone) ? formatPreciseMoney(model.inputDataZone) : "-"}</td>
+      <td>${Number.isFinite(model.outputDataZone) ? formatPreciseMoney(model.outputDataZone) : "-"}</td>
+    </tr>
+  `).join("");
+}
+
+function openCatalog() {
+  output.modelCatalogDialog.classList.add("is-open");
+  output.modelCatalogDialog.setAttribute("aria-hidden", "false");
+}
+
+function closeCatalog() {
+  output.modelCatalogDialog.classList.remove("is-open");
+  output.modelCatalogDialog.setAttribute("aria-hidden", "true");
+}
+
+function readCatalogNumber(field) {
+  const value = Number.parseFloat(field.value);
+  return Number.isFinite(value) ? value : NaN;
+}
+
+function clearCatalogForm() {
+  Object.values(catalogFields).forEach((field) => {
+    field.value = "";
+  });
+}
+
+function saveCatalogModel() {
+  const name = catalogFields.name.value.trim();
+  const publisher = catalogFields.publisher.value.trim() || "Manual";
+  const inputGlobal = readCatalogNumber(catalogFields.inputGlobal);
+  const outputGlobal = readCatalogNumber(catalogFields.outputGlobal);
+
+  if (!name || !Number.isFinite(inputGlobal) || !Number.isFinite(outputGlobal)) {
+    output.statusLine.textContent = "Model name, global input price, and global output price are required.";
+    return;
+  }
+
+  const nextModel = {
+    name,
+    publisher,
+    inputGlobal,
+    outputGlobal,
+    inputDataZone: readCatalogNumber(catalogFields.inputDataZone),
+    outputDataZone: readCatalogNumber(catalogFields.outputDataZone)
+  };
+  const existingIndex = modelCatalog.findIndex((model) => model.name === name);
+
+  if (existingIndex >= 0) {
+    modelCatalog[existingIndex] = nextModel;
+  } else {
+    modelCatalog.push(nextModel);
+  }
+
+  populateModelSelects();
+  renderCatalog();
+  clearCatalogForm();
+  output.statusLine.textContent = "";
+}
+
 function setSignedClass(element, value) {
   element.classList.toggle("positive", Number.isFinite(value) && value > 0);
   element.classList.toggle("negative", Number.isFinite(value) && value < 0);
@@ -201,27 +348,14 @@ function roiTone(value) {
 }
 
 function renderModelCosts(modelMix, summary) {
-  const modelLines = modelMix.map((model) => `
-    <div class="model-cost-line">
-      <span>${model.model} (${formatNumber(model.usage_share)}%)</span>
-      <strong>${formatPreciseMoney(model.cost_per_interaction)}/interaction</strong>
-    </div>
-  `);
-
-  output.modelCostLines.innerHTML = `
-    ${modelLines.join("")}
-    <div class="model-cost-line">
-      <span>Effective blended cost</span>
-      <strong>${formatPreciseMoney(summary.effective_cost_per_interaction)}/interaction</strong>
-    </div>
-  `;
-
   if (output.agentMixBody) {
     const rows = modelMix.map((model, index) => {
       const prefix = index === 0 ? "modelOne" : "modelTwo";
+      const selectedModel = getSelectedModel(prefix);
       return `
         <tr>
-          <td>${model.model}</td>
+          <td>${agentNames[prefix]}</td>
+          <td>${selectedModel.name}</td>
           <td>${formatNumber(model.usage_share)}%</td>
           <td>${formatWholeNumber(readInput(`${prefix}InputTokens`))}</td>
           <td>${formatWholeNumber(readInput(`${prefix}OutputTokens`))}</td>
@@ -310,6 +444,17 @@ function applyPreset(name) {
     }
   });
 
+  if (name === "pilot") {
+    modelSelects.modelOne.value = "GPT-5.5";
+    modelSelects.modelTwo.value = "GPT-5.4 mini";
+  }
+  if (name === "department" || name === "enterprise") {
+    modelSelects.modelOne.value = "GPT-5.5";
+    modelSelects.modelTwo.value = "GPT-5.4 mini";
+  }
+  applyModelToAgent("modelOne");
+  applyModelToAgent("modelTwo");
+
   document.querySelectorAll("[data-scenario]").forEach((button) => {
     button.classList.toggle("is-active", button.dataset.scenario === name);
   });
@@ -326,8 +471,26 @@ Object.values(inputElements).forEach((input) => {
   });
 });
 
+Object.entries(modelSelects).forEach(([prefix, select]) => {
+  select.addEventListener("change", () => applyModelToAgent(prefix));
+});
+
 document.querySelectorAll("[data-scenario]").forEach((button) => {
   button.addEventListener("click", () => applyPreset(button.dataset.scenario));
 });
 
+document.getElementById("openCatalogButton").addEventListener("click", openCatalog);
+document.getElementById("closeCatalogButton").addEventListener("click", closeCatalog);
+document.getElementById("cancelCatalogButton").addEventListener("click", closeCatalog);
+document.getElementById("saveCatalogModelButton").addEventListener("click", saveCatalogModel);
+output.modelCatalogDialog.addEventListener("click", (event) => {
+  if (event.target === output.modelCatalogDialog) {
+    closeCatalog();
+  }
+});
+
+populateModelSelects();
+modelSelects.modelOne.value = "GPT-5.5";
+modelSelects.modelTwo.value = "GPT-5.4 mini";
+renderCatalog();
 updateDashboard();

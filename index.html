@@ -455,7 +455,9 @@
       display: block;
     }
 
-    input[type="number"] {
+    input[type="number"],
+    input[type="text"],
+    select {
       width: 100%;
       min-height: 36px;
       border: 1px solid #c8d3dd;
@@ -463,10 +465,29 @@
       color: var(--text);
       background: var(--surface-soft);
       padding: 7px 9px;
+    }
+
+    input[type="number"] {
       text-align: right;
     }
 
-    input[type="number"]:focus {
+    input[type="text"] {
+      text-align: left;
+    }
+
+    select {
+      text-align: left;
+      appearance: none;
+      background-image: linear-gradient(45deg, transparent 50%, var(--accent) 50%),
+        linear-gradient(135deg, var(--accent) 50%, transparent 50%);
+      background-position: calc(100% - 15px) 15px, calc(100% - 10px) 15px;
+      background-size: 5px 5px, 5px 5px;
+      background-repeat: no-repeat;
+    }
+
+    input[type="number"]:focus,
+    input[type="text"]:focus,
+    select:focus {
       outline: 3px solid rgba(21, 111, 124, 0.16);
       border-color: var(--accent);
       background: #ffffff;
@@ -493,25 +514,6 @@
       font-weight: 800;
       letter-spacing: 0.06em;
       text-transform: uppercase;
-    }
-
-    .model-costs {
-      display: grid;
-      gap: 7px;
-      padding-top: var(--space-1);
-    }
-
-    .model-cost-line {
-      display: flex;
-      justify-content: space-between;
-      gap: var(--space-3);
-      color: var(--muted);
-      font-size: 0.78rem;
-    }
-
-    .model-cost-line strong {
-      color: var(--text);
-      white-space: nowrap;
     }
 
     .status-line {
@@ -625,6 +627,78 @@
     .roi-pill.neutral {
       background: #fff6e6;
       color: var(--warning);
+    }
+
+    .dialog-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      display: none;
+      padding: var(--space-6);
+      background: rgba(22, 32, 42, 0.46);
+      overflow: auto;
+    }
+
+    .dialog-backdrop.is-open {
+      display: grid;
+      place-items: start center;
+    }
+
+    .dialog {
+      width: min(860px, 100%);
+      max-height: calc(100vh - 48px);
+      overflow: auto;
+      border-radius: var(--radius);
+      background: var(--surface);
+      box-shadow: var(--shadow-md);
+    }
+
+    .dialog-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-3);
+      padding: var(--space-5);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .dialog-title h2 {
+      font-size: 1.05rem;
+      font-weight: 760;
+    }
+
+    .dialog-body {
+      padding: var(--space-5);
+    }
+
+    .dialog-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: var(--space-3);
+      padding: var(--space-4) var(--space-5);
+      border-top: 1px solid var(--line);
+      background: var(--surface-soft);
+    }
+
+    .btn-primary {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: #ffffff;
+    }
+
+    .btn-primary:hover,
+    .btn-primary:focus-visible {
+      color: #ffffff;
+      background: #0f5e69;
+    }
+
+    .icon-btn {
+      width: 34px;
+      padding: 0;
+      display: inline-grid;
+      place-items: center;
+      font-size: 1.1rem;
+      line-height: 1;
     }
 
     @media (max-width: 1180px) {
@@ -820,7 +894,10 @@
           <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
           <div class="card-title">
             <h2>Agent & model mix</h2>
-            <span class="info-icon" tabindex="0" data-tip="Each agent contributes to cost based on its share of interactions, token usage, and model input/output prices.">i</span>
+            <div style="display:flex;align-items:center;gap:var(--space-2)">
+              <button id="openCatalogButton" class="btn" type="button">Model catalog</button>
+              <span class="info-icon" tabindex="0" data-tip="Each agent contributes to cost based on its share of interactions, token usage, and model input/output prices.">i</span>
+            </div>
           </div>
 
           <div class="table-wrap">
@@ -828,6 +905,7 @@
               <thead>
                 <tr>
                   <th>Agent</th>
+                  <th>Model</th>
                   <th style="text-align:right">Share</th>
                   <th style="text-align:right">Input tokens</th>
                   <th style="text-align:right">Output tokens</th>
@@ -837,15 +915,19 @@
                 </tr>
               </thead>
               <tbody id="agentMixBody">
-                <tr><td colspan="7">Loading model mix...</td></tr>
+                <tr><td colspan="8">Loading model mix...</td></tr>
               </tbody>
             </table>
           </div>
 
           <div class="two-col" style="margin-top: var(--space-4);">
             <div class="model-row">
-              <div class="model-row-title">Data Extract Agent - GPT-5.5</div>
+              <div class="model-row-title">Data Extract Agent</div>
               <div class="two-col">
+                <div class="field">
+                  <label for="modelOneModel" class="label-with-info">Model <span class="info-icon" tabindex="0" data-tip="Select the model deployment used by this agent. Prices fill from the catalog.">i</span></label>
+                  <select id="modelOneModel" data-model-select="modelOne"></select>
+                </div>
                 <div class="field">
                   <label for="modelOneShare" class="label-with-info">Share (%) <span class="info-icon" tabindex="0" data-tip="Percent of interactions handled by this agent.">i</span></label>
                   <input id="modelOneShare" data-input="modelOneShare" type="number" min="0" max="100" step="1" value="35">
@@ -870,8 +952,12 @@
             </div>
 
             <div class="model-row">
-              <div class="model-row-title">Report Generating Agent - GPT-5.4 mini</div>
+              <div class="model-row-title">Report Generating Agent</div>
               <div class="two-col">
+                <div class="field">
+                  <label for="modelTwoModel" class="label-with-info">Model <span class="info-icon" tabindex="0" data-tip="Select the model deployment used by this agent. Prices fill from the catalog.">i</span></label>
+                  <select id="modelTwoModel" data-model-select="modelTwo"></select>
+                </div>
                 <div class="field">
                   <label for="modelTwoShare" class="label-with-info">Share (%) <span class="info-icon" tabindex="0" data-tip="Percent of interactions handled by this agent.">i</span></label>
                   <input id="modelTwoShare" data-input="modelTwoShare" type="number" min="0" max="100" step="1" value="65">
@@ -895,8 +981,6 @@
               </div>
             </div>
           </div>
-
-          <div id="modelCostLines" class="model-costs"></div>
         </section>
 
         <div id="usageContext" hidden>0 per active user per day</div>
@@ -912,6 +996,71 @@
     </section>
   </main>
 
-  <script src="/app.js"></script>
+  <div id="modelCatalogDialog" class="dialog-backdrop" aria-hidden="true">
+    <section class="dialog blueprint" role="dialog" aria-modal="true" aria-labelledby="modelCatalogTitle">
+      <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+      <div class="dialog-title">
+        <div>
+          <h2 id="modelCatalogTitle">Model catalog</h2>
+          <p class="card-note" style="margin:4px 0 0">Assign catalog models to agents and maintain manual pricing assumptions. Prices are per 1M tokens.</p>
+        </div>
+        <button id="closeCatalogButton" class="btn icon-btn" type="button" aria-label="Close model catalog">x</button>
+      </div>
+      <div class="dialog-body">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Model</th>
+                <th>Publisher</th>
+                <th style="text-align:right">Input $/1M</th>
+                <th style="text-align:right">Output $/1M</th>
+                <th style="text-align:right">Input $/1M - Data zone</th>
+                <th style="text-align:right">Output $/1M - Data zone</th>
+              </tr>
+            </thead>
+            <tbody id="catalogBody"></tbody>
+          </table>
+        </div>
+
+        <div style="margin-top:var(--space-5);padding-top:var(--space-5);border-top:1px solid var(--line)">
+          <h3 style="font-size:1rem;margin-bottom:var(--space-3)">Add a model manually</h3>
+          <div class="two-col">
+            <div class="field">
+              <label for="catalogModelName">Model name</label>
+              <input id="catalogModelName" type="text" placeholder="e.g. GPT-5.6 mini">
+            </div>
+            <div class="field">
+              <label for="catalogPublisher">Publisher / provider</label>
+              <input id="catalogPublisher" type="text" placeholder="e.g. OpenAI">
+            </div>
+            <div class="field">
+              <label for="catalogInputGlobal">Input $/1M - Global</label>
+              <input id="catalogInputGlobal" type="number" min="0" step="0.001" placeholder="0.00">
+            </div>
+            <div class="field">
+              <label for="catalogOutputGlobal">Output $/1M - Global</label>
+              <input id="catalogOutputGlobal" type="number" min="0" step="0.001" placeholder="0.00">
+            </div>
+            <div class="field">
+              <label for="catalogInputDataZone">Input $/1M - Data zone</label>
+              <input id="catalogInputDataZone" type="number" min="0" step="0.001" placeholder="optional">
+            </div>
+            <div class="field">
+              <label for="catalogOutputDataZone">Output $/1M - Data zone</label>
+              <input id="catalogOutputDataZone" type="number" min="0" step="0.001" placeholder="optional">
+            </div>
+          </div>
+          <p class="card-note" style="margin:var(--space-3) 0 0">Leave data-zone prices blank for models only offered globally. Newly added models appear in both agent dropdowns.</p>
+        </div>
+      </div>
+      <div class="dialog-actions">
+        <button id="cancelCatalogButton" class="btn" type="button">Close</button>
+        <button id="saveCatalogModelButton" class="btn btn-primary" type="button">Save model</button>
+      </div>
+    </section>
+  </div>
+
+  <script src="app.js"></script>
 </body>
 </html>
