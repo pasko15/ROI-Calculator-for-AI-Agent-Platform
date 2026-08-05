@@ -14,9 +14,9 @@ The model currently focuses on usage-based AI costs:
 - Expected adoption rate
 - Interactions per active user
 - Working days per month
-- Per-agent model usage share
+- Per-agent model selection from a model catalog
 - Average input and output tokens per interaction
-- Input and output model pricing per 1 million tokens
+- Input and output model pricing per 1 million tokens from the selected catalog model
 - Time saved per worker
 - Average hourly employee cost
 

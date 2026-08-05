@@ -5,8 +5,8 @@ This application separates ROI calculation logic from presentation:
 - `ROI_Model.py` contains the calculation model and dashboard data builder.
 - `app.py` exposes a small local HTTP API using Python standard library tools.
 - `pricing_catalog.py` manages model catalog data, cached manual entries, and Azure Retail Prices API refresh.
-- `index.html` contains the dashboard layout, form controls, cards, agent table, and model catalog modal.
-- `app.js` collects inputs, calls the Python API, and renders the returned results.
+- `index.html` contains the dashboard layout, form controls, cards, agent table, model catalog modal, and token guidance modal.
+- `app.js` collects inputs, applies catalog pricing from the selected model, calls the Python API, and renders the returned results.
 - `model_catalog_cache.json` stores the cached model catalog used by the UI.
 
 The browser does not duplicate the business formulas. It sends assumptions to Python and renders the response.
@@ -68,9 +68,9 @@ The model calculates:
 
 ## Manual Cost Override
 
-The dashboard includes a manual cost override for quick scenario testing. Python uses the blended model cost when model usage shares add to `100` or `1.0`. If shares are incomplete, the manual override is used instead.
+The dashboard includes a manual cost override for quick scenario testing and fallback use. In the current UI, visible per-agent shares are removed. The frontend sends equal internal weights for the configured agents, and Python blends their catalog-derived per-interaction costs.
 
-This makes the UI usable while someone is still editing the model mix.
+If no usable model mix is supplied, Python falls back to the manual cost override.
 
 ## API
 
@@ -100,7 +100,7 @@ Example payload shape:
   "model_mix": [
     {
       "name": "Data Extract Agent - GPT-5.5",
-      "usage_share": 35,
+      "usage_share": 1,
       "input_price_per_1m_tokens": 5,
       "output_price_per_1m_tokens": 30,
       "avg_input_tokens_per_interaction": 68000,
@@ -141,7 +141,7 @@ Adds or updates one manual model in the cache.
 Compile-check Python:
 
 ```powershell
-python -m py_compile ROI_Model.py app.py
+python -m py_compile ROI_Model.py app.py pricing_catalog.py
 ```
 
 Check JavaScript syntax:

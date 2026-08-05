@@ -46,6 +46,33 @@ const agentNames = {
   modelTwo: "Report Generating Agent"
 };
 
+const TOKEN_GUIDANCE = [
+  {
+    name: "Light Q&A",
+    description: "Short lookup, policy answer, or simple internal question.",
+    inputTokens: 1500,
+    outputTokens: 300
+  },
+  {
+    name: "Report generating",
+    description: "Current report-agent estimate for concise generated summaries.",
+    inputTokens: 4200,
+    outputTokens: 64
+  },
+  {
+    name: "Data extraction",
+    description: "Current data-extract estimate with heavy retrieved context.",
+    inputTokens: 68000,
+    outputTokens: 710
+  },
+  {
+    name: "Deep analysis",
+    description: "Large-context review with a longer synthesized answer.",
+    inputTokens: 120000,
+    outputTokens: 2000
+  }
+];
+
 const modelSelects = {
   modelOne: document.getElementById("modelOneModel"),
   modelTwo: document.getElementById("modelTwoModel")
@@ -81,7 +108,9 @@ const output = {
   statusLine: document.getElementById("statusLine"),
   modelCatalogDialog: document.getElementById("modelCatalogDialog"),
   catalogBody: document.getElementById("catalogBody"),
-  catalogSourceNote: document.getElementById("catalogSourceNote")
+  catalogSourceNote: document.getElementById("catalogSourceNote"),
+  tokenGuidanceDialog: document.getElementById("tokenGuidanceDialog"),
+  tokenGuidanceBody: document.getElementById("tokenGuidanceBody")
 };
 
 const catalogFields = {
@@ -137,8 +166,8 @@ function modelPayload(prefix, name) {
   return {
     name: `${name} - ${selectedModel.name}`,
     usage_share: 1,
-    input_price_per_1m_tokens: Math.max(0, readInput(`${prefix}InputPrice`)),
-    output_price_per_1m_tokens: Math.max(0, readInput(`${prefix}OutputPrice`)),
+    input_price_per_1m_tokens: Math.max(0, Number(selectedModel.inputGlobal) || 0),
+    output_price_per_1m_tokens: Math.max(0, Number(selectedModel.outputGlobal) || 0),
     avg_input_tokens_per_interaction: Math.max(0, readInput(`${prefix}InputTokens`)),
     avg_output_tokens_per_interaction: Math.max(0, readInput(`${prefix}OutputTokens`))
   };
@@ -350,9 +379,6 @@ function saveLocalCatalog(models) {
 }
 
 function applyModelToAgent(prefix) {
-  const model = getSelectedModel(prefix);
-  setInputValue(`${prefix}InputPrice`, model.inputGlobal);
-  setInputValue(`${prefix}OutputPrice`, model.outputGlobal);
   scheduleUpdate();
 }
 
@@ -477,8 +503,8 @@ function renderModelCosts(modelMix, summary) {
           <td>${selectedModel.name}</td>
           <td>${formatWholeNumber(readInput(`${prefix}InputTokens`))}</td>
           <td>${formatWholeNumber(readInput(`${prefix}OutputTokens`))}</td>
-          <td>${formatPreciseMoney(readInput(`${prefix}InputPrice`))}</td>
-          <td>${formatPreciseMoney(readInput(`${prefix}OutputPrice`))}</td>
+          <td>${formatPreciseMoney(selectedModel.inputGlobal)}</td>
+          <td>${formatPreciseMoney(selectedModel.outputGlobal)}</td>
           <td>${formatPreciseMoney(model.cost_per_interaction)}</td>
         </tr>
       `;
@@ -486,6 +512,44 @@ function renderModelCosts(modelMix, summary) {
 
     output.agentMixBody.innerHTML = rows;
   }
+}
+
+function renderTokenGuidance() {
+  if (!output.tokenGuidanceBody) {
+    return;
+  }
+
+  output.tokenGuidanceBody.innerHTML = TOKEN_GUIDANCE.map((guidance, index) => `
+    <div class="guidance-row">
+      <div class="guidance-name">${guidance.name}</div>
+      <div class="guidance-description">${guidance.description}</div>
+      <div class="guidance-metric">${formatWholeNumber(guidance.inputTokens)} input</div>
+      <div class="guidance-metric">${formatWholeNumber(guidance.outputTokens)} output</div>
+      <div class="guidance-actions">
+        <button class="btn" type="button" data-guidance-index="${index}" data-guidance-agent="modelOne">Data Extract</button>
+        <button class="btn" type="button" data-guidance-index="${index}" data-guidance-agent="modelTwo">Report</button>
+      </div>
+    </div>
+  `).join("");
+}
+
+function openGuidance() {
+  output.tokenGuidanceDialog.classList.add("is-open");
+  output.tokenGuidanceDialog.setAttribute("aria-hidden", "false");
+}
+
+function closeGuidance() {
+  output.tokenGuidanceDialog.classList.remove("is-open");
+  output.tokenGuidanceDialog.setAttribute("aria-hidden", "true");
+}
+
+function applyTokenGuidance(prefix, guidance) {
+  setInputValue(`${prefix}InputTokens`, guidance.inputTokens);
+  setInputValue(`${prefix}OutputTokens`, guidance.outputTokens);
+  document.querySelectorAll("[data-scenario]").forEach((button) => {
+    button.classList.remove("is-active");
+  });
+  scheduleUpdate();
 }
 
 function renderDashboard(data) {
@@ -601,6 +665,9 @@ document.getElementById("openCatalogButton").addEventListener("click", openCatal
 document.getElementById("closeCatalogButton").addEventListener("click", closeCatalog);
 document.getElementById("cancelCatalogButton").addEventListener("click", closeCatalog);
 document.getElementById("saveCatalogModelButton").addEventListener("click", saveCatalogModel);
+document.getElementById("openGuidanceButton").addEventListener("click", openGuidance);
+document.getElementById("closeGuidanceButton").addEventListener("click", closeGuidance);
+document.getElementById("cancelGuidanceButton").addEventListener("click", closeGuidance);
 document.getElementById("refreshCatalogButton").addEventListener("click", async () => {
   output.statusLine.textContent = "Refreshing Azure prices...";
   await loadModelCatalog(true);
@@ -611,8 +678,25 @@ output.modelCatalogDialog.addEventListener("click", (event) => {
     closeCatalog();
   }
 });
+output.tokenGuidanceDialog.addEventListener("click", (event) => {
+  if (event.target === output.tokenGuidanceDialog) {
+    closeGuidance();
+    return;
+  }
+
+  const button = event.target.closest("[data-guidance-index]");
+  if (!button) {
+    return;
+  }
+
+  const guidance = TOKEN_GUIDANCE[Number(button.dataset.guidanceIndex)];
+  if (guidance) {
+    applyTokenGuidance(button.dataset.guidanceAgent, guidance);
+  }
+});
 
 async function initializeDashboard() {
+  renderTokenGuidance();
   await loadModelCatalog(false);
   modelSelects.modelOne.value = modelCatalog.some((model) => model.name === "GPT-5.5")
     ? "GPT-5.5"
