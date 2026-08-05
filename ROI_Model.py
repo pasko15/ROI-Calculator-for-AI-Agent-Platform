@@ -233,12 +233,10 @@ class ROIModel:
 
     @property
     def effective_cost_per_interaction(self) -> float:
-        if self.model_mix_shares_complete:
+        if self.model_mix_share_total > 0:
             return self.blended_cost_per_interaction
         if self.manual_cost_per_interaction is not None:
             return self.manual_cost_per_interaction
-        if self.model_mix_share_total > 0:
-            return self.blended_cost_per_interaction
         return 0
 
     @property

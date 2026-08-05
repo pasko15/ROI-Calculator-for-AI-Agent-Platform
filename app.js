@@ -3,25 +3,19 @@ const PRESETS = {
     workers: 25,
     adoptionRate: 50,
     interactionsPerDay: 5,
-    manualCostPerInteraction: 0.36,
-    modelOneShare: 100,
-    modelTwoShare: 0
+    manualCostPerInteraction: 0.36
   },
   department: {
     workers: 100,
     adoptionRate: 70,
     interactionsPerDay: 10,
-    manualCostPerInteraction: 0.13,
-    modelOneShare: 35,
-    modelTwoShare: 65
+    manualCostPerInteraction: 0.13
   },
   enterprise: {
     workers: 500,
     adoptionRate: 80,
     interactionsPerDay: 20,
-    manualCostPerInteraction: 0.18,
-    modelOneShare: 45,
-    modelTwoShare: 55
+    manualCostPerInteraction: 0.18
   }
 };
 
@@ -142,7 +136,7 @@ function modelPayload(prefix, name) {
 
   return {
     name: `${name} - ${selectedModel.name}`,
-    usage_share: Math.max(0, readInput(`${prefix}Share`)),
+    usage_share: 1,
     input_price_per_1m_tokens: Math.max(0, readInput(`${prefix}InputPrice`)),
     output_price_per_1m_tokens: Math.max(0, readInput(`${prefix}OutputPrice`)),
     avg_input_tokens_per_interaction: Math.max(0, readInput(`${prefix}InputTokens`)),
@@ -481,7 +475,6 @@ function renderModelCosts(modelMix, summary) {
         <tr>
           <td>${agentNames[prefix]}</td>
           <td>${selectedModel.name}</td>
-          <td>${formatNumber(model.usage_share)}%</td>
           <td>${formatWholeNumber(readInput(`${prefix}InputTokens`))}</td>
           <td>${formatWholeNumber(readInput(`${prefix}OutputTokens`))}</td>
           <td>${formatPreciseMoney(readInput(`${prefix}InputPrice`))}</td>

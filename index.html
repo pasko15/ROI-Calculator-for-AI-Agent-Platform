@@ -806,7 +806,7 @@
               <input id="workingDays" data-input="workingDays" type="number" min="0" max="31" step="1" value="21">
             </div>
             <div class="field">
-              <label for="manualCostPerInteraction" class="label-with-info">Manual override ($/interaction) <span class="info-icon" tabindex="0" data-tip="Fallback cost used only while model shares do not add to 100%.">i</span></label>
+              <label for="manualCostPerInteraction" class="label-with-info">Manual override ($/interaction) <span class="info-icon" tabindex="0" data-tip="Fallback cost used only if no model catalog pricing is available.">i</span></label>
               <input id="manualCostPerInteraction" data-input="manualCostPerInteraction" type="number" min="0" step="0.01" value="0.13">
             </div>
           </div>
@@ -845,7 +845,7 @@
             <h2>Agent & model mix</h2>
             <div style="display:flex;align-items:center;gap:var(--space-2)">
               <button id="openCatalogButton" class="btn" type="button">Model catalog</button>
-              <span class="info-icon" tabindex="0" data-tip="Each agent contributes to cost based on its share of interactions, token usage, and model input/output prices.">i</span>
+              <span class="info-icon" tabindex="0" data-tip="Each agent contributes to cost based on token usage and selected model input/output prices.">i</span>
             </div>
           </div>
 
@@ -855,7 +855,6 @@
                 <tr>
                   <th>Agent</th>
                   <th>Model</th>
-                  <th style="text-align:right">Share</th>
                   <th style="text-align:right">Input tokens</th>
                   <th style="text-align:right">Output tokens</th>
                   <th style="text-align:right">Input $/1M</th>
@@ -864,7 +863,7 @@
                 </tr>
               </thead>
               <tbody id="agentMixBody">
-                <tr><td colspan="8">Loading model mix...</td></tr>
+                <tr><td colspan="7">Loading model mix...</td></tr>
               </tbody>
             </table>
           </div>
@@ -876,10 +875,6 @@
                 <div class="field">
                   <label for="modelOneModel" class="label-with-info">Model <span class="info-icon" tabindex="0" data-tip="Select the model deployment used by this agent. Prices fill from the catalog.">i</span></label>
                   <select id="modelOneModel" data-model-select="modelOne"></select>
-                </div>
-                <div class="field">
-                  <label for="modelOneShare" class="label-with-info">Share (%) <span class="info-icon" tabindex="0" data-tip="Percent of interactions handled by this agent.">i</span></label>
-                  <input id="modelOneShare" data-input="modelOneShare" type="number" min="0" max="100" step="1" value="35">
                 </div>
                 <div class="field">
                   <label for="modelOneInputTokens" class="label-with-info">Input tokens <span class="info-icon" tabindex="0" data-tip="Average input tokens consumed by one interaction.">i</span></label>
@@ -906,10 +901,6 @@
                 <div class="field">
                   <label for="modelTwoModel" class="label-with-info">Model <span class="info-icon" tabindex="0" data-tip="Select the model deployment used by this agent. Prices fill from the catalog.">i</span></label>
                   <select id="modelTwoModel" data-model-select="modelTwo"></select>
-                </div>
-                <div class="field">
-                  <label for="modelTwoShare" class="label-with-info">Share (%) <span class="info-icon" tabindex="0" data-tip="Percent of interactions handled by this agent.">i</span></label>
-                  <input id="modelTwoShare" data-input="modelTwoShare" type="number" min="0" max="100" step="1" value="65">
                 </div>
                 <div class="field">
                   <label for="modelTwoInputTokens" class="label-with-info">Input tokens <span class="info-icon" tabindex="0" data-tip="Average input tokens consumed by one interaction.">i</span></label>
