@@ -34,6 +34,7 @@ Represents one agent/model in the usage mix:
 - `output_price_per_1m_tokens`
 - `avg_input_tokens_per_interaction`
 - `avg_output_tokens_per_interaction`
+- `monthly_interactions`
 
 The per-interaction cost is:
 
@@ -48,7 +49,7 @@ The per-interaction cost is:
 Represents the full ROI scenario:
 
 - active monthly users
-- usage volume
+- per-agent monthly usage volume
 - model mix
 - optional manual cost override
 - time saved
@@ -60,7 +61,7 @@ The model calculates:
 - monthly interactions
 - blended cost per interaction
 - monthly variable AI cost
-- monthly cost per active user
+- monthly cost per active user rollup
 - monthly and annual value
 - monthly and annual net benefit
 - ROI
@@ -99,7 +100,6 @@ Example payload shape:
   "active_monthly_users": 100,
   "hourly_cost_per_worker": 75,
   "time_saved_minutes_per_user_per_week": 45,
-  "working_days_per_month": 21,
   "manual_cost_per_interaction": 0.13,
   "model_mix": [
     {
@@ -109,7 +109,7 @@ Example payload shape:
       "output_price_per_1m_tokens": 30,
       "avg_input_tokens_per_interaction": 68000,
       "avg_output_tokens_per_interaction": 710,
-      "interactions_per_user_per_day": 1
+      "monthly_interactions": 2100
     }
   ]
 }

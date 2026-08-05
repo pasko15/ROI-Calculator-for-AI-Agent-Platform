@@ -1,20 +1,20 @@
 const PRESETS = {
   pilot: {
     activeMonthlyUsers: 25,
-    modelOneInteractions: 0.5,
-    modelTwoInteractions: 2,
+    modelOneMonthlyInteractions: 260,
+    modelTwoMonthlyInteractions: 1050,
     manualCostPerInteraction: 0.36
   },
   department: {
     activeMonthlyUsers: 100,
-    modelOneInteractions: 1,
-    modelTwoInteractions: 4,
+    modelOneMonthlyInteractions: 2100,
+    modelTwoMonthlyInteractions: 8400,
     manualCostPerInteraction: 0.13
   },
   enterprise: {
     activeMonthlyUsers: 500,
-    modelOneInteractions: 2,
-    modelTwoInteractions: 8,
+    modelOneMonthlyInteractions: 21000,
+    modelTwoMonthlyInteractions: 84000,
     manualCostPerInteraction: 0.18
   }
 };
@@ -171,7 +171,7 @@ function modelPayload(prefix, name) {
     output_price_per_1m_tokens: Math.max(0, Number(selectedModel.outputGlobal) || 0),
     avg_input_tokens_per_interaction: Math.max(0, readInput(`${prefix}InputTokens`)),
     avg_output_tokens_per_interaction: Math.max(0, readInput(`${prefix}OutputTokens`)),
-    interactions_per_user_per_day: Math.max(0, readInput(`${prefix}Interactions`))
+    monthly_interactions: Math.max(0, readInput(`${prefix}MonthlyInteractions`))
   };
 }
 
@@ -180,7 +180,6 @@ function getPayload(overrides = {}) {
     active_monthly_users: Math.max(0, readInput("activeMonthlyUsers")),
     hourly_cost_per_worker: Math.max(0, readInput("hourlyCost")),
     time_saved_minutes_per_user_per_week: Math.max(0, readInput("minutesSaved")),
-    working_days_per_month: Math.min(Math.max(readInput("workingDays"), 0), 31),
     manual_cost_per_interaction: Math.max(0, readInput("manualCostPerInteraction")),
     model_mix: [
       modelPayload("modelOne", agentNames.modelOne),
@@ -543,11 +542,10 @@ function renderModelCosts(modelMix, summary) {
         <tr>
           <td>${agentNames[prefix]}</td>
           <td>${selectedModel.name}</td>
-          <td>${formatNumber(readInput(`${prefix}Interactions`))}</td>
+          <td>${formatWholeNumber(readInput(`${prefix}MonthlyInteractions`))}</td>
           <td>${formatWholeNumber(readInput(`${prefix}InputTokens`))}</td>
           <td>${formatWholeNumber(readInput(`${prefix}OutputTokens`))}</td>
           <td>${formatPreciseMoney(model.cost_per_interaction)}</td>
-          <td>${formatPreciseMoney(model.monthly_cost_per_user)}</td>
           <td>${formatMoney(model.monthly_cost)}</td>
         </tr>
       `;
@@ -618,7 +616,7 @@ function renderDashboard(data) {
     summary.monthly_interactions
   );
 
-  output.costMixContext.textContent = `${formatPreciseMoney(summary.monthly_cost_per_user)} per active user/month`;
+  output.costMixContext.textContent = `${formatWholeNumber(summary.monthly_interactions)} monthly interactions`;
   output.monthlyHoursContext.textContent = `${formatNumber(summary.monthly_hours_saved)} monthly hours saved`;
   output.annualHoursContext.textContent = `${formatNumber(summary.annual_hours_saved)} annual hours saved`;
   output.effectiveWorkersContext.textContent = `${formatNumber(summary.active_users)} active monthly users`;

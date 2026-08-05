@@ -3,14 +3,13 @@ Simple ROI model for an AI/platform investment.
 
 Variables:
     U = active monthly users
-    I = interactions per active user per day
-    D = working days per month
+    M = monthly interactions
     T = time saved per user per week, in hours
     S = hourly employee cost
     C = monthly platform cost
 
 Formulas:
-    Monthly interactions = U * I * D
+    Monthly interactions = sum(agent monthly interactions)
 
     Model interaction cost =
         (avg input tokens / 1_000_000 * input price)
@@ -21,7 +20,6 @@ Formulas:
     Monthly variable AI cost = monthly interactions * effective interaction cost
     Total monthly platform cost = monthly variable AI cost
 
-    Monthly cost per user = total monthly platform cost / U
     Weekly value  = U * T * S
     Monthly value = weekly value * 4.33
     Annual value  = weekly value * 52
@@ -54,6 +52,7 @@ class ModelUsage:
     output_price_per_1m_tokens: float
     avg_input_tokens_per_interaction: float
     avg_output_tokens_per_interaction: float
+    monthly_interactions: float = 0
     interactions_per_user_per_day: float = 0
 
     def __post_init__(self) -> None:
@@ -65,6 +64,7 @@ class ModelUsage:
             "output_price_per_1m_tokens",
             "avg_input_tokens_per_interaction",
             "avg_output_tokens_per_interaction",
+            "monthly_interactions",
             "interactions_per_user_per_day",
         ):
             if getattr(self, field_name) < 0:
@@ -200,6 +200,12 @@ class ROIModel:
 
     @property
     def monthly_interactions(self) -> float:
+        model_monthly_interactions = sum(
+            model.monthly_interactions for model in self.model_mix
+        )
+        if model_monthly_interactions > 0:
+            return model_monthly_interactions
+
         model_interactions = sum(
             model.interactions_per_user_per_day for model in self.model_mix
         )
@@ -222,6 +228,16 @@ class ROIModel:
 
     @property
     def blended_cost_per_interaction(self) -> float:
+        monthly_total = sum(model.monthly_interactions for model in self.model_mix)
+        if monthly_total > 0:
+            return (
+                sum(
+                    model.monthly_interactions * model.cost_per_interaction
+                    for model in self.model_mix
+                )
+                / monthly_total
+            )
+
         interaction_total = sum(
             model.interactions_per_user_per_day for model in self.model_mix
         )
@@ -255,6 +271,13 @@ class ROIModel:
 
     @property
     def monthly_variable_ai_cost(self) -> float:
+        monthly_total = sum(model.monthly_interactions for model in self.model_mix)
+        if monthly_total > 0:
+            return sum(
+                model.monthly_interactions * model.cost_per_interaction
+                for model in self.model_mix
+            )
+
         interaction_total = sum(
             model.interactions_per_user_per_day for model in self.model_mix
         )
@@ -411,6 +434,7 @@ def model_mix_table(model_mix: tuple[ModelUsage, ...]) -> list[dict[str, float |
         {
             "model": model.name,
             "usage_share": model.usage_share,
+            "monthly_interactions": model.monthly_interactions,
             "interactions_per_user_per_day": model.interactions_per_user_per_day,
             "cost_per_interaction": model.cost_per_interaction,
         }
@@ -422,29 +446,42 @@ def model_monthly_cost_table(model: ROIModel) -> list[dict[str, float | str]]:
     """Return weighted monthly cost contribution for each model."""
 
     share_total = model.model_mix_share_total
+    monthly_total = sum(entry.monthly_interactions for entry in model.model_mix)
     interaction_total = sum(
         entry.interactions_per_user_per_day for entry in model.model_mix
     )
-    if share_total == 0 and interaction_total == 0:
+    if share_total == 0 and interaction_total == 0 and monthly_total == 0:
         return []
 
     return [
         {
             "model": item.name,
             "usage_share": item.usage_share,
-            "interactions_per_user_per_day": item.interactions_per_user_per_day,
-            "cost_per_interaction": item.cost_per_interaction,
             "monthly_interactions": (
-                model.active_users
+                item.monthly_interactions
+                if monthly_total > 0
+                else model.active_users
                 * item.interactions_per_user_per_day
                 * model.working_days_per_month
             ),
+            "interactions_per_user_per_day": item.interactions_per_user_per_day,
+            "cost_per_interaction": item.cost_per_interaction,
             "monthly_cost_per_user": (
-                item.interactions_per_user_per_day
-                * model.working_days_per_month
-                * item.cost_per_interaction
+                (
+                    item.monthly_interactions * item.cost_per_interaction
+                    if monthly_total > 0
+                    else item.interactions_per_user_per_day
+                    * model.working_days_per_month
+                    * item.cost_per_interaction
+                )
+                / model.active_users
+                if model.active_users > 0
+                else float("inf")
             ),
             "monthly_cost": (
+                item.monthly_interactions * item.cost_per_interaction
+                if monthly_total > 0
+                else
                 model.active_users
                 * item.interactions_per_user_per_day
                 * model.working_days_per_month
@@ -507,6 +544,7 @@ def _build_model(payload: dict[str, Any], overrides: dict[str, Any] | None = Non
             avg_output_tokens_per_interaction=_number(
                 item, "avg_output_tokens_per_interaction"
             ),
+            monthly_interactions=max(0, _number(item, "monthly_interactions")),
             interactions_per_user_per_day=max(
                 0, _number(item, "interactions_per_user_per_day")
             ),
