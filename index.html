@@ -87,23 +87,12 @@
     }
 
     .brand-mark {
-      width: 28px;
-      height: 28px;
+      width: 34px;
+      height: 34px;
       border: 1px solid var(--accent);
       border-radius: 4px;
       object-fit: cover;
       background: #eaf7f7;
-    }
-
-    .nav a {
-      color: var(--muted);
-      text-decoration: none;
-      font-size: 0.9rem;
-      font-weight: 650;
-    }
-
-    .nav a[aria-current="page"] {
-      color: var(--accent);
     }
 
     .nav-actions {
@@ -684,16 +673,8 @@
 </head>
 <body>
   <nav class="nav" aria-label="Dashboard navigation">
-    <div class="nav-brand"><img class="brand-mark" src="/roirobot.png" alt="Agent ROI logo">Agent ROI</div>
-    <a href="#" aria-current="page">Overview</a>
-    <a href="#model-mix">Agents</a>
-    <a href="#assumptions">Assumptions</a>
+    <div class="nav-brand"><img class="brand-mark" src="roirobot.png" alt="Agent ROI logo">Agent ROI</div>
     <div class="nav-actions">
-      <div class="seg" role="radiogroup" aria-label="Time range">
-        <label class="seg-opt"><input type="radio" name="range"><span>Month</span></label>
-        <label class="seg-opt"><input type="radio" name="range" checked><span>Quarter</span></label>
-        <label class="seg-opt"><input type="radio" name="range"><span>Year</span></label>
-      </div>
       <button class="btn blueprint" type="button" disabled title="Future Azure Resource API integration">
         <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
         Connect Azure
