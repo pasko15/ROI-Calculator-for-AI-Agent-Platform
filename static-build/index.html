@@ -1,0 +1,2025 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agent ROI Dashboard</title>
+  <style>
+    :root {
+      --bg: #f5f7f9;
+      --surface: #ffffff;
+      --surface-soft: #f9fbfc;
+      --text: #16202a;
+      --muted: #687586;
+      --line: #d9e1e8;
+      --line-strong: #b8c6d2;
+      --accent: #156f7c;
+      --accent-2: #25a0a8;
+      --accent-3: #a9d9dc;
+      --positive: #1d7f50;
+      --negative: #b42318;
+      --warning: #a56516;
+      --shadow-sm: 0 8px 20px rgba(22, 32, 42, 0.07);
+      --shadow-md: 0 16px 36px rgba(22, 32, 42, 0.1);
+      --radius: 6px;
+      --space-1: 4px;
+      --space-2: 8px;
+      --space-3: 12px;
+      --space-4: 14px;
+      --space-5: 18px;
+      --space-6: 18px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      min-width: 320px;
+      scrollbar-width: none;
+    }
+
+    html::-webkit-scrollbar,
+    body::-webkit-scrollbar,
+    .dialog::-webkit-scrollbar,
+    .dialog-backdrop::-webkit-scrollbar {
+      width: 0;
+      height: 0;
+      display: none;
+    }
+
+    body {
+      margin: 0;
+      color: var(--text);
+      background:
+        linear-gradient(rgba(21, 111, 124, 0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(21, 111, 124, 0.035) 1px, transparent 1px),
+        var(--bg);
+      background-size: 28px 28px;
+      font-family: "Segoe UI", Arial, sans-serif;
+      line-height: 1.45;
+      scrollbar-width: none;
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4,
+    p {
+      margin: 0;
+    }
+
+    .nav {
+      min-height: 50px;
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+      padding: 0 max(var(--space-6), calc((100vw - 1450px) / 2));
+      border-bottom: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(10px);
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
+
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      min-width: 150px;
+      font-weight: 760;
+      letter-spacing: 0;
+    }
+
+    .brand-mark {
+      width: 30px;
+      height: 30px;
+      border: 1px solid var(--accent);
+      border-radius: 4px;
+      object-fit: cover;
+      background: #eaf7f7;
+    }
+
+    .nav-actions {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+    }
+
+    .nav-menu-button {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 38px;
+      border-color: rgba(37, 160, 168, 0.55);
+      background:
+        linear-gradient(180deg, rgba(37, 160, 168, 0.075), rgba(255, 255, 255, 0.94) 170px),
+        rgba(255, 255, 255, 0.94);
+      color: var(--accent);
+      box-shadow: 0 22px 58px rgba(21, 111, 124, 0.14);
+    }
+
+    .nav-menu-button:hover,
+    .nav-menu-button:focus-visible {
+      border-color: rgba(21, 111, 124, 0.62);
+      color: var(--accent);
+      background:
+        linear-gradient(180deg, rgba(37, 160, 168, 0.11), rgba(255, 255, 255, 0.96) 170px),
+        rgba(255, 255, 255, 0.96);
+    }
+
+    .nav-menu-label {
+      font-weight: 850;
+    }
+
+    .nav-menu-badge {
+      display: inline-grid;
+      min-width: 22px;
+      height: 22px;
+      place-items: center;
+      border: 1px solid rgba(37, 160, 168, 0.38);
+      border-radius: 999px;
+      padding: 0 6px;
+      background: rgba(240, 251, 251, 0.92);
+      color: var(--accent);
+      font-size: 0.72rem;
+      font-weight: 850;
+    }
+
+    .seg {
+      display: inline-flex;
+      padding: 3px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface-soft);
+    }
+
+    .seg-opt {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      cursor: pointer;
+    }
+
+    .seg-opt input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .seg-opt span {
+      min-height: 28px;
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 10px;
+      border-radius: 4px;
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+
+    .seg-opt input:checked + span {
+      color: var(--accent);
+      background: #ffffff;
+      box-shadow: 0 1px 4px rgba(22, 32, 42, 0.08);
+    }
+
+    .btn {
+      min-height: 32px;
+      border: 1px solid var(--line-strong);
+      border-radius: var(--radius);
+      padding: 6px 11px;
+      background: #ffffff;
+      color: var(--text);
+      font-weight: 750;
+      cursor: pointer;
+    }
+
+    .btn:hover,
+    .btn:focus-visible {
+      outline: 0;
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .btn[disabled] {
+      color: #8a96a4;
+      cursor: not-allowed;
+      background: #f4f7f9;
+    }
+
+    .blueprint {
+      position: relative;
+      border: 1px solid rgba(184, 198, 210, 0.68);
+      background: rgba(255, 255, 255, 0.92);
+      box-shadow: 0 18px 44px rgba(22, 32, 42, 0.08);
+      backdrop-filter: blur(8px);
+    }
+
+    .corner {
+      display: none;
+    }
+
+    .corner.tl {
+      top: -1px;
+      left: -1px;
+      border-top: 1px solid;
+      border-left: 1px solid;
+    }
+
+    .corner.tr {
+      top: -1px;
+      right: -1px;
+      border-top: 1px solid;
+      border-right: 1px solid;
+    }
+
+    .corner.bl {
+      bottom: -1px;
+      left: -1px;
+      border-bottom: 1px solid;
+      border-left: 1px solid;
+    }
+
+    .corner.br {
+      right: -1px;
+      bottom: -1px;
+      border-right: 1px solid;
+      border-bottom: 1px solid;
+    }
+
+    .shell {
+      width: min(1450px, calc(100% - 36px));
+      margin: 0 auto;
+      padding: var(--space-4) 0;
+    }
+
+    .hero {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: var(--space-4);
+      padding-bottom: var(--space-3);
+    }
+
+    .eyebrow {
+      color: var(--accent);
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin-top: 2px;
+      font-size: clamp(1.55rem, 1.8vw, 1.95rem);
+      font-weight: 760;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .scenario-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 3px;
+      justify-content: flex-end;
+      padding: 3px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.82);
+    }
+
+    .scenario-stack {
+      display: grid;
+      gap: 6px;
+      justify-items: end;
+    }
+
+    .scenario-note {
+      color: var(--muted);
+      font-size: 0.74rem;
+    }
+
+    .scenario-button {
+      min-height: 31px;
+      border: 0;
+      border-radius: 999px;
+      padding: 5px 10px;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 0.82rem;
+      font-weight: 760;
+    }
+
+    .scenario-button:hover,
+    .scenario-button:focus-visible,
+    .scenario-button.is-active {
+      outline: 0;
+      color: var(--accent);
+      background: #edfafa;
+    }
+
+    .scenario-button.is-active {
+      box-shadow: 0 1px 5px rgba(21, 111, 124, 0.14);
+    }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: var(--space-3);
+      margin-bottom: var(--space-3);
+    }
+
+    .kpi-card {
+      min-height: 100px;
+      padding: 10px var(--space-3);
+      display: grid;
+      align-content: space-between;
+      gap: var(--space-2);
+      border-top: 2px solid var(--accent);
+      border-radius: var(--radius);
+    }
+
+    .kpi-card:nth-child(2) {
+      border-top-color: var(--accent-2);
+    }
+
+    .kpi-card:nth-child(3) {
+      border-top-color: #0f5060;
+    }
+
+    .kpi-card:nth-child(4) {
+      border-top-color: var(--accent-3);
+    }
+
+    .kpi-head {
+      display: flex;
+      justify-content: space-between;
+      gap: var(--space-2);
+      align-items: flex-start;
+    }
+
+    .kpi-label,
+    .card-kicker {
+      color: var(--muted);
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+    }
+
+    .kpi-value {
+      color: var(--text);
+      font-size: clamp(1.55rem, 2.25vw, 2.05rem);
+      font-weight: 760;
+      line-height: 1;
+      overflow-wrap: anywhere;
+    }
+
+    .kpi-context {
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      width: max-content;
+      min-height: 22px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 2px 8px;
+      color: var(--accent);
+      background: #f0fbfb;
+      font-size: 0.68rem;
+      font-weight: 800;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(300px, 370px) minmax(0, 1fr);
+      gap: var(--space-3);
+      align-items: start;
+    }
+
+    .rail,
+    .workbench {
+      display: grid;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .card {
+      border-radius: var(--radius);
+      padding: 10px var(--space-3);
+      min-width: 0;
+    }
+
+    .card-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-3);
+      margin-bottom: 6px;
+    }
+
+    .card-title h2,
+    .card-title h3,
+    .card-title h4 {
+      font-size: 0.98rem;
+      font-weight: 760;
+    }
+
+    .card-note {
+      margin-top: -4px;
+      margin-bottom: 6px;
+      color: var(--muted);
+      font-size: 0.76rem;
+      line-height: 1.5;
+    }
+
+    .input-stack {
+      display: grid;
+      gap: 10px;
+    }
+
+    .input-stack[hidden],
+    [hidden] {
+      display: none !important;
+    }
+
+    .field {
+      display: grid;
+      gap: 5px;
+    }
+
+    .field-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-3);
+    }
+
+    label {
+      color: var(--text);
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+
+    .label-with-info {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .info-icon {
+      display: inline-grid;
+      width: 18px;
+      height: 18px;
+      place-items: center;
+      border: 1px solid var(--line-strong);
+      border-radius: 3px;
+      color: var(--accent);
+      background: #ffffff;
+      font-size: 0.68rem;
+      font-weight: 800;
+      line-height: 1;
+      cursor: help;
+      position: relative;
+    }
+
+    .info-icon::after {
+      content: attr(data-tip);
+      position: absolute;
+      left: 0;
+      top: 23px;
+      z-index: 30;
+      display: none;
+      width: 230px;
+      padding: 10px 11px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #ffffff;
+      box-shadow: var(--shadow-md);
+      color: var(--text);
+      font-size: 0.74rem;
+      font-weight: 500;
+      line-height: 1.45;
+      text-align: left;
+      letter-spacing: 0;
+      text-transform: none;
+    }
+
+    .kpi-head .info-icon::after,
+    .card-title > .info-icon::after,
+    .agent-actions .info-icon::after,
+    .insight-head .info-icon::after {
+      left: auto;
+      right: 0;
+    }
+
+    .two-col .field:nth-child(even) .info-icon::after {
+      left: auto;
+      right: 0;
+    }
+
+    .info-icon:hover::after,
+    .info-icon:focus::after {
+      display: block;
+    }
+
+    input[type="number"],
+    input[type="text"],
+    select {
+      width: 100%;
+      min-height: 36px;
+      border: 1px solid #c8d3dd;
+      border-radius: var(--radius);
+      color: var(--text);
+      background: var(--surface-soft);
+      padding: 7px 9px;
+    }
+
+    input[type="number"] {
+      text-align: right;
+    }
+
+    input[type="text"] {
+      text-align: left;
+    }
+
+    select {
+      text-align: left;
+      appearance: none;
+      background-image: linear-gradient(45deg, transparent 50%, var(--accent) 50%),
+        linear-gradient(135deg, var(--accent) 50%, transparent 50%);
+      background-position: calc(100% - 15px) 15px, calc(100% - 10px) 15px;
+      background-size: 5px 5px, 5px 5px;
+      background-repeat: no-repeat;
+    }
+
+    input[type="number"]:focus,
+    input[type="text"]:focus,
+    select:focus {
+      outline: 3px solid rgba(21, 111, 124, 0.16);
+      border-color: var(--accent);
+      background: #ffffff;
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--space-3);
+    }
+
+    .model-row {
+      display: grid;
+      gap: var(--space-3);
+      padding: var(--space-3);
+      border: 1px solid rgba(217, 225, 232, 0.9);
+      border-radius: var(--radius);
+      background: rgba(249, 251, 252, 0.76);
+    }
+
+    .model-row-title {
+      color: var(--accent);
+      font-size: 0.76rem;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .cost-driver-panel {
+      border-color: rgba(37, 160, 168, 0.55);
+      background:
+        linear-gradient(180deg, rgba(37, 160, 168, 0.075), rgba(255, 255, 255, 0.94) 170px),
+        rgba(255, 255, 255, 0.94);
+      box-shadow: 0 22px 58px rgba(21, 111, 124, 0.14);
+    }
+
+    .cost-driver-panel::before {
+      content: "";
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 4px;
+      border-radius: var(--radius) 0 0 var(--radius);
+      background: linear-gradient(180deg, var(--accent-2), var(--accent));
+    }
+
+    .cost-driver-tag {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      border: 1px solid rgba(37, 160, 168, 0.38);
+      border-radius: 999px;
+      padding: 3px 9px;
+      color: var(--accent);
+      background: rgba(240, 251, 251, 0.92);
+      font-size: 0.68rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .agent-actions {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+
+    .agent-cell {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-2);
+    }
+
+    .agent-name {
+      font-weight: 800;
+    }
+
+    .table-model-select {
+      min-height: 32px;
+      padding: 5px 28px 5px 8px;
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+
+    .benchmark-cell {
+      display: grid;
+      gap: 2px;
+      text-align: right;
+    }
+
+    .benchmark-label {
+      color: var(--muted);
+      font-size: 0.64rem;
+      font-weight: 800;
+      line-height: 1.1;
+      text-transform: uppercase;
+    }
+
+    .benchmark-value {
+      color: var(--benchmark-score-color, var(--muted));
+      font-weight: 850;
+    }
+
+    .benchmark-link {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .benchmark-link:hover,
+    .benchmark-link:focus-visible {
+      outline: 0;
+      text-decoration: underline;
+    }
+
+    .benchmark-empty {
+      color: inherit;
+    }
+
+    .optimization-panel {
+      display: grid;
+      gap: var(--space-2);
+      margin-top: var(--space-3);
+      border: 1px solid rgba(37, 160, 168, 0.42);
+      border-radius: var(--radius);
+      padding: var(--space-3);
+      background: rgba(240, 251, 251, 0.72);
+    }
+
+    .optimization-panel[hidden] {
+      display: none;
+    }
+
+    .optimization-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: var(--space-3);
+    }
+
+    .optimization-title {
+      font-size: 0.9rem;
+      font-weight: 850;
+    }
+
+    .optimization-note {
+      color: var(--muted);
+      font-size: 0.74rem;
+      font-weight: 700;
+      text-align: right;
+    }
+
+    .optimization-list {
+      display: grid;
+      gap: var(--space-2);
+    }
+
+    .optimization-item {
+      display: grid;
+      gap: 5px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: var(--space-2);
+      background: rgba(255, 255, 255, 0.82);
+    }
+
+    .optimization-item strong {
+      color: var(--accent);
+    }
+
+    .optimization-tradeoff {
+      color: var(--muted);
+      font-size: 0.74rem;
+      font-weight: 750;
+    }
+
+    .agent-table tbody tr {
+      background: rgba(255, 255, 255, 0.72);
+    }
+
+    .agent-table tbody tr:hover {
+      background: rgba(240, 251, 251, 0.72);
+    }
+
+    .cost-cell {
+      color: var(--accent);
+      background: rgba(240, 251, 251, 0.82);
+      font-weight: 850;
+    }
+
+    .add-agent-row td {
+      padding: var(--space-2) var(--space-3);
+      background: rgba(249, 251, 252, 0.72);
+      text-align: left;
+    }
+
+    .add-agent-button {
+      min-height: 30px;
+      border-style: dashed;
+      color: var(--accent);
+      background: rgba(255, 255, 255, 0.72);
+      font-weight: 760;
+    }
+
+    .agent-state {
+      display: none;
+    }
+
+    .scenario-comparison-card {
+      margin-top: var(--space-3);
+      padding: 10px var(--space-3);
+      border-radius: var(--radius);
+    }
+
+    .scenario-comparison {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: var(--space-3);
+      margin-top: var(--space-3);
+    }
+
+    .scenario-column {
+      display: grid;
+      gap: var(--space-2);
+      min-width: 0;
+      border: 1px solid var(--line);
+      border-top: 4px solid var(--muted);
+      border-radius: var(--radius);
+      padding: var(--space-3);
+      background: rgba(255, 255, 255, 0.78);
+    }
+
+    .scenario-column.positive {
+      border-top-color: var(--positive);
+    }
+
+    .scenario-column.negative {
+      border-top-color: var(--negative);
+    }
+
+    .scenario-column-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: var(--space-2);
+      padding-bottom: var(--space-2);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .scenario-column-title {
+      font-size: 0.88rem;
+      font-weight: 850;
+    }
+
+    .scenario-column-users {
+      color: var(--muted);
+      font-size: 0.72rem;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .scenario-column-metric {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: var(--space-2);
+      color: var(--muted);
+      font-size: 0.76rem;
+    }
+
+    .scenario-column-metric strong {
+      color: var(--text);
+      font-size: 0.86rem;
+      white-space: nowrap;
+    }
+
+    .scenario-column-metric.main {
+      padding-top: var(--space-2);
+      border-top: 1px dashed var(--line-strong);
+    }
+
+    .scenario-column-roi {
+      justify-self: end;
+      border-radius: 999px;
+      padding: 3px 9px;
+      background: #eef3f6;
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 850;
+    }
+
+    .scenario-column-roi.positive {
+      background: rgba(29, 127, 80, 0.1);
+      color: var(--positive);
+    }
+
+    .scenario-column-roi.negative {
+      background: rgba(180, 35, 24, 0.1);
+      color: var(--negative);
+    }
+
+    .guidance-grid {
+      display: grid;
+      gap: var(--space-4);
+    }
+
+    .guidance-section {
+      display: grid;
+      gap: var(--space-3);
+      padding: var(--space-3);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface-soft);
+    }
+
+    .guidance-section-head {
+      display: grid;
+      gap: 2px;
+    }
+
+    .guidance-section-head h3 {
+      font-size: 0.95rem;
+      font-weight: 800;
+    }
+
+    .guidance-section-head p {
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+
+    .guidance-options {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--space-2);
+    }
+
+    .guidance-option {
+      display: grid;
+      gap: 5px;
+      min-height: 112px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 10px;
+      background: #ffffff;
+      color: var(--text);
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .guidance-option:hover,
+    .guidance-option:focus-visible {
+      outline: 0;
+      border-color: var(--accent);
+      box-shadow: 0 8px 20px rgba(21, 111, 124, 0.1);
+    }
+
+    .guidance-option.is-selected {
+      border-color: var(--accent);
+      background:
+        linear-gradient(180deg, rgba(37, 160, 168, 0.12), rgba(255, 255, 255, 0.96) 150px),
+        #ffffff;
+      box-shadow: 0 12px 28px rgba(21, 111, 124, 0.16);
+    }
+
+    .guidance-option.is-selected .guidance-name::after {
+      content: "Selected";
+      display: inline-flex;
+      min-height: 20px;
+      align-items: center;
+      margin-left: 8px;
+      border: 1px solid rgba(37, 160, 168, 0.38);
+      border-radius: 999px;
+      padding: 1px 7px;
+      background: rgba(240, 251, 251, 0.92);
+      color: var(--accent);
+      font-size: 0.66rem;
+      font-weight: 850;
+      vertical-align: middle;
+    }
+
+    .guidance-custom-option {
+      cursor: default;
+    }
+
+    .guidance-name {
+      font-weight: 800;
+    }
+
+    .guidance-description {
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+
+    .guidance-token-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-self: end;
+    }
+
+    .guidance-token-row span {
+      display: inline-flex;
+      min-height: 22px;
+      align-items: center;
+      border: 1px solid rgba(37, 160, 168, 0.38);
+      border-radius: 999px;
+      padding: 2px 8px;
+      background: rgba(240, 251, 251, 0.92);
+      color: var(--accent);
+      font-size: 0.72rem;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .guidance-custom-fields {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--space-2);
+      align-self: end;
+    }
+
+    .guidance-custom-fields label {
+      display: grid;
+      gap: 4px;
+      color: var(--muted);
+      font-size: 0.72rem;
+      font-weight: 800;
+    }
+
+    .guidance-custom-fields input {
+      min-height: 32px;
+      padding: 6px 8px;
+      text-align: right;
+    }
+
+    .use-case-summary {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: var(--space-3);
+      margin-bottom: var(--space-3);
+    }
+
+    .use-case-stat {
+      padding: 9px 10px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface-soft);
+    }
+
+    .use-case-stat-value {
+      margin-top: 2px;
+      color: var(--text);
+      font-size: 1.15rem;
+      font-weight: 800;
+    }
+
+    .use-case-sync-note {
+      margin: -2px 0 var(--space-3);
+      padding: 8px 10px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface-soft);
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+
+    .use-case-sync-note.warning {
+      border-color: rgba(165, 101, 22, 0.35);
+      background: rgba(255, 248, 235, 0.86);
+      color: var(--warning);
+    }
+
+    .use-case-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.25fr) minmax(260px, 0.75fr);
+      gap: var(--space-4);
+      align-items: start;
+    }
+
+    .use-case-list {
+      display: grid;
+      gap: var(--space-3);
+    }
+
+    .use-case-card {
+      display: grid;
+      gap: 7px;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #ffffff;
+    }
+
+    .use-case-card-head {
+      display: flex;
+      justify-content: space-between;
+      gap: var(--space-3);
+      align-items: start;
+    }
+
+    .use-case-card h3 {
+      font-size: 0.94rem;
+      font-weight: 800;
+    }
+
+    .use-case-description {
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+
+    .use-case-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .use-case-pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 22px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 2px 8px;
+      background: var(--surface-soft);
+      color: var(--muted);
+      font-size: 0.72rem;
+      font-weight: 760;
+    }
+
+    .empty-state {
+      padding: 14px;
+      border: 1px dashed var(--line-strong);
+      border-radius: var(--radius);
+      color: var(--muted);
+      background: var(--surface-soft);
+      font-size: 0.82rem;
+    }
+
+    .checkbox-stack {
+      display: grid;
+      gap: 8px;
+    }
+
+    .check-option {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 34px;
+      padding: 6px 8px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface-soft);
+      cursor: pointer;
+    }
+
+    .check-option input {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--accent);
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 92px;
+      resize: vertical;
+      border: 1px solid #c8d3dd;
+      border-radius: var(--radius);
+      color: var(--text);
+      background: var(--surface-soft);
+      padding: 7px 9px;
+      font: inherit;
+    }
+
+    textarea:focus {
+      outline: 3px solid rgba(21, 111, 124, 0.16);
+      border-color: var(--accent);
+      background: #ffffff;
+    }
+
+    .status-line {
+      min-height: 18px;
+      color: var(--negative);
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+
+    .table-wrap {
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #ffffff;
+      scrollbar-width: thin;
+      min-width: 0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .agent-table {
+      min-width: 980px;
+      table-layout: fixed;
+    }
+
+    .agent-table th:nth-child(1),
+    .agent-table td:nth-child(1) {
+      width: 15%;
+    }
+
+    .agent-table th:nth-child(2),
+    .agent-table td:nth-child(2) {
+      width: 15%;
+    }
+
+    .agent-table th:nth-child(3),
+    .agent-table td:nth-child(3) {
+      width: 11%;
+    }
+
+    th,
+    td {
+      border-bottom: 1px solid var(--line);
+      padding: 7px 8px;
+      text-align: right;
+      vertical-align: top;
+      overflow-wrap: anywhere;
+    }
+
+    th {
+      background: #f0f4f7;
+      color: #40505f;
+      font-size: 0.7rem;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      white-space: normal;
+      line-height: 1.18;
+    }
+
+    tbody th,
+    td:first-child {
+      color: var(--text);
+      text-align: left;
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+
+    tr:last-child th,
+    tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .positive {
+      color: var(--positive);
+    }
+
+    .negative {
+      color: var(--negative);
+    }
+
+    .dialog-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      display: none;
+      padding: var(--space-4);
+      background: rgba(22, 32, 42, 0.46);
+      overflow: auto;
+      scrollbar-width: none;
+      --dialog-from-x: 0px;
+      --dialog-from-y: 0px;
+      --ghost-left: 50vw;
+      --ghost-top: 50vh;
+      --ghost-width: 36px;
+      --ghost-height: 36px;
+      --ghost-travel-x: 0px;
+      --ghost-travel-y: 0px;
+    }
+
+    .dialog-backdrop::before {
+      content: "";
+      position: fixed;
+      left: var(--ghost-left);
+      top: var(--ghost-top);
+      width: var(--ghost-width);
+      height: var(--ghost-height);
+      border: 1px solid rgba(21, 111, 124, 0.42);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, 0.5);
+      box-shadow: 0 10px 28px rgba(21, 111, 124, 0.14);
+      opacity: 0;
+      pointer-events: none;
+      transform: translate(-50%, -50%) scale(0.96);
+    }
+
+    .dialog-backdrop.is-open {
+      display: grid;
+      place-items: center;
+    }
+
+    .dialog-backdrop.is-open::before {
+      animation: button-ghost 190ms cubic-bezier(0.22, 0.78, 0.28, 1) both;
+    }
+
+    .dialog {
+      width: min(860px, 100%);
+      max-height: calc(100svh - 32px);
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr) auto;
+      overflow: hidden;
+      scrollbar-width: none;
+      border-radius: var(--radius);
+      background: var(--surface);
+      box-shadow: 0 28px 80px rgba(22, 32, 42, 0.22);
+      transform-origin: 50% 48%;
+    }
+
+    .dialog-backdrop.is-open .dialog {
+      animation: ghost-dialog-in 210ms cubic-bezier(0.2, 0.82, 0.24, 1) both;
+    }
+
+    .token-dialog {
+      width: min(720px, 100%);
+      overflow-x: hidden;
+    }
+
+    .catalog-dialog {
+      width: min(860px, 100%);
+    }
+
+    .catalog-dialog .table-wrap {
+      max-height: min(44svh, 430px);
+    }
+
+    .catalog-dialog table {
+      min-width: 780px;
+    }
+
+    .catalog-dialog thead th {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+
+    .use-cases-dialog {
+      width: min(980px, 100%);
+    }
+
+    .dialog-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-3);
+      padding: var(--space-4);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .dialog-title-actions {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+
+    .catalog-source-row {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      margin-top: 4px;
+    }
+
+    .catalog-source-row .card-note {
+      margin: 0;
+    }
+
+    .dialog-title h2 {
+      font-size: 1.05rem;
+      font-weight: 760;
+    }
+
+    .dialog-body {
+      padding: var(--space-3) var(--space-4);
+      overflow: auto;
+      min-width: 0;
+    }
+
+    .dialog-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: var(--space-3);
+      padding: var(--space-3) var(--space-4);
+      border-top: 1px solid var(--line);
+      background: var(--surface-soft);
+    }
+
+    .btn-primary {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: #ffffff;
+    }
+
+    .btn-primary:hover,
+    .btn-primary:focus-visible {
+      color: #ffffff;
+      background: #0f5e69;
+    }
+
+    .icon-btn {
+      width: 32px;
+      padding: 0;
+      display: inline-grid;
+      place-items: center;
+      font-size: 1.1rem;
+      line-height: 1;
+    }
+
+    .catalog-preview-actions {
+      display: flex;
+      justify-content: center;
+      position: sticky;
+      bottom: 0;
+      padding: 6px;
+      border-top: 1px solid var(--line);
+      background: var(--surface-soft);
+    }
+
+    .insight-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--space-3);
+    }
+
+    .insight-card {
+      min-height: 178px;
+      display: grid;
+      align-content: start;
+      gap: var(--space-2);
+      padding: 10px var(--space-3);
+      border-radius: var(--radius);
+    }
+
+    .insight-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: var(--space-3);
+    }
+
+    .insight-head h3 {
+      font-size: 0.92rem;
+      font-weight: 760;
+    }
+
+    .insight-note {
+      color: var(--muted);
+      font-size: 0.76rem;
+      line-height: 1.45;
+    }
+
+    .bar-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .bar-row {
+      display: grid;
+      gap: 5px;
+    }
+
+    .bar-meta {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: var(--space-3);
+      font-size: 0.78rem;
+    }
+
+    .bar-name {
+      font-weight: 760;
+    }
+
+    .bar-value {
+      color: var(--muted);
+      font-weight: 750;
+      white-space: nowrap;
+    }
+
+    .bar-track {
+      height: 18px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: #dfe9ed;
+    }
+
+    .bar-fill {
+      width: var(--bar-width, 0%);
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #0f5e69, #25a0a8);
+      transition: width 180ms ease;
+    }
+
+    .comparison-chart {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--space-3);
+      align-items: end;
+      min-height: 112px;
+      padding-top: var(--space-1);
+    }
+
+    .comparison-column {
+      display: grid;
+      gap: 6px;
+      align-items: end;
+      min-height: 112px;
+    }
+
+    .column-bar {
+      height: var(--bar-height, 0%);
+      min-height: 8px;
+      border-radius: var(--radius) var(--radius) 2px 2px;
+      background: linear-gradient(180deg, var(--accent-2), var(--accent));
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.42);
+      transition: height 180ms ease;
+    }
+
+    .column-bar.cost {
+      background: linear-gradient(180deg, #7e96a5, #40505f);
+    }
+
+    .column-label {
+      color: var(--muted);
+      font-size: 0.72rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .column-value {
+      font-size: 1rem;
+      font-weight: 760;
+    }
+
+    @keyframes button-ghost {
+      0% {
+        opacity: 0.42;
+        transform: translate(-50%, -50%) scale(0.98);
+        filter: blur(0);
+      }
+
+      62% {
+        opacity: 0.18;
+        transform: translate(calc(-50% + var(--ghost-travel-x) * 0.62), calc(-50% + var(--ghost-travel-y) * 0.62)) scale(2.8, 2);
+        filter: blur(0.5px);
+      }
+
+      100% {
+        opacity: 0;
+        transform: translate(calc(-50% + var(--ghost-travel-x)), calc(-50% + var(--ghost-travel-y))) scale(5.2, 3.8);
+        filter: blur(3px);
+      }
+    }
+
+    @keyframes ghost-dialog-in {
+      0% {
+        opacity: 0;
+        transform: translate(calc(var(--dialog-from-x) * 0.18), calc(var(--dialog-from-y) * 0.18)) scale(0.94);
+        filter: blur(2px);
+      }
+
+      78% {
+        opacity: 1;
+        transform: translate(0, 0) scale(1.003);
+        filter: blur(0);
+      }
+
+      100% {
+        opacity: 1;
+        transform: translate(0, 0) scale(1);
+        filter: blur(0);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .dialog-backdrop.is-open .dialog,
+      .dialog-backdrop.is-open::before {
+        animation: none;
+      }
+    }
+
+    @media (max-width: 1180px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .kpi-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 760px) {
+      .nav,
+      .hero,
+      .nav-actions {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .nav {
+        position: static;
+        gap: var(--space-3);
+        padding: var(--space-4);
+      }
+
+      .nav-actions {
+        margin-left: 0;
+      }
+
+      .shell {
+        padding: var(--space-4);
+      }
+
+      .kpi-grid,
+      .two-col,
+      .scenario-comparison,
+      .use-case-summary,
+      .use-case-layout,
+      .insight-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .guidance-options {
+        grid-template-columns: 1fr;
+      }
+
+      input[type="number"] {
+        text-align: left;
+      }
+
+    }
+  </style>
+</head>
+<body>
+  <nav class="nav" aria-label="Dashboard navigation">
+    <div class="nav-brand"><img class="brand-mark" src="roirobot.png" alt="Agent ROI logo">Agent ROI</div>
+    <div class="nav-actions">
+      <button id="openUseCasesButton" class="btn blueprint nav-menu-button" type="button">
+        <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+        <span class="nav-menu-label">Use cases</span>
+        <span id="useCaseNavBadge" class="nav-menu-badge">0</span>
+      </button>
+      <button class="btn blueprint" type="button" disabled title="Future Azure Resource API integration">
+        <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+        Connect Azure
+      </button>
+    </div>
+  </nav>
+
+  <main class="shell">
+    <section class="hero">
+      <div>
+        <div class="eyebrow">Static Azure AI Foundry ROI model</div>
+        <h1>ROI overview</h1>
+        <p class="subtitle">Usage-based AI model cost and productivity value from visible assumptions.</p>
+      </div>
+      <div class="scenario-stack">
+        <div class="scenario-actions" aria-label="Preset scenarios">
+          <button class="scenario-button" type="button" data-scenario="pilot">Small Pilot</button>
+          <button class="scenario-button" type="button" data-scenario="department">Department Rollout</button>
+          <button class="scenario-button" type="button" data-scenario="enterprise">Enterprise Deployment</button>
+        </div>
+        <div class="scenario-note">Presets: 10 pilot users, 40 department users, 200 enterprise users.</div>
+      </div>
+    </section>
+
+    <section class="kpi-grid" aria-label="Key performance indicators">
+      <article class="kpi-card blueprint">
+        <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+        <div class="kpi-head">
+          <div class="kpi-label">Net ROI</div>
+          <span class="info-icon" tabindex="0" data-tip="Monthly net value divided by total monthly cost.">i</span>
+        </div>
+        <div id="roiKpi" class="kpi-value">0%</div>
+        <div id="effectiveWorkersContext" class="kpi-context">0 active monthly users</div>
+      </article>
+
+      <article class="kpi-card blueprint">
+        <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+        <div class="kpi-head">
+          <div class="kpi-label">Total monthly costs</div>
+          <span class="info-icon" tabindex="0" data-tip="Estimated monthly usage cost for all configured Foundry agents, based on each agent's monthly interactions, token usage, and selected model prices.">i</span>
+        </div>
+        <div id="monthlyPlatformCostKpi" class="kpi-value">$0</div>
+        <span id="costMixContext" class="tag">$0 model usage cost</span>
+      </article>
+
+      <article class="kpi-card blueprint">
+        <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+        <div class="kpi-head">
+          <div class="kpi-label">Time saved / month</div>
+          <span class="info-icon" tabindex="0" data-tip="Active monthly users multiplied by average weekly time saved per user and 4.33 average weeks per month.">i</span>
+        </div>
+        <div id="monthlyHoursKpi" class="kpi-value">0 hrs</div>
+        <div id="monthlyHoursContext" class="kpi-context">0 monthly hours saved</div>
+      </article>
+    </section>
+
+    <section class="layout">
+      <aside id="assumptions" class="rail" aria-label="ROI model inputs">
+        <section class="card blueprint">
+          <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+          <div class="card-title">
+            <h2>Users & value</h2>
+          </div>
+          <div class="input-stack">
+            <div class="field">
+              <div class="field-row">
+                <label for="activeMonthlyUsers" class="label-with-info">Active monthly users <span class="info-icon" tabindex="0" data-tip="Estimated number of people who use the agents at least once in a month.">i</span></label>
+              </div>
+              <input id="activeMonthlyUsers" data-input="activeMonthlyUsers" type="number" min="0" step="1" value="100">
+            </div>
+            <div class="field">
+              <div class="field-row">
+                <label for="hourlyCost" class="label-with-info">Hourly employee cost ($) <span class="info-icon" tabindex="0" data-tip="Fully loaded average employee cost used to turn saved time into value.">i</span></label>
+              </div>
+              <input id="hourlyCost" data-input="hourlyCost" type="number" min="0" step="1" value="75">
+            </div>
+          </div>
+        </section>
+
+        <section class="card blueprint">
+          <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+          <div class="card-title">
+            <h2>Fixed platform cost</h2>
+            <span class="info-icon" tabindex="0" data-tip="Optional non-token monthly cost such as hosting, storage, monitoring, integration, support, or dedicated capacity baseline.">i</span>
+          </div>
+          <div class="field">
+            <div class="field-row">
+              <label for="fixedMonthlyCost" class="label-with-info">Fixed monthly platform cost ($) <span class="info-icon" tabindex="0" data-tip="Optional non-token monthly cost such as hosting, storage, monitoring, integration, support, or dedicated capacity baseline.">i</span></label>
+            </div>
+            <input id="fixedMonthlyCost" data-input="fixedMonthlyCost" type="number" min="0" step="100" value="0">
+          </div>
+        </section>
+
+        <div id="statusLine" class="status-line" role="status"></div>
+      </aside>
+
+      <div class="workbench">
+        <section id="model-mix" class="card blueprint cost-driver-panel">
+          <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+          <div class="card-title">
+            <h2>Agent & model mix</h2>
+            <div class="agent-actions">
+              <span class="cost-driver-tag">Main cost driver</span>
+              <button id="openGuidanceButton" class="btn" type="button">Token guidance</button>
+              <button id="openCatalogButton" class="btn" type="button">Model catalog</button>
+              <button id="optimizeModelsButton" class="btn" type="button">AI suggestion</button>
+              <span class="info-icon" tabindex="0" data-tip="Each agent contributes to cost based on token usage and selected model input/output prices.">i</span>
+            </div>
+          </div>
+          <p class="card-note">Monthly interactions are total agent calls per month, derived from presets or the use-case rollup. Add use cases to model niche workflows and common agent usage.</p>
+
+          <div class="table-wrap">
+            <table class="agent-table">
+              <thead>
+                <tr>
+                  <th>Agent</th>
+                  <th>Model</th>
+                  <th style="text-align:right">Benchmark</th>
+                  <th style="text-align:right">Total monthly interactions</th>
+                  <th style="text-align:right">Input tokens / interaction</th>
+                  <th style="text-align:right">Output tokens / interaction</th>
+                  <th style="text-align:right">Cost / interaction</th>
+                  <th style="text-align:right">Monthly cost</th>
+                </tr>
+              </thead>
+              <tbody id="agentMixBody">
+                <tr><td colspan="8">Loading model mix...</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div id="optimizationPanel" class="optimization-panel" hidden></div>
+
+          <div class="agent-state" aria-hidden="true">
+            <input id="minutesSaved" data-input="minutesSaved" type="number" min="0" step="1" value="0">
+            <select id="modelOneModel" data-model-select="modelOne"></select>
+            <input id="modelOneMonthlyInteractions" data-input="modelOneMonthlyInteractions" type="number" min="0" step="1" value="2100">
+            <input id="modelOneInputTokens" data-input="modelOneInputTokens" type="number" min="0" step="50" value="68000">
+            <input id="modelOneOutputTokens" data-input="modelOneOutputTokens" type="number" min="0" step="50" value="710">
+            <select id="modelTwoModel" data-model-select="modelTwo"></select>
+            <input id="modelTwoMonthlyInteractions" data-input="modelTwoMonthlyInteractions" type="number" min="0" step="1" value="8400">
+            <input id="modelTwoInputTokens" data-input="modelTwoInputTokens" type="number" min="0" step="50" value="4200">
+            <input id="modelTwoOutputTokens" data-input="modelTwoOutputTokens" type="number" min="0" step="50" value="64">
+          </div>
+        </section>
+
+        <section class="scenario-comparison-card blueprint" aria-label="Preset scenario comparison">
+          <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+          <div class="card-title">
+            <h2>Preset comparison</h2>
+            <span class="info-icon" tabindex="0" data-tip="Compares the three scale presets using the current model, token, hourly cost, time saved, and fixed-cost assumptions.">i</span>
+          </div>
+          <p class="card-note">Shows whether the same agent setup improves or worsens as usage scales.</p>
+          <div id="scenarioComparison" class="scenario-comparison"></div>
+        </section>
+
+        <section class="insight-grid" aria-label="Management insight charts">
+          <article class="insight-card blueprint">
+            <div class="insight-head">
+              <div>
+                <h3>Cost by agent</h3>
+                <p class="insight-note">Shows which agents drive monthly spend.</p>
+              </div>
+              <span class="info-icon" tabindex="0" data-tip="Each bar is one agent's monthly cost as a share of the highest-cost agent.">i</span>
+            </div>
+            <div id="costByAgentChart" class="bar-list"></div>
+          </article>
+
+          <article class="insight-card blueprint">
+            <div class="insight-head">
+              <div>
+                <h3>Value vs cost</h3>
+                <p class="insight-note">Compares monthly productivity value with monthly AI cost.</p>
+              </div>
+              <span class="info-icon" tabindex="0" data-tip="Monthly value is active users times weekly time saved times hourly cost times 4.33 weeks.">i</span>
+            </div>
+            <div id="valueCostChart" class="comparison-chart"></div>
+          </article>
+
+        </section>
+
+        <div id="usageContext" hidden>0 per active user per day</div>
+        <div id="monthlyInteractionsKpi" hidden>0</div>
+        <div id="annualPlatformCostKpi" hidden>$0</div>
+        <div id="monthlyValueKpi" hidden>$0</div>
+        <div id="annualValueKpi" hidden>$0</div>
+        <div id="monthlyNetBenefitKpi" hidden>$0</div>
+        <div id="annualNetBenefitKpi" hidden>$0</div>
+        <div id="annualHoursContext" hidden>0 annual hours saved</div>
+        <div id="heroBreakEven" hidden>0 min</div>
+      </div>
+    </section>
+  </main>
+
+  <div id="useCasesDialog" class="dialog-backdrop" aria-hidden="true">
+    <section class="dialog use-cases-dialog blueprint" role="dialog" aria-modal="true" aria-labelledby="useCasesTitle">
+      <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+      <div class="dialog-title">
+        <div>
+          <h2 id="useCasesTitle">Use cases</h2>
+          <p class="card-note" style="margin:4px 0 0">Map recurring business use cases to agent calls. Choose niche for specific low-volume workflows, or common for agent usage that scales with active users.</p>
+        </div>
+        <button id="closeUseCasesButton" class="btn icon-btn" type="button" aria-label="Close use cases">x</button>
+      </div>
+      <div class="dialog-body">
+        <div class="use-case-summary" aria-label="Use case summary">
+          <div class="use-case-stat">
+            <div class="kpi-label">Use cases</div>
+            <div id="useCaseCount" class="use-case-stat-value">0</div>
+          </div>
+          <div class="use-case-stat">
+            <div class="kpi-label">Annual use-case runs</div>
+            <div id="useCaseAnnualTotal" class="use-case-stat-value">0</div>
+          </div>
+          <div class="use-case-stat">
+            <div class="kpi-label">Monthly agent interactions</div>
+            <div id="useCaseMonthlyTotal" class="use-case-stat-value">0</div>
+          </div>
+          <div class="use-case-stat">
+            <div class="kpi-label">Annual hours saved</div>
+            <div id="useCaseAnnualHoursSaved" class="use-case-stat-value">0</div>
+          </div>
+        </div>
+        <div id="useCaseSyncNote" class="use-case-sync-note">Use cases have not been applied to the dashboard yet.</div>
+
+        <div class="use-case-layout">
+          <section>
+            <div class="card-title">
+              <h3>Existing use cases</h3>
+              <button id="applyUseCasesButton" class="btn" type="button">Apply to ROI assumptions</button>
+            </div>
+            <div id="useCaseList" class="use-case-list"></div>
+          </section>
+
+          <section>
+            <div class="card-title">
+              <h3>Add use case</h3>
+            </div>
+            <div class="input-stack">
+              <div class="field">
+                <label for="useCaseName">Name</label>
+                <input id="useCaseName" type="text" placeholder="e.g. Monthly production report">
+              </div>
+              <div class="field">
+                <label for="useCaseDescription">Description</label>
+                <textarea id="useCaseDescription" placeholder="What business process does this cover?"></textarea>
+              </div>
+              <div class="field">
+                <label for="useCaseBasis">Use pattern</label>
+                <select id="useCaseBasis">
+                  <option value="total">Specific niche use case</option>
+                  <option value="perUser">General/common agent usage</option>
+                </select>
+              </div>
+              <div id="nicheUseCaseFields" class="input-stack">
+                <div class="field">
+                  <label for="useCaseOccurrences">Frequency per year</label>
+                  <input id="useCaseOccurrences" type="number" min="0" step="1" value="12">
+                </div>
+                <div class="field">
+                  <label for="useCaseHoursSaved">Hours saved per occurrence</label>
+                  <input id="useCaseHoursSaved" type="number" min="0" step="0.25" value="0.5">
+                </div>
+              </div>
+              <div id="commonUseCaseFields" class="input-stack" hidden>
+                <div class="field">
+                  <label for="useCaseUsageIntensity">Usage intensity</label>
+                  <select id="useCaseUsageIntensity">
+                    <option value="1">1 - 1-10 uses/user/week</option>
+                    <option value="2">2 - 5-10 uses/user/week</option>
+                    <option value="3" selected>3 - 30-100 uses/user/week</option>
+                    <option value="4">4 - 100+ uses/user/week</option>
+                    <option value="5">5 - 300+ uses/user/week</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="useCaseEfficiencyRating">Efficiency improvement</label>
+                  <select id="useCaseEfficiencyRating">
+                    <option value="1">1 - small assist</option>
+                    <option value="2">2 - modest improvement</option>
+                    <option value="3" selected>3 - meaningful improvement</option>
+                    <option value="4">4 - major improvement</option>
+                    <option value="5">5 - automates most of the process</option>
+                  </select>
+                </div>
+              </div>
+              <div class="field">
+                <label>Agents used</label>
+                <div id="useCaseAgentChoices" class="checkbox-stack"></div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+      <div class="dialog-actions">
+        <button id="cancelUseCasesButton" class="btn" type="button">Close</button>
+        <button id="saveUseCaseButton" class="btn btn-primary" type="button">Save use case</button>
+      </div>
+    </section>
+  </div>
+
+  <div id="modelCatalogDialog" class="dialog-backdrop" aria-hidden="true">
+    <section class="dialog catalog-dialog blueprint" role="dialog" aria-modal="true" aria-labelledby="modelCatalogTitle">
+      <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+      <div class="dialog-title">
+        <div>
+          <h2 id="modelCatalogTitle">Model catalog</h2>
+          <p class="card-note" style="margin:4px 0 0">Assign catalog models to agents and maintain manual pricing assumptions. Prices are per 1M tokens.</p>
+          <p class="card-note" style="margin:4px 0 0">Catalog prices are currently used for standard pay-as-you-go estimates only. PTUs, batch processing, and dedicated capacity are future additions.</p>
+          <div class="catalog-source-row">
+            <p id="catalogSourceNote" class="card-note">Loading catalog...</p>
+            <button id="refreshCatalogButton" class="btn icon-btn" type="button" aria-label="Refresh Azure prices" title="Refresh Azure prices">&#8635;</button>
+          </div>
+        </div>
+        <div class="dialog-title-actions">
+          <button id="closeCatalogButton" class="btn icon-btn" type="button" aria-label="Close model catalog">x</button>
+        </div>
+      </div>
+      <div class="dialog-body">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Model</th>
+                <th>Publisher</th>
+                <th style="text-align:right">Input $/1M</th>
+                <th style="text-align:right">Output $/1M</th>
+                <th style="text-align:right">Input $/1M - Data zone</th>
+                <th style="text-align:right">Output $/1M - Data zone</th>
+              </tr>
+            </thead>
+            <tbody id="catalogBody"></tbody>
+          </table>
+          <div class="catalog-preview-actions">
+            <button id="toggleCatalogRowsButton" class="btn" type="button">View more</button>
+          </div>
+        </div>
+
+        <div style="margin-top:var(--space-5);padding-top:var(--space-5);border-top:1px solid var(--line)">
+          <h3 style="font-size:1rem;margin-bottom:var(--space-3)">Add a model manually</h3>
+          <div class="two-col">
+            <div class="field">
+              <label for="catalogModelName">Model name</label>
+              <input id="catalogModelName" type="text" placeholder="e.g. GPT-5.6 mini">
+            </div>
+            <div class="field">
+              <label for="catalogPublisher">Publisher / provider</label>
+              <input id="catalogPublisher" type="text" placeholder="e.g. OpenAI">
+            </div>
+            <div class="field">
+              <label for="catalogInputGlobal">Input $/1M - Global</label>
+              <input id="catalogInputGlobal" type="number" min="0" step="0.001" placeholder="0.00">
+            </div>
+            <div class="field">
+              <label for="catalogOutputGlobal">Output $/1M - Global</label>
+              <input id="catalogOutputGlobal" type="number" min="0" step="0.001" placeholder="0.00">
+            </div>
+            <div class="field">
+              <label for="catalogInputDataZone">Input $/1M - Data zone</label>
+              <input id="catalogInputDataZone" type="number" min="0" step="0.001" placeholder="optional">
+            </div>
+            <div class="field">
+              <label for="catalogOutputDataZone">Output $/1M - Data zone</label>
+              <input id="catalogOutputDataZone" type="number" min="0" step="0.001" placeholder="optional">
+            </div>
+          </div>
+          <p class="card-note" style="margin:var(--space-3) 0 0">Leave data-zone prices blank for models only offered globally. Newly added models appear in both agent dropdowns.</p>
+        </div>
+      </div>
+      <div class="dialog-actions">
+        <button id="cancelCatalogButton" class="btn" type="button">Close</button>
+        <button id="saveCatalogModelButton" class="btn btn-primary" type="button">Save model</button>
+      </div>
+    </section>
+  </div>
+
+  <div id="tokenGuidanceDialog" class="dialog-backdrop" aria-hidden="true">
+    <section class="dialog token-dialog blueprint" role="dialog" aria-modal="true" aria-labelledby="tokenGuidanceTitle">
+      <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+      <div class="dialog-title">
+        <div>
+          <h2 id="tokenGuidanceTitle">Token guidance</h2>
+          <p class="card-note" style="margin:4px 0 0">Choose the closest workload shape for each agent to update token assumptions. Interaction volume comes from use cases.</p>
+        </div>
+        <button id="closeGuidanceButton" class="btn icon-btn" type="button" aria-label="Close token guidance">x</button>
+      </div>
+      <div class="dialog-body">
+        <div id="tokenGuidanceBody" class="guidance-grid"></div>
+      </div>
+      <div class="dialog-actions">
+        <button id="cancelGuidanceButton" class="btn" type="button">Close</button>
+      </div>
+    </section>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,537 @@
+{
+  "lastUpdated": "2026-08-06T07:51:05.341395+00:00",
+  "source": "azure-retail-prices",
+  "models": [
+    {
+      "name": "chat-latest 05052026",
+      "publisher": "OpenAI",
+      "inputGlobal": 5.0,
+      "outputGlobal": 30.0,
+      "inputDataZone": null,
+      "outputDataZone": null,
+      "source": "azure-retail-prices"
+    },
+    {
+      "name": "chat-latest 05282026",
+      "publisher": "OpenAI",
+      "inputGlobal": 5.0,
+      "outputGlobal": 30.0,
+      "inputDataZone": null,
+      "outputDataZone": null,
+      "source": "azure-retail-prices"
+    },
+    {
+      "name": "gpt 4o 0513",
+      "publisher": "OpenAI",
+      "inputGlobal": 5.0,
+      "outputGlobal": 15.0,
+      "inputDataZone": 5.5,
+      "outputDataZone": 16.5,
+      "source": "azure-retail-prices"
+    },
+    {
+      "name": "GPT 5.1",
+      "publisher": "OpenAI",
+      "inputGlobal": 0.625,
+      "outputGlobal": 10.0,
+      "inputDataZone": 0.6875,
+      "outputDataZone": 5.5,
+      "source": "azure-retail-prices"
+    },
+    {
+      "name": "GPT 5.1 chat",
+      "publisher": "OpenAI",
+      "inputGlobal": 1.25,
+      "outputGlobal": 10.0,
+      "inputDataZone": 1.375,
+      "outputDataZone": 11.0,
+      "source": "azure-retail-prices"
+    },
+    {
+      "name": "GPT 5.2",
+      "publisher": "OpenAI",
+      "inputGlobal": 0.875,
+      "outputGlobal": 14.0,
+      "inputDataZone": 0.9625,
+      "outputDataZone": 15.4,
+      "source": "azure-retail-prices"
+    },
+    {
+      "name": "GPT 5.2 chat",
+      "publisher": "OpenAI",
+      "inputGlobal": 1.75,
+      "outputGlobal": 14.0,
+      "inputDataZone": 1.925,
+      "outputDataZone": 15.4,
+      "source": "azure-retail-prices"
+    },
+    {
+      "name": "GPT 5.2 pro",
+      "publisher": "OpenAI",
+      "inputGlobal": 10.5,
+      "outputGlobal": 168.0,
+      "inputDataZone": 23.1,
+      "outputDataZone": 92.4,
+      "source": "azure-retail-prices"
+    },
+    {
+      "name": "gpt aud 1.5",
+      "publisher": "OpenAI",
+      "inputGlobal": 32.0,
+      "outputGlobal": 64.0,
+      "inputDataZone": 35.2,
+      "outputDataZone": 70.4,
+      "source": "azure-retail-prices"
+    },
+    {
+      "name": "gpt aud 1.5 txt",
+      "publisher": "OpenAI",
+      "inputGlobal": 2.5,
+      "outputGlobal": 10.0,
+      "inputDataZone": 2.75,
+      "outputDataZone": 11.0,
+      "source": "azure-retail-prices"
+    },
+    {
+      "name": "gpt rt 1.5 aud",
+      "publisher": "OpenAI",
+      "inputGlobal": 32.0,
+      "outputGlobal": 64.0,
+      "inputDataZone": 35.2,
+      "outputDataZone": 70.4,
+      "source": "azure-retail-prices"
+    },
+    {
+      "name": "gpt rt 1.5 txt",
+      "publisher": "OpenAI",
+      "inputGlobal": 4.0,
+      "outputGlobal": 16.0,
+      "inputDataZone": 4.4,
+      "outputDataZone": 17.6,
+      "source": "azure-retail-prices"
+    },
+    {
+      "name": "GPT-4.1 mini pp",
+      "publisher": "OpenAI",
+      "inputGlobal": 0.7,
+      "outputGlobal": 2.8,
+      "inputDataZone": 0.7699999999999999,
+      "outputDataZone": 3.0799999999999996,
+      "source": "azure-retail-prices"
+    },
+    {
+      "name": "GPT-4.1 pp",
+      "publisher": "OpenAI",
+      "inputGlobal": 3.5,
+      "outputGlobal": 14.0,
+      "inputDataZone": 3.85,
+      "outputDataZone": 15.4,
+      "source": "azure-retail-prices"
+    },
+    {
+      "name": "gpt-4.1-ft",
+      "publisher": "OpenAI",
+      "inputGlobal": 2.0,
+      "outputGlobal": 8.0,
+      "inputDataZone": null,
+      "outputDataZone": null,
+      "source": "azure-retail-prices"
+    },
+    {
+      "name": "gpt-4.1-mini-ft",
+      "publisher": "OpenAI",
+      "inputGlobal": 0.4,
+      "outputGlobal": 1.6,
+      "inputDataZone": null,
+      "outputDataZone": null,
+      "source": "azure-retail-prices"
+    },
+    {
+      "name": "gpt-4.1-nano-ft",
+      "publisher": "OpenAI",
+      "inputGlobal": 0.1,
+      "outputGlobal": 0.4,
+      "inputDataZone": null,
+      "outputDataZone": null,
+      "source": "azure-retail-prices"
+    },
+    {
+      "name": "GPT-5 mini pp",
+      "publisher": "OpenAI",
+      "inputGlobal": 0.45,
+      "outputGlobal": 3.6,
+      "inputDataZone": 0.495,
+      "outputDataZone": 3.96,
+      "source": "azure-retail-prices"
+    },
+    {
+      "name": "GPT-5 pp",
+      "publisher": "OpenAI",
+      "inputGlobal": 2.5,
+      "outputGlobal": 20.0,
+      "inputDataZone": 2.75,
+      "outputDataZone": 22.0,
+      "source": "azure-retail-prices"
+    },
+    {
+      "name": "GPT-5.1 codex",
+      "publisher": "OpenAI",
+      "inputGlobal": 1.25,
+      "outputGlobal": 10.0,
+      "inputDataZone": 1.375,
+      "outputDataZone": 11.0,
+      "source": "azure-retail-prices"
+    },
+    {
+      "name": "GPT-5.1 codex max",
+      "publisher": "OpenAI",
+      "inputGlobal": 1.25,
+      "outputGlobal": 10.0,
+      "inputDataZone": 1.375,
+      "outputDataZone": 11.0,
+      "source": "azure-retail-prices"
+    },
+    {
+      "name": "GPT-5.1 codex mini",
+      "publisher": "OpenAI",
+      "inputGlobal": 0.25,
+      "outputGlobal": 2.0,
+      "inputDataZone": 0.275,
+      "outputDataZone": 2.2,
+      "source": "azure-retail-prices"
+    },
+    {
+      "name": "GPT-5.1 pp",
+      "publisher": "OpenAI",
+      "inputGlobal": 2.5,
+      "outputGlobal": 20.0,
+      "inputDataZone": 2.75,
+      "outputDataZone": 22.0,
+      "source": "azure-retail-prices"
+    },
+    {
+      "name": "GPT-5.2 chat 0210",
+      "publisher": "OpenAI",
+      "inputGlobal": 1.75,
+      "outputGlobal": 14.0,
+      "inputDataZone": 1.925,
+      "outputDataZone": 15.4,
+      "source": "azure-retail-prices"
+    },
+    {
+      "name": "GPT-5.2 codex",
+      "publisher": "OpenAI",
+      "inputGlobal": 1.75,
+      "outputGlobal": 14.0,
+      "inputDataZone": 1.925,
+      "outputDataZone": 15.4,
+      "source": "azure-retail-prices"
+    },
+    {
+      "name": "GPT-5.2 pp",
+      "publisher": "OpenAI",
+      "inputGlobal": 3.5,
+      "outputGlobal": 28.0,
+      "inputDataZone": 3.85,
+      "outputDataZone": 30.8,
+      "source": "azure-retail-prices"
+    },
+    {
+      "name": "GPT-5.3 chat",
+      "publisher": "OpenAI",
+      "inputGlobal": 1.75,
+      "outputGlobal": 14.0,
+      "inputDataZone": 1.925,
+      "outputDataZone": 15.4,
+      "source": "azure-retail-prices"
+    },
+    {
+      "name": "GPT-5.3 codex",
+      "publisher": "OpenAI",
+      "inputGlobal": 1.75,
+      "outputGlobal": 14.0,
+      "inputDataZone": 1.925,
+      "outputDataZone": 15.4,
+      "source": "azure-retail-prices"
+    },
+    {
+      "name": "GPT-5.3 codex pp",
+      "publisher": "OpenAI",
+      "inputGlobal": 3.5,
+      "outputGlobal": 28.0,
+      "inputDataZone": 3.85,
+      "outputDataZone": 30.8,
+      "source": "azure-retail-prices"
+    },
+    {
+      "name": "GPT-5.4",
+      "publisher": "OpenAI",
+      "inputGlobal": 1.25,
+      "outputGlobal": 7.5,
+      "inputDataZone": 3.0,
+      "outputDataZone": 16.5,
+      "source": "azure-retail-prices"
+    },
+    {
+      "name": "GPT-5.4 longco",
+      "publisher": "OpenAI",
+      "inputGlobal": 2.5,
+      "outputGlobal": 22.5,
+      "inputDataZone": 2.75,
+      "outputDataZone": 24.75,
+      "source": "azure-retail-prices"
+    },
+    {
+      "name": "GPT-5.4 mini",
+      "publisher": "OpenAI",
+      "inputGlobal": 0.375,
+      "outputGlobal": 2.25,
+      "inputDataZone": 0.4125,
+      "outputDataZone": 4.95,
+      "source": "azure-retail-prices"
+    },
+    {
+      "name": "GPT-5.4 mini pp",
+      "publisher": "OpenAI",
+      "inputGlobal": 1.5,
+      "outputGlobal": 9.0,
+      "inputDataZone": 1.65,
+      "outputDataZone": 9.9,
+      "source": "azure-retail-prices"
+    },
+    {
+      "name": "GPT-5.4 nano",
+      "publisher": "OpenAI",
+      "inputGlobal": 0.1,
+      "outputGlobal": 1.25,
+      "inputDataZone": 0.22,
+      "outputDataZone": 0.6875,
+      "source": "azure-retail-prices"
+    },
+    {
+      "name": "GPT-5.4 pp",
+      "publisher": "OpenAI",
+      "inputGlobal": 5.0,
+      "outputGlobal": 30.0,
+      "inputDataZone": 5.5,
+      "outputDataZone": 33.0,
+      "source": "azure-retail-prices"
+    },
+    {
+      "name": "GPT-5.4 pro",
+      "publisher": "OpenAI",
+      "inputGlobal": 15.0,
+      "outputGlobal": 180.0,
+      "inputDataZone": 16.5,
+      "outputDataZone": 198.0,
+      "source": "azure-retail-prices"
+    },
+    {
+      "name": "GPT-5.4 pro longco",
+      "publisher": "OpenAI",
+      "inputGlobal": 30.0,
+      "outputGlobal": 135.0,
+      "inputDataZone": 33.0,
+      "outputDataZone": 148.5,
+      "source": "azure-retail-prices"
+    },
+    {
+      "name": "GPT-5.5",
+      "publisher": "OpenAI",
+      "inputGlobal": 5.0,
+      "outputGlobal": 30.0,
+      "inputDataZone": 5.5,
+      "outputDataZone": 33.0,
+      "source": "manual-default"
+    },
+    {
+      "name": "GPT-5.5 LongCo",
+      "publisher": "OpenAI",
+      "inputGlobal": 10.0,
+      "outputGlobal": 22.5,
+      "inputDataZone": 5.5,
+      "outputDataZone": 49.5,
+      "source": "azure-retail-prices"
+    },
+    {
+      "name": "GPT-5.5 ShortCo",
+      "publisher": "OpenAI",
+      "inputGlobal": 2.5,
+      "outputGlobal": 30.0,
+      "inputDataZone": 2.75,
+      "outputDataZone": 33.0,
+      "source": "azure-retail-prices"
+    },
+    {
+      "name": "GPT-5.5 ShortCo PP",
+      "publisher": "OpenAI",
+      "inputGlobal": 12.5,
+      "outputGlobal": 75.0,
+      "inputDataZone": 13.75,
+      "outputDataZone": 82.5,
+      "source": "azure-retail-prices"
+    },
+    {
+      "name": "GPT-5.6 luna LongCo Std",
+      "publisher": "OpenAI",
+      "inputGlobal": 2.0,
+      "outputGlobal": 9.0,
+      "inputDataZone": 2.2,
+      "outputDataZone": 9.9,
+      "source": "azure-retail-prices"
+    },
+    {
+      "name": "GPT-5.6 luna ShortCo PP",
+      "publisher": "OpenAI",
+      "inputGlobal": 2.0,
+      "outputGlobal": 12.0,
+      "inputDataZone": 2.2,
+      "outputDataZone": 13.2,
+      "source": "azure-retail-prices"
+    },
+    {
+      "name": "GPT-5.6 luna ShortCo Std",
+      "publisher": "OpenAI",
+      "inputGlobal": 1.0,
+      "outputGlobal": 6.0,
+      "inputDataZone": 1.1,
+      "outputDataZone": 6.6,
+      "source": "azure-retail-prices"
+    },
+    {
+      "name": "GPT-5.6 sol LongCo Std",
+      "publisher": "OpenAI",
+      "inputGlobal": 10.0,
+      "outputGlobal": 45.0,
+      "inputDataZone": 11.0,
+      "outputDataZone": 49.5,
+      "source": "azure-retail-prices"
+    },
+    {
+      "name": "GPT-5.6 sol ShortCo PP",
+      "publisher": "OpenAI",
+      "inputGlobal": 10.0,
+      "outputGlobal": 60.0,
+      "inputDataZone": 11.0,
+      "outputDataZone": 66.0,
+      "source": "azure-retail-prices"
+    },
+    {
+      "name": "GPT-5.6 sol ShortCo Std",
+      "publisher": "OpenAI",
+      "inputGlobal": 5.0,
+      "outputGlobal": 30.0,
+      "inputDataZone": 5.5,
+      "outputDataZone": 33.0,
+      "source": "azure-retail-prices"
+    },
+    {
+      "name": "GPT-5.6 terra LongCo Std",
+      "publisher": "OpenAI",
+      "inputGlobal": 5.0,
+      "outputGlobal": 22.5,
+      "inputDataZone": 5.5,
+      "outputDataZone": 24.75,
+      "source": "azure-retail-prices"
+    },
+    {
+      "name": "GPT-5.6 terra ShortCo PP",
+      "publisher": "OpenAI",
+      "inputGlobal": 5.0,
+      "outputGlobal": 30.0,
+      "inputDataZone": 5.5,
+      "outputDataZone": 33.0,
+      "source": "azure-retail-prices"
+    },
+    {
+      "name": "GPT-5.6 terra ShortCo Std",
+      "publisher": "OpenAI",
+      "inputGlobal": 2.5,
+      "outputGlobal": 15.0,
+      "inputDataZone": 2.75,
+      "outputDataZone": 16.5,
+      "source": "azure-retail-prices"
+    },
+    {
+      "name": "gpt-latest 05052026",
+      "publisher": "OpenAI",
+      "inputGlobal": 32.0,
+      "outputGlobal": 64.0,
+      "inputDataZone": null,
+      "outputDataZone": null,
+      "source": "azure-retail-prices"
+    },
+    {
+      "name": "gpt-realtime-2 Text",
+      "publisher": "OpenAI",
+      "inputGlobal": 4.0,
+      "outputGlobal": 24.0,
+      "inputDataZone": null,
+      "outputDataZone": null,
+      "source": "azure-retail-prices"
+    },
+    {
+      "name": "gpt-realtime-2.1 Audio",
+      "publisher": "OpenAI",
+      "inputGlobal": 32.0,
+      "outputGlobal": 64.0,
+      "inputDataZone": 35.2,
+      "outputDataZone": 70.4,
+      "source": "azure-retail-prices"
+    },
+    {
+      "name": "gpt-realtime-2.1 Text",
+      "publisher": "OpenAI",
+      "inputGlobal": 4.0,
+      "outputGlobal": 24.0,
+      "inputDataZone": 4.4,
+      "outputDataZone": 26.4,
+      "source": "azure-retail-prices"
+    },
+    {
+      "name": "gpt-realtime-2.1-mini Audio",
+      "publisher": "OpenAI",
+      "inputGlobal": 10.0,
+      "outputGlobal": 20.0,
+      "inputDataZone": 11.0,
+      "outputDataZone": 22.0,
+      "source": "azure-retail-prices"
+    },
+    {
+      "name": "gpt-realtime-2.1-mini Text",
+      "publisher": "OpenAI",
+      "inputGlobal": 0.6,
+      "outputGlobal": 2.4,
+      "inputDataZone": 0.66,
+      "outputDataZone": 2.64,
+      "source": "azure-retail-prices"
+    },
+    {
+      "name": "Image 2 img",
+      "publisher": "OpenAI",
+      "inputGlobal": 4.0,
+      "outputGlobal": 30.0,
+      "inputDataZone": 4.4,
+      "outputDataZone": 33.0,
+      "source": "azure-retail-prices"
+    },
+    {
+      "name": "o3-mini-ft",
+      "publisher": "OpenAI",
+      "inputGlobal": 1.1,
+      "outputGlobal": 4.4,
+      "inputDataZone": null,
+      "outputDataZone": null,
+      "source": "azure-retail-prices"
+    },
+    {
+      "name": "o4-mini-ft",
+      "publisher": "OpenAI",
+      "inputGlobal": 1.1,
+      "outputGlobal": 4.4,
+      "inputDataZone": null,
+      "outputDataZone": null,
+      "source": "azure-retail-prices"
+    }
+  ]
+}

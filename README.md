@@ -83,6 +83,12 @@ Then open:
 http://127.0.0.1:8001
 ```
 
+## Sharing It
+
+The repo also includes a static GitHub Pages build in `static-build/`. That version runs the ROI calculations in browser JavaScript, loads the cached model catalog from JSON, and can call the public Azure pricing and benchmark APIs directly when browser/CORS policy allows it.
+
+The included GitHub Actions workflow deploys `static-build/` to GitHub Pages.
+
 ## Notes
 
 This is still a practical estimation tool, not a billing system. It is meant to support early decision-making, model comparison, and ROI conversations.
