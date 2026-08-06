@@ -1,110 +1,63 @@
-# AI Agent ROI Model
+# Azure AI Foundry ROI Dashboard
 
-This project is a Python-backed ROI dashboard for estimating the cost and business value of AI agents running on Azure AI Foundry model deployments.
+There is plenty of Azure pricing documentation, but there is not a very clear, practical calculator for the question I kept running into:
 
-I created this because the Azure cost calculator was inefficient for my use case. In practice, getting realistic figures for AI agent usage can become a rigorous and tiresome process: model pricing is split across input and output tokens, each agent can use a different model, token consumption varies by workflow, and quota planning often has to happen before the organization has a clear cost estimate.
+How much will an Azure AI Foundry agent setup actually cost once real users, real workflows, model choice, token volume, and business value are all considered together?
 
-That is a problem, because management usually needs figures early. Cost estimates should be relatively easy to produce, explain, and adjust.
+The standard pricing experience is useful for looking up prices, but it does not naturally answer the management question: should we pilot this, scale it, or change the model mix before it gets expensive?
 
-This dashboard solves that by using a mathematical model based on known cost drivers and practical experience with the platform. The goal is to make cost estimation more transparent and repeatable, while keeping the assumptions visible enough that they can be challenged, refined, and improved.
+So I built my own pricing model and dashboard.
 
-The model currently focuses on the practical drivers of agent ROI:
+## What This Is
 
-- Active monthly users
-- Use cases that generate agent interactions
-- Specific niche use cases with fixed annual frequency
-- General/common agent usage that scales by eligible users and usage intensity
-- Per-agent model selection from the model catalog
-- Average input and output tokens per interaction
-- Input and output model pricing per 1 million tokens from the selected catalog model
-- Multiple configured agents, including custom agent slots
-- Optional fixed monthly platform cost
-- Time saved from use-case assumptions
-- Average hourly employee cost
+This is a local ROI dashboard for Azure AI Foundry agent scenarios. It combines model pricing, token assumptions, user scale, use cases, benchmark scores, and productivity value into one view.
 
-The current model and agent mix assumes standard pay-as-you-go token pricing, with an optional fixed monthly platform-cost assumption for non-token costs. Dedicated capacity options such as PTUs, batch processing, and other commitment-based pricing models are not included yet and are planned as future additions.
+The goal is not just to show cost. The goal is to make the assumptions visible enough that someone can challenge them, change them, and understand what happens.
 
-An interaction is defined as one user task made up of roughly 1-3 user-entered messages.
+The dashboard helps answer questions like:
 
-The dashboard blends per-agent model costs into an effective cost per interaction, estimates total monthly cost from use-case-derived monthly interactions and fixed monthly costs, converts expected time savings into financial value, and calculates ROI. Extremely high ROI values are capped in the display and shown with a warning so low-cost scenarios do not look like broken arithmetic.
+- What does this agent setup cost per month?
+- Which agent is driving most of the spend?
+- Does the ROI improve when we scale from pilot to department to enterprise?
+- Which model gives a better balance of cost and benchmark quality?
+- Are we choosing a model because it is actually better, or just because it is the default?
 
-## How The Model Works
+## Why I Made It
 
-The model separates four questions that are easy to mix together:
+Azure AI Foundry projects can get hard to estimate quickly because the cost is spread across several moving parts:
 
-- **Who can use the agent?** `Active monthly users` defines the broad population. General/common use cases can further limit this with `eligible users`, so a workflow used by one person does not accidentally scale across the whole company.
-- **How often is the agent used?** Niche use cases use fixed annual frequency. General/common use cases use a 1-5 usage intensity scale that maps to weekly interactions per eligible user.
-- **How heavy is each interaction?** Token guidance sets average input and output tokens for each agent.
-- **What does each interaction cost?** The selected model supplies input/output token prices from the model catalog.
+- Different agents can use different models.
+- Each model has separate input and output token pricing.
+- Workflows have very different token sizes.
+- Usage can come from specific recurring use cases or broad everyday adoption.
+- Management usually wants a rough business case before the architecture is final.
 
-The simplified cost formula is:
+There was no simple calculator that matched that reality closely enough, so this dashboard became a way to model it directly.
 
-```text
-agent monthly cost =
-monthly interactions
-* (
-  input tokens / 1,000,000 * input price per 1M
-  +
-  output tokens / 1,000,000 * output price per 1M
-)
-```
+## Data Sources
 
-For niche use cases:
+The model catalog is populated from Azure pricing/catalog data, so model prices are not just typed into the UI as static guesses. The dashboard keeps a local cache, but the intent is to use current Azure model pricing as the pricing baseline.
 
-```text
-monthly interactions = annual frequency / 12
-```
+I also added benchmark data so the dashboard can compare models by more than price. The Agent & Model Mix table shows Artificial Analysis benchmark scores, such as agentic and intelligence ratings, and the AI suggestion button uses those scores when looking for cheaper alternatives.
 
-For general/common agent usage:
+That means the dashboard can make recommendations like:
 
-```text
-monthly interactions =
-weekly interactions per eligible user
-* eligible users
-* 52 / 12
-```
+> Use this model because it is cheaper and has a similar or better benchmark rating.
 
-Saved time is also use-case based. Niche use cases use hours saved per occurrence. General/common use cases use an efficiency improvement rating.
+That is more useful for budget conversations than only saying "this setup costs X dollars."
 
-## Use Cases
+## What You Can Do
 
-Use cases are the main way to make the model credible:
+- Choose active monthly users and hourly employee cost.
+- Model agent usage through presets or use cases.
+- Select models per agent from the catalog.
+- Adjust input and output tokens per interaction.
+- See monthly cost, value, ROI, and cost by agent.
+- Compare pilot, department, and enterprise rollout scenarios side by side.
+- Ask for an AI model suggestion based on price and benchmark trade-offs.
+- Add fixed monthly platform cost when there are non-token costs to include.
 
-- **Specific niche use case**: for workflows like one recurring report, audit pack, or extract that happens a known number of times per year.
-- **General/common agent usage**: for agents that many users actively use, such as a common Q&A, drafting, reporting, or analysis assistant.
-
-For general/common usage, `eligible users` is important. Leave it blank when all active users can realistically use the agent. Set it to a smaller number when only a subset will use it.
-
-Example:
-
-```text
-DNV reporting
-Pattern: Specific niche use case
-Frequency: 25/year
-Agents: Data Extract Agent, Report Generating Agent
-```
-
-This creates 25 annual interactions for each selected agent, not 25 interactions per employee.
-
-## Agents And Models
-
-The dashboard starts with:
-
-- Data Extract Agent
-- Report Generating Agent
-
-You can add custom agent slots from the Agent & model mix table. Each agent has:
-
-- selected model
-- total monthly interactions derived from presets or applied use cases
-- input tokens per interaction
-- output tokens per interaction
-- cost per interaction
-- monthly cost
-
-The model catalog maintains model pricing assumptions. Prices are entered as dollars per 1 million tokens.
-
-## Preview
+## Running It
 
 Run the local server:
 
@@ -130,21 +83,8 @@ Then open:
 http://127.0.0.1:8001
 ```
 
-## Project Structure
+## Notes
 
-- `app.py` starts the local dashboard server.
-- `backend/` contains the Python API, pricing catalog integration, and ROI model.
-- `frontend/` contains the HTML, browser JavaScript, and UI assets.
-- `data/` contains the local model catalog cache.
-- `docs/` contains technical notes and future ideas.
+This is still a practical estimation tool, not a billing system. It is meant to support early decision-making, model comparison, and ROI conversations.
 
-## Current Scope
-
-The monthly platform cost combines standard pay-as-you-go model usage with any manually entered fixed monthly platform cost. Future versions may add Azure Resource API integration to automatically pull deployment, pricing, quota, and usage data, including dedicated capacity, PTUs, and batch processing.
-
-Current limitations:
-
-- Use cases are stored in browser state/local app state, not in a shared database.
-- Scenarios are not yet exportable or versioned.
-- PTUs, batch pricing, provisioned throughput, negotiated discounts, and regional deployment modes are not modeled as first-class pricing modes yet.
-- Azure/Foundry project sync is still a future integration.
+For implementation details, API routes, calculation formulas, and project structure, see [docs/TECHNICAL_README.md](docs/TECHNICAL_README.md).
