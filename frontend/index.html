@@ -1256,6 +1256,10 @@
       gap: var(--space-3);
     }
 
+    .insight-card.wide {
+      grid-column: 1 / -1;
+    }
+
     .insight-card {
       min-height: 178px;
       display: grid;
@@ -1368,6 +1372,85 @@
       font-weight: 760;
     }
 
+    .cumulative-chart {
+      display: grid;
+      gap: var(--space-2);
+      min-height: 176px;
+    }
+
+    .cumulative-plot {
+      width: 100%;
+      height: 142px;
+      display: block;
+      overflow: visible;
+    }
+
+    .chart-grid-line {
+      stroke: #d9e1e8;
+      stroke-width: 1;
+    }
+
+    .chart-axis-label {
+      fill: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .chart-line {
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-width: 3;
+    }
+
+    .chart-line.value {
+      stroke: var(--positive);
+    }
+
+    .chart-line.cost {
+      stroke: #40505f;
+    }
+
+    .chart-cross-marker {
+      fill: #ffffff;
+      stroke: var(--positive);
+      stroke-width: 2;
+    }
+
+    .cumulative-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-3);
+      color: var(--muted);
+      font-size: 0.76rem;
+      font-weight: 700;
+    }
+
+    .chart-legend {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      white-space: nowrap;
+    }
+
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .legend-swatch {
+      width: 18px;
+      height: 3px;
+      border-radius: 999px;
+      background: var(--positive);
+    }
+
+    .legend-swatch.cost {
+      background: #40505f;
+    }
+
     @keyframes button-ghost {
       0% {
         opacity: 0.42;
@@ -1461,6 +1544,13 @@
 
       input[type="number"] {
         text-align: left;
+      }
+
+      .cumulative-footer,
+      .chart-legend {
+        align-items: flex-start;
+        flex-wrap: wrap;
+        white-space: normal;
       }
 
     }
@@ -1644,6 +1734,17 @@
               <span class="info-icon" tabindex="0" data-tip="Monthly value is active users times weekly time saved times hourly cost times 4.33 weeks.">i</span>
             </div>
             <div id="valueCostChart" class="comparison-chart"></div>
+          </article>
+
+          <article class="insight-card blueprint wide">
+            <div class="insight-head">
+              <div>
+                <h3>Cumulative break-even</h3>
+                <p class="insight-note">Tracks cumulative monthly cost against cumulative productivity value over 12 months.</p>
+              </div>
+              <span class="info-icon" tabindex="0" data-tip="Uses the current monthly cost and monthly productivity value assumptions. One-time implementation cost is not modeled yet.">i</span>
+            </div>
+            <div id="cumulativeChart" class="cumulative-chart"></div>
           </article>
 
         </section>
