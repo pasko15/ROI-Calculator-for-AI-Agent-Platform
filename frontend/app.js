@@ -268,10 +268,10 @@ function modelPayload(prefix, name, monthlyInteractions) {
   const selectedModel = getSelectedModel(prefix);
 
   return {
-    name: `${name} - ${selectedModel.name}`,
+    name: `${name} - ${selectedModel?.name || "Unknown model"}`,
     usage_share: 1,
-    input_price_per_1m_tokens: Math.max(0, Number(selectedModel.inputGlobal) || 0),
-    output_price_per_1m_tokens: Math.max(0, Number(selectedModel.outputGlobal) || 0),
+    input_price_per_1m_tokens: Math.max(0, Number(selectedModel?.inputGlobal) || 0),
+    output_price_per_1m_tokens: Math.max(0, Number(selectedModel?.outputGlobal) || 0),
     avg_input_tokens_per_interaction: Math.max(0, readInput(`${prefix}InputTokens`)),
     avg_output_tokens_per_interaction: Math.max(0, readInput(`${prefix}OutputTokens`)),
     monthly_interactions: Math.max(0, monthlyInteractions)
@@ -454,7 +454,7 @@ function formatMonths(value) {
 
 function getSelectedModel(prefix) {
   const selectedName = modelSelects[prefix]?.value;
-  return modelCatalog.find((model) => model.name === selectedName) || modelCatalog[0];
+  return modelCatalog.find((model) => model.name === selectedName) || modelCatalog[0] || fallbackModelCatalog[0];
 }
 
 function normalizeModelName(value) {
@@ -701,7 +701,7 @@ function loadUseCases() {
   try {
     const saved = JSON.parse(localStorage.getItem(LOCAL_USE_CASES_KEY) || "null");
     if (Array.isArray(saved)) {
-      return saved
+      const normalized = saved
         .filter((item) => item && typeof item === "object")
         .map((item) => ({
           id: String(item.id || `use-case-${Date.now()}`),
@@ -721,6 +721,7 @@ function loadUseCases() {
           efficiencyRating: clampRating(item.efficiencyRating)
         }))
         .filter((item) => item.name);
+      return normalized.length > 0 ? normalized : defaultUseCases();
     }
   } catch {
     // Ignore corrupt browser state and fall back to starter use cases.
