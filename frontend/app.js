@@ -199,7 +199,6 @@ const output = {
   tokenGuidanceBody: document.getElementById("tokenGuidanceBody"),
   costByAgentChart: document.getElementById("costByAgentChart"),
   valueCostChart: document.getElementById("valueCostChart"),
-  cumulativeChart: document.getElementById("cumulativeChart"),
   useCasesDialog: document.getElementById("useCasesDialog"),
   useCaseList: document.getElementById("useCaseList"),
   useCaseNavBadge: document.getElementById("useCaseNavBadge"),
@@ -243,13 +242,6 @@ const preciseMoneyFormatter = new Intl.NumberFormat("en-US", {
   currency: "USD",
   minimumFractionDigits: 2,
   maximumFractionDigits: 4
-});
-
-const compactMoneyFormatter = new Intl.NumberFormat("en-US", {
-  style: "currency",
-  currency: "USD",
-  notation: "compact",
-  maximumFractionDigits: 1
 });
 
 const numberFormatter = new Intl.NumberFormat("en-US", {
@@ -405,10 +397,6 @@ async function readJsonResponse(response, fallbackMessage) {
 
 function formatMoney(value) {
   return Number.isFinite(value) ? moneyFormatter.format(value) : "N/A";
-}
-
-function formatCompactMoney(value) {
-  return Number.isFinite(value) ? compactMoneyFormatter.format(value) : "N/A";
 }
 
 function formatPreciseMoney(value) {
@@ -1443,72 +1431,9 @@ function renderValueCostChart(summary) {
   `;
 }
 
-function renderCumulativeChart(summary) {
-  if (!output.cumulativeChart) {
-    return;
-  }
-
-  const months = 12;
-  const monthlyValue = Math.max(0, summary.monthly_value || 0);
-  const monthlyCost = Math.max(0, summary.monthly_platform_cost || 0);
-  const maxCumulative = Math.max(monthlyValue * months, monthlyCost * months, 1);
-  const plot = {
-    left: 34,
-    right: 12,
-    top: 10,
-    bottom: 24,
-    width: 360,
-    height: 142
-  };
-  const innerWidth = plot.width - plot.left - plot.right;
-  const innerHeight = plot.height - plot.top - plot.bottom;
-  const xForMonth = (month) => plot.left + (month / months) * innerWidth;
-  const yForValue = (value) => plot.top + innerHeight - (value / maxCumulative) * innerHeight;
-  const pointsFor = (monthlyAmount) => Array.from({ length: months + 1 }, (_, month) => (
-    `${xForMonth(month).toFixed(1)},${yForValue(monthlyAmount * month).toFixed(1)}`
-  )).join(" ");
-  const breakEvenMonth = monthlyValue >= monthlyCost && monthlyCost > 0
-    ? 1
-    : null;
-  const netAtTwelveMonths = (monthlyValue - monthlyCost) * months;
-  const breakEvenLabel = monthlyCost === 0
-    ? "No monthly cost"
-    : breakEvenMonth
-      ? `Net-positive from month ${breakEvenMonth}`
-      : "No break-even within 12 months";
-  const netTone = netAtTwelveMonths > 0 ? "positive" : netAtTwelveMonths < 0 ? "negative" : "";
-  const marker = breakEvenMonth
-    ? `<circle class="chart-cross-marker" cx="${xForMonth(breakEvenMonth).toFixed(1)}" cy="${yForValue(monthlyValue * breakEvenMonth).toFixed(1)}" r="4"></circle>`
-    : "";
-
-  output.cumulativeChart.innerHTML = `
-    <svg class="cumulative-plot" viewBox="0 0 ${plot.width} ${plot.height}" role="img" aria-label="Cumulative value and cost over 12 months">
-      <line class="chart-grid-line" x1="${plot.left}" y1="${plot.top}" x2="${plot.left}" y2="${plot.top + innerHeight}"></line>
-      <line class="chart-grid-line" x1="${plot.left}" y1="${plot.top + innerHeight}" x2="${plot.left + innerWidth}" y2="${plot.top + innerHeight}"></line>
-      <line class="chart-grid-line" x1="${plot.left}" y1="${yForValue(maxCumulative / 2).toFixed(1)}" x2="${plot.left + innerWidth}" y2="${yForValue(maxCumulative / 2).toFixed(1)}"></line>
-      <text class="chart-axis-label" x="0" y="${plot.top + 4}">${formatCompactMoney(maxCumulative)}</text>
-      <text class="chart-axis-label" x="0" y="${plot.top + innerHeight + 3}">$0</text>
-      <text class="chart-axis-label" x="${plot.left - 3}" y="${plot.height - 3}">0</text>
-      <text class="chart-axis-label" x="${xForMonth(6) - 10}" y="${plot.height - 3}">6 mo</text>
-      <text class="chart-axis-label" x="${xForMonth(12) - 24}" y="${plot.height - 3}">12 mo</text>
-      <polyline class="chart-line cost" points="${pointsFor(monthlyCost)}"></polyline>
-      <polyline class="chart-line value" points="${pointsFor(monthlyValue)}"></polyline>
-      ${marker}
-    </svg>
-    <div class="cumulative-footer">
-      <span>${breakEvenLabel} &middot; 12-mo net <strong class="${netTone}">${formatMoney(netAtTwelveMonths)}</strong></span>
-      <span class="chart-legend">
-        <span class="legend-item"><i class="legend-swatch"></i>Value</span>
-        <span class="legend-item"><i class="legend-swatch cost"></i>Cost</span>
-      </span>
-    </div>
-  `;
-}
-
 function renderInsightCharts(data) {
   renderCostByAgent(data.model_mix || []);
   renderValueCostChart(data.summary);
-  renderCumulativeChart(data.summary);
 }
 
 function renderTokenGuidance() {
