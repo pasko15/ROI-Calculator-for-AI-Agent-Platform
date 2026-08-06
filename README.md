@@ -49,7 +49,7 @@ That is more useful for budget conversations than only saying "this setup costs 
 ## What You Can Do
 
 - Choose active monthly users and hourly employee cost.
-- Model agent usage through presets or use cases.
+- Model agent usage through use cases, with presets changing active-user scale.
 - Select models per agent from the catalog.
 - Adjust input and output tokens per interaction.
 - See monthly cost, value, ROI, and cost by agent.

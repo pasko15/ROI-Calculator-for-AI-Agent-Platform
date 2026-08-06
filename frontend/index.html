@@ -1700,7 +1700,7 @@
               <div class="field-row">
                 <label for="hourlyCost" class="label-with-info">Hourly employee cost ($) <span class="info-icon" tabindex="0" data-tip="Fully loaded average employee cost used to turn saved time into value.">i</span></label>
               </div>
-              <input id="hourlyCost" data-input="hourlyCost" type="number" min="0" step="1" value="75">
+              <input id="hourlyCost" data-input="hourlyCost" type="number" min="0" step="1" value="150">
             </div>
           </div>
         </section>
@@ -1735,7 +1735,7 @@
               <span class="info-icon" tabindex="0" data-tip="Each agent contributes to cost based on token usage and selected model input/output prices.">i</span>
             </div>
           </div>
-          <p class="card-note">Monthly interactions are total agent calls per month, derived from presets or the use-case rollup. Add use cases to model niche workflows and common agent usage.</p>
+          <p class="card-note">Monthly interactions are generated from use cases. Presets only change active user scale; common use cases scale with active users while niche use cases stay fixed.</p>
 
           <div class="table-wrap">
             <table class="agent-table">
@@ -1761,11 +1761,9 @@
           <div class="agent-state" aria-hidden="true">
             <input id="minutesSaved" data-input="minutesSaved" type="number" min="0" step="1" value="0">
             <select id="modelOneModel" data-model-select="modelOne"></select>
-            <input id="modelOneMonthlyInteractions" data-input="modelOneMonthlyInteractions" type="number" min="0" step="1" value="2100">
             <input id="modelOneInputTokens" data-input="modelOneInputTokens" type="number" min="0" step="50" value="68000">
             <input id="modelOneOutputTokens" data-input="modelOneOutputTokens" type="number" min="0" step="50" value="710">
             <select id="modelTwoModel" data-model-select="modelTwo"></select>
-            <input id="modelTwoMonthlyInteractions" data-input="modelTwoMonthlyInteractions" type="number" min="0" step="1" value="8400">
             <input id="modelTwoInputTokens" data-input="modelTwoInputTokens" type="number" min="0" step="50" value="4200">
             <input id="modelTwoOutputTokens" data-input="modelTwoOutputTokens" type="number" min="0" step="50" value="64">
           </div>
@@ -1775,7 +1773,7 @@
           <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
           <div class="card-title">
             <h2>Preset comparison</h2>
-            <span class="info-icon" tabindex="0" data-tip="Compares the three scale presets using the current model, token, hourly cost, time saved, and fixed-cost assumptions.">i</span>
+            <span class="info-icon" tabindex="0" data-tip="Compares the three active-user scale presets using the current use cases, model, token, hourly cost, and fixed-cost assumptions.">i</span>
           </div>
           <p class="card-note">Shows whether the same agent setup improves or worsens as usage scales.</p>
           <div id="scenarioComparison" class="scenario-comparison"></div>
@@ -1848,13 +1846,12 @@
             <div id="useCaseAnnualHoursSaved" class="use-case-stat-value">0</div>
           </div>
         </div>
-        <div id="useCaseSyncNote" class="use-case-sync-note">Use cases have not been applied to the dashboard yet.</div>
+        <div id="useCaseSyncNote" class="use-case-sync-note">Use cases automatically feed the ROI dashboard.</div>
 
         <div class="use-case-layout">
           <section>
             <div class="card-title">
               <h3>Existing use cases</h3>
-              <button id="applyUseCasesButton" class="btn" type="button">Apply to ROI assumptions</button>
             </div>
             <div id="useCaseList" class="use-case-list"></div>
           </section>

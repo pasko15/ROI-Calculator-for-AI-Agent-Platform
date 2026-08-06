@@ -1,18 +1,12 @@
 const PRESETS = {
   pilot: {
-    activeMonthlyUsers: 10,
-    modelOneMonthlyInteractions: 210,
-    modelTwoMonthlyInteractions: 840
+    activeMonthlyUsers: 10
   },
   department: {
-    activeMonthlyUsers: 40,
-    modelOneMonthlyInteractions: 840,
-    modelTwoMonthlyInteractions: 3360
+    activeMonthlyUsers: 40
   },
   enterprise: {
-    activeMonthlyUsers: 200,
-    modelOneMonthlyInteractions: 4200,
-    modelTwoMonthlyInteractions: 16800
+    activeMonthlyUsers: 200
   }
 };
 
@@ -71,7 +65,6 @@ const agentBenchmarkMetrics = {
 };
 
 let useCases = [];
-let useCasesAppliedActiveUsers = null;
 
 const WEEKS_PER_YEAR = 52;
 
@@ -271,7 +264,7 @@ function escapeHtml(value) {
     .replace(/'/g, "&#039;");
 }
 
-function modelPayload(prefix, name) {
+function modelPayload(prefix, name, monthlyInteractions) {
   const selectedModel = getSelectedModel(prefix);
 
   return {
@@ -281,24 +274,33 @@ function modelPayload(prefix, name) {
     output_price_per_1m_tokens: Math.max(0, Number(selectedModel.outputGlobal) || 0),
     avg_input_tokens_per_interaction: Math.max(0, readInput(`${prefix}InputTokens`)),
     avg_output_tokens_per_interaction: Math.max(0, readInput(`${prefix}OutputTokens`)),
-    monthly_interactions: Math.max(0, readInput(`${prefix}MonthlyInteractions`))
+    monthly_interactions: Math.max(0, monthlyInteractions)
   };
 }
 
-function getPayload(overrides = {}) {
+function payloadForActiveUsers(activeUsers, overrides = {}) {
+  const rollup = useCaseRollup(activeUsers);
+  const minutesSaved = activeUsers > 0 && rollup.annualHoursSaved > 0
+    ? (rollup.annualHoursSaved * 60) / WEEKS_PER_YEAR / activeUsers
+    : Math.max(0, readInput("minutesSaved"));
+
   return {
-    active_monthly_users: Math.max(0, readInput("activeMonthlyUsers")),
+    active_monthly_users: activeUsers,
     hourly_cost_per_worker: Math.max(0, readInput("hourlyCost")),
-    time_saved_minutes_per_user_per_week: Math.max(0, readInput("minutesSaved")),
+    time_saved_minutes_per_user_per_week: minutesSaved,
     fixed_monthly_costs: {
       enterprise_integration: Math.max(0, readInput("fixedMonthlyCost"))
     },
     model_mix: [
-      modelPayload("modelOne", agentNames.modelOne),
-      modelPayload("modelTwo", agentNames.modelTwo)
+      modelPayload("modelOne", agentNames.modelOne, rollup.agentAnnualInteractions.modelOne / 12),
+      modelPayload("modelTwo", agentNames.modelTwo, rollup.agentAnnualInteractions.modelTwo / 12)
     ],
     ...overrides
   };
+}
+
+function getPayload(overrides = {}) {
+  return payloadForActiveUsers(Math.max(0, readInput("activeMonthlyUsers")), overrides);
 }
 
 function getPresetPayload(name, basePayload = getPayload()) {
@@ -307,16 +309,7 @@ function getPresetPayload(name, basePayload = getPayload()) {
     return basePayload;
   }
 
-  return {
-    ...basePayload,
-    active_monthly_users: preset.activeMonthlyUsers,
-    model_mix: basePayload.model_mix.map((model, index) => ({
-      ...model,
-      monthly_interactions: index === 0
-        ? preset.modelOneMonthlyInteractions
-        : preset.modelTwoMonthlyInteractions
-    }))
-  };
+  return payloadForActiveUsers(preset.activeMonthlyUsers);
 }
 
 async function calculate(payload) {
@@ -740,11 +733,10 @@ function saveUseCases() {
   localStorage.setItem(LOCAL_USE_CASES_KEY, JSON.stringify(useCases));
 }
 
-function useCaseRollup() {
+function useCaseRollup(activeUsers = Math.max(0, readInput("activeMonthlyUsers"))) {
   return useCases.reduce(
     (totals, useCase) => {
       const occurrences = Math.max(0, Number(useCase.annualOccurrences) || 0);
-      const activeUsers = Math.max(0, readInput("activeMonthlyUsers"));
       const usageIntensity = clampRating(useCase.usageIntensity);
       const efficiencyRating = clampRating(useCase.efficiencyRating);
       const weeklyInteractionsPerUser = COMMON_USAGE_WEEKLY_INTERACTIONS[usageIntensity];
@@ -795,20 +787,12 @@ function renderUseCaseSyncNote() {
   }
 
   const currentUsers = Math.max(0, readInput("activeMonthlyUsers"));
-  const hasApplied = useCasesAppliedActiveUsers !== null;
-  const isStale = hasApplied && useCasesAppliedActiveUsers !== currentUsers;
-
-  output.useCaseSyncNote.classList.toggle("warning", isStale || !hasApplied);
-  if (!hasApplied) {
-    output.useCaseSyncNote.textContent = "Use cases have not been applied to the dashboard yet.";
+  output.useCaseSyncNote.classList.toggle("warning", useCases.length === 0);
+  if (useCases.length === 0) {
+    output.useCaseSyncNote.textContent = "No use cases configured. AI cost will stay at $0 until use cases generate agent interactions.";
     return;
   }
-  if (isStale) {
-    output.useCaseSyncNote.textContent = `Use cases were applied for ${formatWholeNumber(useCasesAppliedActiveUsers)} active users; current dashboard has ${formatWholeNumber(currentUsers)}. Apply again to resync.`;
-    return;
-  }
-
-  output.useCaseSyncNote.textContent = `Use cases are applied for the current ${formatWholeNumber(currentUsers)} active users.`;
+  output.useCaseSyncNote.textContent = `Use cases automatically feed ROI for the current ${formatWholeNumber(currentUsers)} active users. Common use cases scale with active users; niche use cases stay fixed.`;
 }
 
 function renderUseCases() {
@@ -963,30 +947,13 @@ function saveUseCase() {
   renderUseCases();
   clearUseCaseForm();
   output.statusLine.textContent = "";
+  scheduleUpdate();
 }
 
 function deleteUseCase(id) {
   useCases = useCases.filter((useCase) => useCase.id !== id);
   saveUseCases();
   renderUseCases();
-}
-
-function applyUseCasesToAgentUsage() {
-  const rollup = useCaseRollup();
-  Object.entries(rollup.agentAnnualInteractions).forEach(([agent, annualInteractions]) => {
-    setInputValue(`${agent}MonthlyInteractions`, Math.round(annualInteractions / 12));
-  });
-  const activeUsers = Math.max(0, readInput("activeMonthlyUsers"));
-  const minutesSavedPerUserPerWeek = activeUsers > 0
-    ? (rollup.annualHoursSaved * 60) / 52 / activeUsers
-    : 0;
-  setInputValue("minutesSaved", Math.round(minutesSavedPerUserPerWeek));
-  useCasesAppliedActiveUsers = activeUsers;
-  renderUseCaseSyncNote();
-  document.querySelectorAll("[data-scenario]").forEach((button) => {
-    button.classList.remove("is-active");
-  });
-  closeUseCases();
   scheduleUpdate();
 }
 
@@ -1183,7 +1150,7 @@ function renderModelCosts(modelMix, summary) {
               <span class="benchmark-value"${benchmarkStyle}>${benchmarkCell}</span>
             </div>
           </td>
-          <td>${formatWholeNumber(readInput(`${prefix}MonthlyInteractions`))}</td>
+          <td>${formatWholeNumber(model.monthly_interactions)}</td>
           <td>${formatWholeNumber(readInput(`${prefix}InputTokens`))}</td>
           <td>${formatWholeNumber(readInput(`${prefix}OutputTokens`))}</td>
           <td>${formatInteractionCost(model.cost_per_interaction)}</td>
@@ -1689,7 +1656,6 @@ document.getElementById("openUseCasesButton").addEventListener("click", (event) 
 document.getElementById("closeUseCasesButton").addEventListener("click", closeUseCases);
 document.getElementById("cancelUseCasesButton").addEventListener("click", closeUseCases);
 document.getElementById("saveUseCaseButton").addEventListener("click", saveUseCase);
-document.getElementById("applyUseCasesButton").addEventListener("click", applyUseCasesToAgentUsage);
 useCaseFields.basis.addEventListener("change", updateUseCasePatternFields);
 document.getElementById("closeCatalogButton").addEventListener("click", closeCatalog);
 document.getElementById("cancelCatalogButton").addEventListener("click", closeCatalog);
