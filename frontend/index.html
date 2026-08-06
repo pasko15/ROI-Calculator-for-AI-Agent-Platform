@@ -42,8 +42,7 @@
     html::-webkit-scrollbar,
     body::-webkit-scrollbar,
     .dialog::-webkit-scrollbar,
-    .dialog-backdrop::-webkit-scrollbar,
-    .table-wrap::-webkit-scrollbar {
+    .dialog-backdrop::-webkit-scrollbar {
       width: 0;
       height: 0;
       display: none;
@@ -1015,7 +1014,7 @@
       border: 1px solid var(--line);
       border-radius: var(--radius);
       background: #ffffff;
-      scrollbar-width: none;
+      scrollbar-width: thin;
       min-width: 0;
     }
 
@@ -1132,7 +1131,9 @@
     .dialog {
       width: min(860px, 100%);
       max-height: calc(100svh - 32px);
-      overflow: visible;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr) auto;
+      overflow: hidden;
       scrollbar-width: none;
       border-radius: var(--radius);
       background: var(--surface);
@@ -1151,6 +1152,20 @@
 
     .catalog-dialog {
       width: min(860px, 100%);
+    }
+
+    .catalog-dialog .table-wrap {
+      max-height: min(44svh, 430px);
+    }
+
+    .catalog-dialog table {
+      min-width: 780px;
+    }
+
+    .catalog-dialog thead th {
+      position: sticky;
+      top: 0;
+      z-index: 1;
     }
 
     .use-cases-dialog {
@@ -1190,6 +1205,8 @@
 
     .dialog-body {
       padding: var(--space-3) var(--space-4);
+      overflow: auto;
+      min-width: 0;
     }
 
     .dialog-actions {
@@ -1225,6 +1242,8 @@
     .catalog-preview-actions {
       display: flex;
       justify-content: center;
+      position: sticky;
+      bottom: 0;
       padding: 6px;
       border-top: 1px solid var(--line);
       background: var(--surface-soft);
