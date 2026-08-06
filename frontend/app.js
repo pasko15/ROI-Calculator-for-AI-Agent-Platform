@@ -189,6 +189,7 @@ const output = {
   usageContext: document.getElementById("usageContext"),
   agentMixBody: document.getElementById("agentMixBody"),
   scenarioComparison: document.getElementById("scenarioComparison"),
+  optimizationPanel: document.getElementById("optimizationPanel"),
   statusLine: document.getElementById("statusLine"),
   modelCatalogDialog: document.getElementById("modelCatalogDialog"),
   catalogBody: document.getElementById("catalogBody"),
@@ -418,10 +419,6 @@ function formatInteractionCost(value) {
   return Number.isFinite(value) ? `$${value.toFixed(4)}` : "N/A";
 }
 
-function formatCompactMoney(value) {
-  return Number.isFinite(value) ? compactMoneyFormatter.format(value) : "N/A";
-}
-
 function formatNumber(value) {
   return Number.isFinite(value) ? numberFormatter.format(value) : "N/A";
 }
@@ -559,6 +556,15 @@ function benchmarkForAgent(prefix, catalogModel) {
     sourceUrl: benchmarkModel?.url || "",
     modelName: benchmarkModel?.name || ""
   };
+}
+
+function interactionCostForCatalogModel(prefix, catalogModel) {
+  const inputTokens = Math.max(0, readInput(`${prefix}InputTokens`));
+  const outputTokens = Math.max(0, readInput(`${prefix}OutputTokens`));
+  const inputPrice = Math.max(0, Number(catalogModel?.inputGlobal) || 0);
+  const outputPrice = Math.max(0, Number(catalogModel?.outputGlobal) || 0);
+
+  return ((inputTokens * inputPrice) + (outputTokens * outputPrice)) / 1000000;
 }
 
 function setInputValue(name, value) {
@@ -1251,6 +1257,144 @@ function renderScenarioComparison(scenarios = []) {
   }).join("");
 }
 
+function bestOptimizationForAgent(prefix) {
+  const currentModel = getSelectedModel(prefix);
+  const currentBenchmark = benchmarkForAgent(prefix, currentModel);
+  const currentCost = interactionCostForCatalogModel(prefix, currentModel);
+
+  if (!Number.isFinite(currentBenchmark.value) || currentBenchmark.value <= 0 || currentCost <= 0) {
+    return null;
+  }
+
+  const minimumScore = currentBenchmark.value - 2;
+  const candidates = modelCatalog
+    .filter((candidate) => candidate.name !== currentModel.name)
+    .map((candidate) => {
+      const benchmark = benchmarkForAgent(prefix, candidate);
+      const cost = interactionCostForCatalogModel(prefix, candidate);
+      const savingsPercent = currentCost > 0
+        ? ((currentCost - cost) / currentCost) * 100
+        : 0;
+      return {
+        model: candidate,
+        benchmark,
+        cost,
+        savingsPercent
+      };
+    })
+    .filter((candidate) => (
+      Number.isFinite(candidate.benchmark.value) &&
+      candidate.benchmark.value >= minimumScore &&
+      candidate.cost > 0 &&
+      candidate.cost < currentCost &&
+      candidate.savingsPercent >= 10
+    ))
+    .sort((left, right) => (
+      right.savingsPercent - left.savingsPercent ||
+      right.benchmark.value - left.benchmark.value ||
+      left.cost - right.cost
+    ));
+
+  const best = candidates[0];
+  if (!best) {
+    return null;
+  }
+
+  return {
+    agent: agentNames[prefix],
+    metric: currentBenchmark.label,
+    currentModel,
+    currentBenchmark,
+    currentCost,
+    alternative: best
+  };
+}
+
+function optimizationTradeoffText(suggestion) {
+  const scoreDelta = suggestion.alternative.benchmark.value - suggestion.currentBenchmark.value;
+  if (scoreDelta > 0) {
+    return `Trade-off: no quality concession indicated; the ${suggestion.metric} rating is ${formatNumber(scoreDelta)} points better.`;
+  }
+  if (scoreDelta < 0) {
+    return `Trade-off: the ${suggestion.metric} rating is ${formatNumber(Math.abs(scoreDelta))} points lower, so this is a cost-first swap.`;
+  }
+  return `Trade-off: the ${suggestion.metric} rating is unchanged, so this is a straightforward cost reduction.`;
+}
+
+function renderOptimizationSuggestions() {
+  if (!output.optimizationPanel) {
+    return;
+  }
+
+  output.optimizationPanel.hidden = false;
+
+  if (benchmarkStatus === "loading") {
+    output.optimizationPanel.innerHTML = `
+      <div class="optimization-head">
+        <span class="optimization-title">AI model suggestions</span>
+        <span class="optimization-note">Loading benchmarks...</span>
+      </div>
+    `;
+    return;
+  }
+
+  if (benchmarkStatus === "unavailable" || benchmarkCatalog.length === 0) {
+    output.optimizationPanel.innerHTML = `
+      <div class="optimization-head">
+        <span class="optimization-title">AI model suggestions</span>
+        <span class="optimization-note">Benchmark data is unavailable.</span>
+      </div>
+    `;
+    return;
+  }
+
+  const suggestions = ["modelOne", "modelTwo"]
+    .map(bestOptimizationForAgent)
+    .filter(Boolean);
+
+  if (suggestions.length === 0) {
+    output.optimizationPanel.innerHTML = `
+      <div class="optimization-head">
+        <span class="optimization-title">AI model suggestions</span>
+        <span class="optimization-note">No cheaper similar-score alternatives found.</span>
+      </div>
+    `;
+    return;
+  }
+
+  output.optimizationPanel.innerHTML = `
+    <div class="optimization-head">
+      <span class="optimization-title">AI model suggestions</span>
+      <span class="optimization-note">Cheaper models with similar or better benchmark ratings.</span>
+    </div>
+    <div class="optimization-list">
+      ${suggestions.map((suggestion) => {
+        const alternative = suggestion.alternative;
+        const scoreDelta = alternative.benchmark.value - suggestion.currentBenchmark.value;
+        const scoreReason = scoreDelta > 0
+          ? `and its ${escapeHtml(suggestion.metric)} rating is better`
+          : scoreDelta === 0
+            ? `with the same ${escapeHtml(suggestion.metric)} rating`
+            : `with a small ${escapeHtml(suggestion.metric)} rating trade-off`;
+        return `
+          <div class="optimization-item">
+            <span>
+              <strong>${escapeHtml(suggestion.agent)}</strong> should use
+              <strong>${escapeHtml(alternative.model.name)}</strong> because it is
+              <strong>${formatNumber(alternative.savingsPercent)}% cheaper</strong>
+              ${scoreReason}
+              (<strong>${formatBenchmarkValue(alternative.benchmark.value)}</strong>
+              versus ${formatBenchmarkValue(suggestion.currentBenchmark.value)} today.
+              )
+            </span>
+            <span class="optimization-tradeoff">${escapeHtml(optimizationTradeoffText(suggestion))}</span>
+          </div>
+        `;
+      }).join("")}
+    </div>
+  `;
+}
+
 function renderCostByAgent(modelMix) {
   if (!output.costByAgentChart) {
     return;
@@ -1544,6 +1688,9 @@ async function updateDashboard() {
     }
     renderDashboard(data);
     renderScenarioComparison(scenarios);
+    if (output.optimizationPanel && !output.optimizationPanel.hidden) {
+      renderOptimizationSuggestions();
+    }
   } catch (error) {
     if (updateId !== pendingUpdate) {
       return;
@@ -1625,6 +1772,7 @@ document.getElementById("saveCatalogModelButton").addEventListener("click", save
 document.getElementById("openGuidanceButton").addEventListener("click", (event) => {
   openGuidance(event.currentTarget);
 });
+document.getElementById("optimizeModelsButton").addEventListener("click", renderOptimizationSuggestions);
 document.getElementById("closeGuidanceButton").addEventListener("click", closeGuidance);
 document.getElementById("cancelGuidanceButton").addEventListener("click", closeGuidance);
 document.getElementById("toggleCatalogRowsButton").addEventListener("click", () => {

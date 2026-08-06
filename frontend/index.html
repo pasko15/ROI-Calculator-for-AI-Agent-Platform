@@ -692,6 +692,63 @@
       color: inherit;
     }
 
+    .optimization-panel {
+      display: grid;
+      gap: var(--space-2);
+      margin-top: var(--space-3);
+      border: 1px solid rgba(37, 160, 168, 0.42);
+      border-radius: var(--radius);
+      padding: var(--space-3);
+      background: rgba(240, 251, 251, 0.72);
+    }
+
+    .optimization-panel[hidden] {
+      display: none;
+    }
+
+    .optimization-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: var(--space-3);
+    }
+
+    .optimization-title {
+      font-size: 0.9rem;
+      font-weight: 850;
+    }
+
+    .optimization-note {
+      color: var(--muted);
+      font-size: 0.74rem;
+      font-weight: 700;
+      text-align: right;
+    }
+
+    .optimization-list {
+      display: grid;
+      gap: var(--space-2);
+    }
+
+    .optimization-item {
+      display: grid;
+      gap: 5px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: var(--space-2);
+      background: rgba(255, 255, 255, 0.82);
+    }
+
+    .optimization-item strong {
+      color: var(--accent);
+    }
+
+    .optimization-tradeoff {
+      color: var(--muted);
+      font-size: 0.74rem;
+      font-weight: 750;
+    }
+
     .agent-table tbody tr {
       background: rgba(255, 255, 255, 0.72);
     }
@@ -1769,6 +1826,7 @@
               <span class="cost-driver-tag">Main cost driver</span>
               <button id="openGuidanceButton" class="btn" type="button">Token guidance</button>
               <button id="openCatalogButton" class="btn" type="button">Model catalog</button>
+              <button id="optimizeModelsButton" class="btn" type="button">AI suggestion</button>
               <span class="info-icon" tabindex="0" data-tip="Each agent contributes to cost based on token usage and selected model input/output prices.">i</span>
             </div>
           </div>
@@ -1793,6 +1851,7 @@
               </tbody>
             </table>
           </div>
+          <div id="optimizationPanel" class="optimization-panel" hidden></div>
 
           <div class="agent-state" aria-hidden="true">
             <input id="minutesSaved" data-input="minutesSaved" type="number" min="0" step="1" value="0">
