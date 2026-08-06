@@ -724,6 +724,99 @@
       display: none;
     }
 
+    .scenario-comparison-card {
+      margin-top: var(--space-3);
+      padding: 10px var(--space-3);
+      border-radius: var(--radius);
+    }
+
+    .scenario-comparison {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: var(--space-3);
+      margin-top: var(--space-3);
+    }
+
+    .scenario-column {
+      display: grid;
+      gap: var(--space-2);
+      min-width: 0;
+      border: 1px solid var(--line);
+      border-top: 4px solid var(--muted);
+      border-radius: var(--radius);
+      padding: var(--space-3);
+      background: rgba(255, 255, 255, 0.78);
+    }
+
+    .scenario-column.positive {
+      border-top-color: var(--positive);
+    }
+
+    .scenario-column.negative {
+      border-top-color: var(--negative);
+    }
+
+    .scenario-column-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: var(--space-2);
+      padding-bottom: var(--space-2);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .scenario-column-title {
+      font-size: 0.88rem;
+      font-weight: 850;
+    }
+
+    .scenario-column-users {
+      color: var(--muted);
+      font-size: 0.72rem;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .scenario-column-metric {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: var(--space-2);
+      color: var(--muted);
+      font-size: 0.76rem;
+    }
+
+    .scenario-column-metric strong {
+      color: var(--text);
+      font-size: 0.86rem;
+      white-space: nowrap;
+    }
+
+    .scenario-column-metric.main {
+      padding-top: var(--space-2);
+      border-top: 1px dashed var(--line-strong);
+    }
+
+    .scenario-column-roi {
+      justify-self: end;
+      border-radius: 999px;
+      padding: 3px 9px;
+      background: #eef3f6;
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 850;
+    }
+
+    .scenario-column-roi.positive {
+      background: rgba(29, 127, 80, 0.1);
+      color: var(--positive);
+    }
+
+    .scenario-column-roi.negative {
+      background: rgba(180, 35, 24, 0.1);
+      color: var(--negative);
+    }
+
     .guidance-grid {
       display: grid;
       gap: var(--space-4);
@@ -1532,6 +1625,7 @@
 
       .kpi-grid,
       .two-col,
+      .scenario-comparison,
       .use-case-summary,
       .use-case-layout,
       .insight-grid {
@@ -1711,6 +1805,16 @@
             <input id="modelTwoInputTokens" data-input="modelTwoInputTokens" type="number" min="0" step="50" value="4200">
             <input id="modelTwoOutputTokens" data-input="modelTwoOutputTokens" type="number" min="0" step="50" value="64">
           </div>
+        </section>
+
+        <section class="scenario-comparison-card blueprint" aria-label="Preset scenario comparison">
+          <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+          <div class="card-title">
+            <h2>Preset comparison</h2>
+            <span class="info-icon" tabindex="0" data-tip="Compares the three scale presets using the current model, token, hourly cost, time saved, and fixed-cost assumptions.">i</span>
+          </div>
+          <p class="card-note">Shows whether the same agent setup improves or worsens as usage scales.</p>
+          <div id="scenarioComparison" class="scenario-comparison"></div>
         </section>
 
         <section class="insight-grid" aria-label="Management insight charts">

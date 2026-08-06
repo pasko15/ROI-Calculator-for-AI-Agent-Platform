@@ -16,6 +16,14 @@ const PRESETS = {
   }
 };
 
+const PRESET_ORDER = ["pilot", "department", "enterprise"];
+
+const PRESET_LABELS = {
+  pilot: "Small Pilot",
+  department: "Department",
+  enterprise: "Enterprise"
+};
+
 const fallbackModelCatalog = [
   {
     name: "GPT-5.5",
@@ -180,6 +188,7 @@ const output = {
   effectiveWorkersContext: document.getElementById("effectiveWorkersContext"),
   usageContext: document.getElementById("usageContext"),
   agentMixBody: document.getElementById("agentMixBody"),
+  scenarioComparison: document.getElementById("scenarioComparison"),
   statusLine: document.getElementById("statusLine"),
   modelCatalogDialog: document.getElementById("modelCatalogDialog"),
   catalogBody: document.getElementById("catalogBody"),
@@ -296,6 +305,24 @@ function getPayload(overrides = {}) {
       modelPayload("modelTwo", agentNames.modelTwo)
     ],
     ...overrides
+  };
+}
+
+function getPresetPayload(name, basePayload = getPayload()) {
+  const preset = PRESETS[name];
+  if (!preset) {
+    return basePayload;
+  }
+
+  return {
+    ...basePayload,
+    active_monthly_users: preset.activeMonthlyUsers,
+    model_mix: basePayload.model_mix.map((model, index) => ({
+      ...model,
+      monthly_interactions: index === 0
+        ? preset.modelOneMonthlyInteractions
+        : preset.modelTwoMonthlyInteractions
+    }))
   };
 }
 
@@ -1183,6 +1210,47 @@ function renderModelCosts(modelMix, summary) {
   }
 }
 
+function scenarioTone(value) {
+  if (!Number.isFinite(value) || value === 0) {
+    return "neutral";
+  }
+  return value > 0 ? "positive" : "negative";
+}
+
+function renderScenarioComparison(scenarios = []) {
+  if (!output.scenarioComparison) {
+    return;
+  }
+
+  output.scenarioComparison.innerHTML = scenarios.map((scenario) => {
+    const summary = scenario.data.summary;
+    const tone = scenarioTone(summary.monthly_net_benefit);
+    return `
+      <div class="scenario-column ${tone}">
+        <div class="scenario-column-head">
+          <span class="scenario-column-title">${escapeHtml(scenario.label)}</span>
+          <span class="scenario-column-users">${formatWholeNumber(summary.active_users)} users</span>
+        </div>
+        <div class="scenario-column-metric">
+          <span>Monthly cost</span>
+          <strong>${formatMoney(summary.monthly_platform_cost)}</strong>
+        </div>
+        <div class="scenario-column-metric">
+          <span>Monthly value</span>
+          <strong>${formatMoney(summary.monthly_value)}</strong>
+        </div>
+        <div class="scenario-column-metric main">
+          <span>Net / month</span>
+          <strong class="${tone === "neutral" ? "" : tone}">${formatMoney(summary.monthly_net_benefit)}</strong>
+        </div>
+        <div class="scenario-column-roi ${tone}">
+          ${formatPercent(summary.monthly_roi_percent)}
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
 function renderCostByAgent(modelMix) {
   if (!output.costByAgentChart) {
     return;
@@ -1460,13 +1528,22 @@ let pendingUpdate = 0;
 async function updateDashboard() {
   const updateId = ++pendingUpdate;
   output.statusLine.textContent = "";
+  const payload = getPayload();
 
   try {
-    const data = await calculate(getPayload());
+    const [data, scenarios] = await Promise.all([
+      calculate(payload),
+      Promise.all(PRESET_ORDER.map(async (name) => ({
+        name,
+        label: PRESET_LABELS[name],
+        data: await calculate(getPresetPayload(name, payload))
+      })))
+    ]);
     if (updateId !== pendingUpdate) {
       return;
     }
     renderDashboard(data);
+    renderScenarioComparison(scenarios);
   } catch (error) {
     if (updateId !== pendingUpdate) {
       return;
