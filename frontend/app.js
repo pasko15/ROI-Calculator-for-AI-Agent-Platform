@@ -406,6 +406,16 @@ function formatBenchmarkValue(value) {
   return Number.isFinite(value) ? numberFormatter.format(value) : "-";
 }
 
+function benchmarkScoreColor(value) {
+  if (!Number.isFinite(value)) {
+    return "";
+  }
+
+  const normalized = (Math.min(Math.max(value, 1), 100) - 1) / 99;
+  const hue = Math.round(4 + normalized * 138);
+  return `hsl(${hue} 68% 34%)`;
+}
+
 function formatMinutes(value) {
   if (!Number.isFinite(value)) {
     return "N/A";
@@ -444,6 +454,28 @@ function normalizeModelName(value) {
     .replace(/[^a-z0-9]+/g, "");
 }
 
+const catalogDeploymentTokens = new Set(["longco", "shortco", "std", "pp"]);
+
+function modelNameTokens(value) {
+  return String(value || "")
+    .toLowerCase()
+    .replace(/\b(openai|azure|microsoft|google|anthropic|meta|xai)\b/g, "")
+    .match(/[a-z0-9]+/g) || [];
+}
+
+function benchmarkComparableKeys(value) {
+  const tokens = modelNameTokens(value);
+  const keys = new Set([normalizeModelName(value)]);
+  const firstDeploymentTokenIndex = tokens.findIndex((token) => catalogDeploymentTokens.has(token));
+
+  if (firstDeploymentTokenIndex > 0) {
+    keys.add(tokens.slice(0, firstDeploymentTokenIndex).join(""));
+  }
+
+  keys.add(tokens.filter((token) => !catalogDeploymentTokens.has(token)).join(""));
+  return Array.from(keys).filter(Boolean);
+}
+
 function benchmarkModelKeys(model) {
   const id = String(model?.id || "");
   const name = String(model?.name || "");
@@ -451,20 +483,31 @@ function benchmarkModelKeys(model) {
   const shortName = name.includes(":") ? name.split(":").pop() : name;
 
   return [id, shortId, name, shortName]
-    .map(normalizeModelName)
+    .flatMap(benchmarkComparableKeys)
     .filter(Boolean);
 }
 
 function findBenchmarkModel(catalogModel) {
-  const selectedKey = normalizeModelName(catalogModel?.name);
-  if (!selectedKey || benchmarkCatalog.length === 0) {
+  const selectedKeys = benchmarkComparableKeys(catalogModel?.name);
+  if (selectedKeys.length === 0 || benchmarkCatalog.length === 0) {
     return null;
   }
 
+  const hasExactMatch = (model) => {
+    const modelKeys = benchmarkModelKeys(model);
+    return selectedKeys.some((selectedKey) => modelKeys.includes(selectedKey));
+  };
+  const hasLooseMatch = (model) => {
+    const modelKeys = benchmarkModelKeys(model);
+    return selectedKeys.some((selectedKey) => (
+      modelKeys.some((key) => key.endsWith(selectedKey) || selectedKey.endsWith(key))
+    ));
+  };
+
   return benchmarkCatalog.find((model) => (
-    benchmarkModelKeys(model).includes(selectedKey)
+    hasExactMatch(model)
   )) || benchmarkCatalog.find((model) => (
-    benchmarkModelKeys(model).some((key) => key.endsWith(selectedKey) || selectedKey.endsWith(key))
+    hasLooseMatch(model)
   )) || null;
 }
 
@@ -1087,6 +1130,9 @@ function renderModelCosts(modelMix, summary) {
       const benchmarkValue = benchmarkStatus === "loading"
         ? "..."
         : formatBenchmarkValue(benchmark.value);
+      const benchmarkStyle = Number.isFinite(benchmark.value)
+        ? ` style="--benchmark-score-color:${benchmarkScoreColor(benchmark.value)}"`
+        : "";
       const benchmarkCell = benchmark.sourceUrl
         ? `<a class="benchmark-link" href="${escapeHtml(benchmark.sourceUrl)}" target="_blank" rel="noopener" title="${escapeHtml(`${benchmark.title} Matched to ${benchmark.modelName}.`)}">${benchmarkValue}</a>`
         : `<span class="benchmark-empty" title="${escapeHtml(benchmarkStatus === "unavailable" ? "ModelGrep benchmarks are unavailable right now." : benchmark.title)}">${benchmarkValue}</span>`;
@@ -1108,7 +1154,7 @@ function renderModelCosts(modelMix, summary) {
           <td>
             <div class="benchmark-cell">
               <span class="benchmark-label">${escapeHtml(benchmark.label)}</span>
-              <span class="benchmark-value">${benchmarkCell}</span>
+              <span class="benchmark-value"${benchmarkStyle}>${benchmarkCell}</span>
             </div>
           </td>
           <td>${formatWholeNumber(readInput(`${prefix}MonthlyInteractions`))}</td>
